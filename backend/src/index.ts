@@ -20,10 +20,6 @@ type Bindings = {
 
 const app = new Hono<{ Bindings: Bindings }>();
 
-// Rate limiting: IP address - timestamp
-const lastPostTime: Record<string, number> = {};
-const RATE_LIMIT_POST = 60 * 1000; // 60 seconds
-
 const PATH_MAX_LENGTH = 100; // max length of path
 
 // 100 IDs per Hour: ~148 years or 129M IDs needed, in order to have a 1% probability of at least one collision.
