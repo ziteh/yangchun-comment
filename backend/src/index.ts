@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { customAlphabet } from "nanoid";
 import xss from "xss";
 
 type Comment = {
@@ -11,10 +12,16 @@ type Comment = {
 
 // Type definition to make type inference
 type Bindings = {
-  COMMENTS: any;
+  COMMENTS: KVNamespace;
 };
 
 const app = new Hono<{ Bindings: Bindings }>();
+
+// 100 IDs per Hour: ~148 years or 129M IDs needed, in order to have a 1% probability of at least one collision.
+const nanoid = customAlphabet(
+  "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
+  10
+);
 
 app.use("*", async (c, next) => {
   await next();
@@ -30,10 +37,6 @@ app.options("*", (c) => {
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   });
 });
-
-function randomId(length = 10) {
-  return [...Array(length)].map(() => Math.random().toString(36)[2]).join("");
-}
 
 app.get("/comments", async (c) => {
   const path = c.req.query("path");
@@ -56,7 +59,7 @@ app.post("/comments", async (c) => {
     }).replace(/\]\(\s*javascript:[^)]+\)/gi, "]("); // need it ? for `[XSS](javascript:alert('xss'))`
 
   const comment: Comment = {
-    id: randomId(),
+    id: nanoid(),
     name: sanitize(name),
     email: sanitize(email),
     msg: sanitize(msg),
