@@ -18,6 +18,10 @@ type Bindings = {
 
 const app = new Hono<{ Bindings: Bindings }>();
 
+// Rate limiting: IP address - timestamp
+const lastPostTime: Record<string, number> = {};
+const RATE_LIMIT_POST = 60 * 1000; // 60 seconds
+
 // 100 IDs per Hour: ~148 years or 129M IDs needed, in order to have a 1% probability of at least one collision.
 const nanoid = customAlphabet(
   "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
@@ -67,6 +71,16 @@ app.get("/comments", async (c) => {
 
 app.post("/comments", async (c) => {
   try {
+    const ip = c.req.header("CF-Connecting-IP") || "0.0.0.0";
+    const now = Date.now();
+
+    // rate limiting
+    if (lastPostTime[ip] && now - lastPostTime[ip] < RATE_LIMIT_POST) {
+      // 429 Too Many Requests
+      return c.text("Rate limit exceeded", 429);
+    }
+    lastPostTime[ip] = now;
+
     const { path, name, email, msg } = await c.req.json();
     if (!path || !msg) {
       // 400 Bad Request
@@ -78,7 +92,7 @@ app.post("/comments", async (c) => {
       name: sanitize(name),
       email: sanitize(email),
       msg: sanitize(msg),
-      pubDate: Date.now(),
+      pubDate: now,
     };
 
     // save to KV
