@@ -22,6 +22,8 @@ const app = new Hono<{ Bindings: Bindings }>();
 const lastPostTime: Record<string, number> = {};
 const RATE_LIMIT_POST = 60 * 1000; // 60 seconds
 
+const PATH_MAX_LENGTH = 100; // max length of path
+
 // 100 IDs per Hour: ~148 years or 129M IDs needed, in order to have a 1% probability of at least one collision.
 const nanoid = customAlphabet(
   "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
@@ -37,7 +39,23 @@ const sanitize = (raw: string) =>
 
 const getKey = (path: string) => `comments:${path}`;
 
-// CORS Middleware
+const validatePath = (path: any): boolean => {
+  if (!path) {
+    return false;
+  }
+
+  if (typeof path !== "string") {
+    return false;
+  }
+
+  if (path.length > PATH_MAX_LENGTH) {
+    return false;
+  }
+
+  return true; // Ok
+};
+
+// CORS middleware
 app.use(
   "*",
   cors({
@@ -49,65 +67,68 @@ app.use(
   })
 );
 
+// error handling middleware
+app.onError((err, c) => {
+  console.error(`${c.req.method} ${c.req.path} - Error:`, err);
+
+  // 500 Internal Server Error
+  return c.text("Internal Server Error", 500);
+});
+
 app.get("/comments", async (c) => {
-  try {
-    const path = c.req.query("path");
-    if (!path) {
-      // 400 Bad Request
-      return c.text("Missing path", 400);
-    }
-
-    const key = getKey(path);
-    const raw = await c.env.COMMENTS.get(key);
-    const comments = raw ? JSON.parse(raw) : [];
-
-    // 200 OK
-    return c.json(comments);
-  } catch (err) {
-    // 500 Internal Server Error
-    return c.text("Internal Server Error", 500);
+  const path = c.req.query("path") || "";
+  if (!validatePath(path)) {
+    // 400 Bad Request
+    return c.text("Invalid path", 400);
   }
+
+  const key = getKey(path);
+  const raw = await c.env.COMMENTS.get(key);
+  const comments = raw ? JSON.parse(raw) : [];
+
+  // 200 OK
+  return c.json(comments);
 });
 
 app.post("/comments", async (c) => {
-  try {
-    const ip = c.req.header("CF-Connecting-IP") || "0.0.0.0";
-    const now = Date.now();
+  const ip = c.req.header("CF-Connecting-IP") || "0.0.0.0";
+  const now = Date.now();
 
-    // rate limiting
-    if (lastPostTime[ip] && now - lastPostTime[ip] < RATE_LIMIT_POST) {
-      // 429 Too Many Requests
-      return c.text("Rate limit exceeded", 429);
-    }
-    lastPostTime[ip] = now;
-
-    const { path, name, email, msg } = await c.req.json();
-    if (!path || !msg) {
-      // 400 Bad Request
-      return c.text("Missing fields", 400);
-    }
-
-    const comment: Comment = {
-      id: nanoid(),
-      name: sanitize(name),
-      email: sanitize(email),
-      msg: sanitize(msg),
-      pubDate: now,
-    };
-
-    // save to KV
-    const key = getKey(path);
-    const raw = await c.env.COMMENTS.get(key);
-    const comments = raw ? JSON.parse(raw) : [];
-    comments.push(comment);
-    await c.env.COMMENTS.put(key, JSON.stringify(comments));
-
-    // 201 Created
-    return c.json({ ok: true }, 201);
-  } catch (err) {
-    // 500 Internal Server Error
-    return c.text("Internal Server Error", 500);
+  // rate limiting
+  if (lastPostTime[ip] && now - lastPostTime[ip] < RATE_LIMIT_POST) {
+    // 429 Too Many Requests
+    return c.text("Rate limit exceeded", 429);
   }
+  lastPostTime[ip] = now;
+
+  const { path, name, email, msg } = await c.req.json();
+  if (!validatePath(path)) {
+    // 400 Bad Request
+    return c.text("Invalid path", 400);
+  }
+
+  if (!msg) {
+    // 400 Bad Request
+    return c.text("Missing fields", 400);
+  }
+
+  const comment: Comment = {
+    id: nanoid(),
+    name: sanitize(name),
+    email: sanitize(email),
+    msg: sanitize(msg),
+    pubDate: now,
+  };
+
+  // save to KV
+  const key = getKey(path);
+  const raw = await c.env.COMMENTS.get(key);
+  const comments = raw ? JSON.parse(raw) : [];
+  comments.push(comment);
+  await c.env.COMMENTS.put(key, JSON.stringify(comments));
+
+  // 201 Created
+  return c.json({ ok: true }, 201);
 });
 
 export default app;
