@@ -21,16 +21,20 @@ type Comment = {
 };
 
 type Bindings = {
+  // bindings
   COMMENTS: KVNamespace;
   RATE_LIMITER_POST: RateLimit;
   RATE_LIMITER_GET: RateLimit;
 
+  // environment variables
+  CORS_ORIGIN: string;
   MAX_PATH_LENGTH: number;
 };
 
 const app = new Hono<{ Bindings: Bindings }>();
 
 // 100 IDs per Hour: ~148 years or 129M IDs needed, in order to have a 1% probability of at least one collision.
+// https://zelark.github.io/nano-id-cc/
 const genId = customAlphabet(
   "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
   10
@@ -46,16 +50,17 @@ const sanitize = (raw: string) =>
 const getKey = (path: string) => `comments:${path}`;
 
 // CORS middleware
-app.use(
-  "*",
-  cors({
-    origin: "*",
+app.use("*", async (c, next) => {
+  const corsMiddleware = cors({
+    origin: c.env.CORS_ORIGIN,
     allowHeaders: ["Content-Type"],
     allowMethods: ["GET", "POST", "OPTIONS"],
     exposeHeaders: ["Content-Length"],
     maxAge: 600,
-  })
-);
+  });
+
+  return corsMiddleware(c, next);
+});
 
 // error handling middleware
 app.onError((err, c) => {
