@@ -4,19 +4,19 @@ import { customAlphabet } from "nanoid";
 import xss from "xss";
 
 type Comment = {
-  // Comment ID
+  // unique ID
   id: string;
 
-  // Comment author name (optional)
+  // author name
   name?: string;
 
-  // Comment author email (optional)
+  // author email
   email?: string;
 
-  // Comment content
+  // content
   msg: string;
 
-  // Comment publish date timestamp
+  // publish date timestamp
   pubDate: number;
 };
 
@@ -24,11 +24,11 @@ type Bindings = {
   COMMENTS: KVNamespace;
   RATE_LIMITER_POST: RateLimit;
   RATE_LIMITER_GET: RateLimit;
+
+  MAX_PATH_LENGTH: number;
 };
 
 const app = new Hono<{ Bindings: Bindings }>();
-
-const MAX_PATH_LENGTH = 100; // max length of path
 
 // 100 IDs per Hour: ~148 years or 129M IDs needed, in order to have a 1% probability of at least one collision.
 const genId = customAlphabet(
@@ -96,7 +96,7 @@ app.use("*", async (c, next) => {
     return c.text("Invalid path", 400);
   }
 
-  if (path.length > MAX_PATH_LENGTH) {
+  if (path.length > Number(c.env.MAX_PATH_LENGTH)) {
     // 400 Bad Request
     return c.text("Invalid path", 400);
   }
@@ -115,7 +115,8 @@ app.get("/comments", async (c) => {
 });
 
 app.post("/comments", async (c) => {
-  const { path, name, email, msg } = await c.req.json();
+  const path = c.req.query("path") || "";
+  const { name, email, msg } = await c.req.json();
 
   if (!msg) {
     // 400 Bad Request

@@ -20,3 +20,6 @@ name = "RATE_LIMITER_GET"
 type = "ratelimit"
 namespace_id = "1001"
 simple = { limit = 20, period = 10 }
+
+[vars]
+MAX_PATH_LENGTH = 100
