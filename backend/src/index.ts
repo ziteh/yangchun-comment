@@ -4,14 +4,22 @@ import { customAlphabet } from "nanoid";
 import xss from "xss";
 
 type Comment = {
+  // Comment ID
   id: string;
+
+  // Comment author name (optional)
   name?: string;
+
+  // Comment author email (optional)
   email?: string;
+
+  // Comment content
   msg: string;
+
+  // Comment publish date timestamp
   pubDate: number;
 };
 
-// Type definition to make type inference
 type Bindings = {
   COMMENTS: KVNamespace;
   RATE_LIMITER_POST: RateLimit;
@@ -20,10 +28,10 @@ type Bindings = {
 
 const app = new Hono<{ Bindings: Bindings }>();
 
-const PATH_MAX_LENGTH = 100; // max length of path
+const MAX_PATH_LENGTH = 100; // max length of path
 
 // 100 IDs per Hour: ~148 years or 129M IDs needed, in order to have a 1% probability of at least one collision.
-const nanoid = customAlphabet(
+const genId = customAlphabet(
   "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
   10
 );
@@ -46,7 +54,7 @@ const validatePath = (path: any): boolean => {
     return false;
   }
 
-  if (path.length > PATH_MAX_LENGTH) {
+  if (path.length > MAX_PATH_LENGTH) {
     return false;
   }
 
@@ -73,15 +81,24 @@ app.onError((err, c) => {
   return c.text("Internal Server Error", 500);
 });
 
-app.get("/comments", async (c) => {
+// rate limiting middleware
+app.use("*", async (c, next) => {
   // TODO not recommended to use IP
   const ip = c.req.header("CF-Connecting-IP") || "0.0.0.0";
-  const { success } = await c.env.RATE_LIMITER_GET.limit({ key: ip });
+  const isPost = c.req.method === "POST";
+
+  const limiter = isPost ? c.env.RATE_LIMITER_POST : c.env.RATE_LIMITER_GET;
+  const { success } = await limiter.limit({ key: ip });
+
   if (!success) {
     // 429 Too Many Requests
     return c.text("Rate limit exceeded", 429);
   }
 
+  await next();
+});
+
+app.get("/comments", async (c) => {
   const path = c.req.query("path") || "";
   if (!validatePath(path)) {
     // 400 Bad Request
@@ -97,14 +114,6 @@ app.get("/comments", async (c) => {
 });
 
 app.post("/comments", async (c) => {
-  // TODO not recommended to use IP
-  const ip = c.req.header("CF-Connecting-IP") || "0.0.0.0";
-  const { success } = await c.env.RATE_LIMITER_POST.limit({ key: ip });
-  if (!success) {
-    // 429 Too Many Requests
-    return c.text("Rate limit exceeded", 429);
-  }
-
   const { path, name, email, msg } = await c.req.json();
   if (!validatePath(path)) {
     // 400 Bad Request
@@ -117,7 +126,7 @@ app.post("/comments", async (c) => {
   }
 
   const comment: Comment = {
-    id: nanoid(),
+    id: genId(),
     name: sanitize(name),
     email: sanitize(email),
     msg: sanitize(msg),
