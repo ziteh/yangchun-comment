@@ -52,7 +52,6 @@ app.get("/comments", async (c) => {
 });
 
 app.post("/comments", async (c) => {
-  console.log("post");
   const { path, name, email, msg } = await c.req.json();
   if (!path || !msg) return c.text("Missing fields", 400);
 
@@ -64,20 +63,12 @@ app.post("/comments", async (c) => {
     pubDate: Date.now(),
   };
 
-  console.log(comment);
-
   const key = `comments:${path}`;
   const raw = await c.env.COMMENTS.get(key);
   const comments = raw ? JSON.parse(raw) : [];
   comments.push(comment);
   await c.env.COMMENTS.put(key, JSON.stringify(comments));
   return c.json({ ok: true });
-});
-
-app.post("/test", async (c) => {
-  await c.env.COMMENTS.put("hello", "world");
-  const value = await c.env.COMMENTS.get("hello");
-  return c.text(`Value = ${value}`);
 });
 
 export default app;
