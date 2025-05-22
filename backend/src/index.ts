@@ -1,18 +1,82 @@
-/**
- * Welcome to Cloudflare Workers! This is your first worker.
- *
- * - Run `npm run dev` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run `npm run deploy` to publish your worker
- *
- * Bind resources to your worker in `wrangler.jsonc`. After adding bindings, a type definition for the
- * `Env` object can be regenerated with `npm run cf-typegen`.
- *
- * Learn more at https://developers.cloudflare.com/workers/
- */
+import { Hono } from "hono";
+import xss from "xss";
 
-export default {
-	async fetch(request, env, ctx): Promise<Response> {
-		return new Response('Hello World!');
-	},
-} satisfies ExportedHandler<Env>;
+type Comment = {
+  id: string;
+  name?: string;
+  email?: string;
+  msg: string;
+  pubDate: number;
+};
+
+// Type definition to make type inference
+type Bindings = {
+  COMMENTS: any;
+};
+
+const app = new Hono<{ Bindings: Bindings }>();
+
+app.use("*", async (c, next) => {
+  await next();
+  c.header("Access-Control-Allow-Origin", "*");
+  c.header("Access-Control-Allow-Headers", "Content-Type");
+  c.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+});
+
+app.options("*", (c) => {
+  return c.text("", 204, {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  });
+});
+
+function randomId(length = 10) {
+  return [...Array(length)].map(() => Math.random().toString(36)[2]).join("");
+}
+
+app.get("/comments", async (c) => {
+  const path = c.req.query("path");
+  const key = `comments:${path}`;
+  const raw = await c.env.COMMENTS.get(key);
+  const comments = raw ? JSON.parse(raw) : [];
+  return c.json(comments);
+});
+
+app.post("/comments", async (c) => {
+  console.log("post");
+  const { path, name, email, msg } = await c.req.json();
+  if (!path || !msg) return c.text("Missing fields", 400);
+
+  const sanitize = (raw: string) =>
+    xss(raw, {
+      whiteList: {}, // empty, means filter out all HTML tags
+      stripIgnoreTag: true, // filter out all HTML not in the whitelist
+      stripIgnoreTagBody: ["script"], // the script tag is a special case, we need to filter out its content
+    }).replace(/\]\(\s*javascript:[^)]+\)/gi, "]("); // need it ? for `[XSS](javascript:alert('xss'))`
+
+  const comment: Comment = {
+    id: randomId(),
+    name: sanitize(name),
+    email: sanitize(email),
+    msg: sanitize(msg),
+    pubDate: Date.now(),
+  };
+
+  console.log(comment);
+
+  const key = `comments:${path}`;
+  const raw = await c.env.COMMENTS.get(key);
+  const comments = raw ? JSON.parse(raw) : [];
+  comments.push(comment);
+  await c.env.COMMENTS.put(key, JSON.stringify(comments));
+  return c.json({ ok: true });
+});
+
+app.post("/test", async (c) => {
+  await c.env.COMMENTS.put("hello", "world");
+  const value = await c.env.COMMENTS.get("hello");
+  return c.text(`Value = ${value}`);
+});
+
+export default app;

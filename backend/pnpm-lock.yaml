@@ -11,6 +11,9 @@ importers:
       '@cloudflare/vitest-pool-workers':
         specifier: ^0.8.19
         version: 0.8.32(@vitest/runner@3.0.9)(@vitest/snapshot@3.0.9)(vitest@3.0.9)
+      hono:
+        specifier: ^4.7.10
+        version: 4.7.10
       typescript:
         specifier: ^5.5.2
         version: 5.8.3
@@ -20,6 +23,9 @@ importers:
       wrangler:
         specifier: ^4.16.1
         version: 4.16.1
+      xss:
+        specifier: ^1.0.15
+        version: 1.0.15
 
 packages:
 
@@ -535,9 +541,15 @@ packages:
     resolution: {integrity: sha512-1rXeuUUiGGrykh+CeBdu5Ie7OJwinCgQY0bc7GCRxy5xVHy+moaqkpL/jqQq0MtQOeYcrqEz4abc5f0KtU7W4A==}
     engines: {node: '>=12.5.0'}
 
+  commander@2.20.3:
+    resolution: {integrity: sha512-GpVkmM8vF2vQUkj2LvZmD35JxeJOLCwJ9cUkugyk2nuhbv3+mJvpLYYt+0+USMxE+oj+ey/lJEnhZw75x/OMcQ==}
+
   cookie@0.7.2:
     resolution: {integrity: sha512-yki5XnKuf750l50uGTllt6kKILY4nQ1eNIQatoXEByZ5dWgnKqbnqmTrBE5B4N7lrMJKQ2ytWMiTO2o0v6Ew/w==}
     engines: {node: '>= 0.6'}
+
+  cssfilter@0.0.10:
+    resolution: {integrity: sha512-FAaLDaplstoRsDR8XGYH51znUN0UY7nMc6Z9/fvE8EXGwvJE9hu7W2vHwx1+bd6gCYnln9nLbzxFTrcO9YQDZw==}
 
   data-uri-to-buffer@2.0.2:
     resolution: {integrity: sha512-ND9qDTLc6diwj+Xe5cdAgVTbLVdXbtxTJRXRhli8Mowuaan+0EJOtdqJ0QCHNSSPyoXGx9HX2/VMnKeC34AChA==}
@@ -605,6 +617,10 @@ packages:
 
   glob-to-regexp@0.4.1:
     resolution: {integrity: sha512-lkX1HJXwyMcprw/5YUZc2s7DrpAiHB21/V+E1rHUrVNokkvB6bqMzT0VfV6/86ZNabt1k14YOIaT7nDvOX3Iiw==}
+
+  hono@4.7.10:
+    resolution: {integrity: sha512-QkACju9MiN59CKSY5JsGZCYmPZkA6sIW6OFCUp7qDjZu6S6KHtJHhAc9Uy9mV9F8PJ1/HQ3ybZF2yjCa/73fvQ==}
+    engines: {node: '>=16.9.0'}
 
   is-arrayish@0.3.2:
     resolution: {integrity: sha512-eVRqCvVlZbuw3GrM63ovNSNAeA1K16kaR/LRY/92w0zxQ5/1YzwblUX652i4Xs9RwAGjW9d9y6X88t8OaAJfWQ==}
@@ -849,6 +865,11 @@ packages:
         optional: true
       utf-8-validate:
         optional: true
+
+  xss@1.0.15:
+    resolution: {integrity: sha512-FVdlVVC67WOIPvfOwhoMETV72f6GbW7aOabBC3WxN/oUdoEMDyLz4OgRv5/gck2ZeNqEQu+Tb0kloovXOfpYVg==}
+    engines: {node: '>= 0.10.0'}
+    hasBin: true
 
   youch@3.3.4:
     resolution: {integrity: sha512-UeVBXie8cA35DS6+nBkls68xaBBXCye0CNznrhszZjTbRVnJKQuNsyLKBTTL4ln1o1rh2PKtv35twV7irj5SEg==}
@@ -1223,7 +1244,11 @@ snapshots:
       color-convert: 2.0.1
       color-string: 1.9.1
 
+  commander@2.20.3: {}
+
   cookie@0.7.2: {}
+
+  cssfilter@0.0.10: {}
 
   data-uri-to-buffer@2.0.2: {}
 
@@ -1292,6 +1317,8 @@ snapshots:
       source-map: 0.6.1
 
   glob-to-regexp@0.4.1: {}
+
+  hono@4.7.10: {}
 
   is-arrayish@0.3.2: {}
 
@@ -1555,6 +1582,11 @@ snapshots:
       - utf-8-validate
 
   ws@8.18.0: {}
+
+  xss@1.0.15:
+    dependencies:
+      commander: 2.20.3
+      cssfilter: 0.0.10
 
   youch@3.3.4:
     dependencies:
