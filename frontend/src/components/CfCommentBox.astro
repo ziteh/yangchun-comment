@@ -45,7 +45,7 @@ const path = "/blog/my-post"; // 可用前端參數動態決定
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    await fetch("http://localhost:8787/comments", {
+    await fetch(apiUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
