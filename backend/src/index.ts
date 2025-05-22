@@ -45,22 +45,6 @@ const sanitize = (raw: string) =>
 
 const getKey = (path: string) => `comments:${path}`;
 
-const validatePath = (path: any): boolean => {
-  if (!path) {
-    return false;
-  }
-
-  if (typeof path !== "string") {
-    return false;
-  }
-
-  if (path.length > MAX_PATH_LENGTH) {
-    return false;
-  }
-
-  return true; // Ok
-};
-
 // CORS middleware
 app.use(
   "*",
@@ -98,13 +82,30 @@ app.use("*", async (c, next) => {
   await next();
 });
 
-app.get("/comments", async (c) => {
-  const path = c.req.query("path") || "";
-  if (!validatePath(path)) {
+// path validation middleware
+app.use("*", async (c, next) => {
+  const path = c.req.query("path");
+
+  if (!path) {
     // 400 Bad Request
     return c.text("Invalid path", 400);
   }
 
+  if (typeof path !== "string") {
+    // 400 Bad Request
+    return c.text("Invalid path", 400);
+  }
+
+  if (path.length > MAX_PATH_LENGTH) {
+    // 400 Bad Request
+    return c.text("Invalid path", 400);
+  }
+
+  await next();
+});
+
+app.get("/comments", async (c) => {
+  const path = c.req.query("path") || "";
   const key = getKey(path);
   const raw = await c.env.COMMENTS.get(key);
   const comments = raw ? JSON.parse(raw) : [];
@@ -115,10 +116,6 @@ app.get("/comments", async (c) => {
 
 app.post("/comments", async (c) => {
   const { path, name, email, msg } = await c.req.json();
-  if (!validatePath(path)) {
-    // 400 Bad Request
-    return c.text("Invalid path", 400);
-  }
 
   if (!msg) {
     // 400 Bad Request
@@ -146,10 +143,6 @@ app.post("/comments", async (c) => {
 
 app.get("/comments/rss", async (c) => {
   const path = c.req.query("path") || "";
-  if (!validatePath(path)) {
-    return c.text("Invalid path", 400);
-  }
-
   const key = getKey(path);
   const raw = await c.env.COMMENTS.get(key);
   const comments: Comment[] = raw ? JSON.parse(raw) : [];
