@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { cors } from "hono/cors";
 import { customAlphabet } from "nanoid";
 import xss from "xss";
 
@@ -30,20 +31,17 @@ const sanitize = (raw: string) =>
     stripIgnoreTagBody: ["script"], // the script tag is a special case, we need to filter out its content
   }).replace(/\]\(\s*javascript:[^)]+\)/gi, "]("); // need it ? for `[XSS](javascript:alert('xss'))`
 
-app.use("*", async (c, next) => {
-  await next();
-  c.header("Access-Control-Allow-Origin", "*");
-  c.header("Access-Control-Allow-Headers", "Content-Type");
-  c.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-});
-
-app.options("*", (c) => {
-  return c.text("", 204, {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "Content-Type",
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  });
-});
+// CORS Middleware
+app.use(
+  "*",
+  cors({
+    origin: "*",
+    allowHeaders: ["Content-Type"],
+    allowMethods: ["GET", "POST", "OPTIONS"],
+    exposeHeaders: ["Content-Length"],
+    maxAge: 600,
+  })
+);
 
 app.get("/comments", async (c) => {
   const path = c.req.query("path");
