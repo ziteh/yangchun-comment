@@ -131,4 +131,50 @@ app.post("/comments", async (c) => {
   return c.json({ ok: true }, 201);
 });
 
+app.get("/comments/rss", async (c) => {
+  const path = c.req.query("path") || "";
+  if (!validatePath(path)) {
+    return c.text("Invalid path", 400);
+  }
+
+  const key = getKey(path);
+  const raw = await c.env.COMMENTS.get(key);
+  const comments = raw ? JSON.parse(raw) : [];
+
+  const siteUrl = "https://example.com";
+  const pageTitle = `Comments: ${path}`;
+
+  let rss = `<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+<channel>
+  <title>${pageTitle}</title>
+  <link>${siteUrl}${path}</link>
+  <description>Latest comments</description>
+  <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
+  `;
+
+  // fetch the latest 20 comments
+  comments
+    .sort((a, b) => b.pubDate - a.pubDate)
+    .slice(0, 20)
+    .forEach((comment) => {
+      rss += `
+  <item>
+    <title>${comment.name || "Anonymous"}'s Comment</title>
+    <description><![CDATA[${comment.msg}]]></description>
+    <pubDate>${new Date(comment.pubDate).toUTCString()}</pubDate>
+    <guid>${siteUrl}${path}#comment-${comment.id}</guid>
+  </item>`;
+    });
+
+  rss += `
+</channel>
+</rss>`;
+
+  return c.body(rss, 200, {
+    "Content-Type": "application/xml; charset=utf-8",
+    "X-Content-Type-Options": "nosniff",
+  });
+});
+
 export default app;
