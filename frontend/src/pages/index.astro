@@ -1,16 +1,28 @@
 ---
-
+import CfCommentBox from "../components/CfCommentBox.astro";
 ---
 
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>Astro</title>
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/snarkdown@2.0.0/dist/snarkdown.umd.js"
+      integrity="sha256-QqCCWG2y306e9DZ9VbcdrkacMAz1nubFmYCkac3I3AM="
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js"
+      integrity="sha256-ieH6dkfLSVNw06mXrOQ4f10V2fTFrxI1LFPapACVYoc="
+      crossorigin="anonymous"
+    ></script>
+  </head>
+  <body>
+    <h1>Astro</h1>
+    <CfCommentBox />
+  </body>
 </html>

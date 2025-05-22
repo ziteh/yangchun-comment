@@ -1,0 +1,64 @@
+---
+const path = "/blog/my-post"; // 可用前端參數動態決定
+---
+
+<div id="comments"></div>
+
+<form id="comment-form">
+  <input type="text" id="name" placeholder="Name (optional)" />
+  <input type="email" id="email" placeholder="Email (optional)" />
+  <textarea id="message" required></textarea>
+  <button type="submit">Send</button>
+</form>
+
+<pre id="preview"></pre>
+
+<script type="module">
+  const apiUrl = "http://localhost:8787/comments";
+
+  const form = document.getElementById("comment-form");
+  const preview = document.getElementById("preview");
+  const messageInput = document.getElementById("message");
+  const commentsEl = document.getElementById("comments");
+  const path = "/blog/my-post";
+
+  const render = (s) => DOMPurify.sanitize(snarkdown(s));
+
+  messageInput.addEventListener("input", () => {
+    preview.innerHTML = render(messageInput.value);
+  });
+
+  async function loadComments() {
+    const res = await fetch(`${apiUrl}?path=${path}`);
+    const data = await res.json();
+    commentsEl.innerHTML = data
+      .map(
+        (c) => `
+      <div>
+        <strong>${DOMPurify.sanitize(c.name) || "Anonymous"}</strong>
+        <div>${render(c.msg)}</div>
+      </div>
+    `
+      )
+      .join("");
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    await fetch("http://localhost:8787/comments", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        path,
+        name: form.name.value,
+        email: form.email.value,
+        msg: form.message.value,
+      }),
+    });
+    form.reset();
+    preview.textContent = "";
+    loadComments();
+  });
+
+  loadComments();
+</script>
