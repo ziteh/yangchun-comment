@@ -31,6 +31,8 @@ const sanitize = (raw: string) =>
     stripIgnoreTagBody: ["script"], // the script tag is a special case, we need to filter out its content
   }).replace(/\]\(\s*javascript:[^)]+\)/gi, "]("); // need it ? for `[XSS](javascript:alert('xss'))`
 
+const getKey = (path: string) => `comments:${path}`;
+
 // CORS Middleware
 app.use(
   "*",
@@ -44,31 +46,54 @@ app.use(
 );
 
 app.get("/comments", async (c) => {
-  const path = c.req.query("path");
-  const key = `comments:${path}`;
-  const raw = await c.env.COMMENTS.get(key);
-  const comments = raw ? JSON.parse(raw) : [];
-  return c.json(comments);
+  try {
+    const path = c.req.query("path");
+    if (!path) {
+      // 400 Bad Request
+      return c.text("Missing path", 400);
+    }
+
+    const key = getKey(path);
+    const raw = await c.env.COMMENTS.get(key);
+    const comments = raw ? JSON.parse(raw) : [];
+
+    // 200 OK
+    return c.json(comments);
+  } catch (err) {
+    // 500 Internal Server Error
+    return c.text("Internal Server Error", 500);
+  }
 });
 
 app.post("/comments", async (c) => {
-  const { path, name, email, msg } = await c.req.json();
-  if (!path || !msg) return c.text("Missing fields", 400);
+  try {
+    const { path, name, email, msg } = await c.req.json();
+    if (!path || !msg) {
+      // 400 Bad Request
+      return c.text("Missing fields", 400);
+    }
 
-  const comment: Comment = {
-    id: nanoid(),
-    name: sanitize(name),
-    email: sanitize(email),
-    msg: sanitize(msg),
-    pubDate: Date.now(),
-  };
+    const comment: Comment = {
+      id: nanoid(),
+      name: sanitize(name),
+      email: sanitize(email),
+      msg: sanitize(msg),
+      pubDate: Date.now(),
+    };
 
-  const key = `comments:${path}`;
-  const raw = await c.env.COMMENTS.get(key);
-  const comments = raw ? JSON.parse(raw) : [];
-  comments.push(comment);
-  await c.env.COMMENTS.put(key, JSON.stringify(comments));
-  return c.json({ ok: true });
+    // save to KV
+    const key = getKey(path);
+    const raw = await c.env.COMMENTS.get(key);
+    const comments = raw ? JSON.parse(raw) : [];
+    comments.push(comment);
+    await c.env.COMMENTS.put(key, JSON.stringify(comments));
+
+    // 201 Created
+    return c.json({ ok: true }, 201);
+  } catch (err) {
+    // 500 Internal Server Error
+    return c.text("Internal Server Error", 500);
+  }
 });
 
 export default app;
