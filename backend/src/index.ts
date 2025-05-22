@@ -14,6 +14,8 @@ type Comment = {
 // Type definition to make type inference
 type Bindings = {
   COMMENTS: KVNamespace;
+  RATE_LIMITER_POST: RateLimit;
+  RATE_LIMITER_GET: RateLimit;
 };
 
 const app = new Hono<{ Bindings: Bindings }>();
@@ -76,6 +78,14 @@ app.onError((err, c) => {
 });
 
 app.get("/comments", async (c) => {
+  // TODO not recommended to use IP
+  const ip = c.req.header("CF-Connecting-IP") || "0.0.0.0";
+  const { success } = await c.env.RATE_LIMITER_GET.limit({ key: ip });
+  if (!success) {
+    // 429 Too Many Requests
+    return c.text("Rate limit exceeded", 429);
+  }
+
   const path = c.req.query("path") || "";
   if (!validatePath(path)) {
     // 400 Bad Request
@@ -91,15 +101,13 @@ app.get("/comments", async (c) => {
 });
 
 app.post("/comments", async (c) => {
+  // TODO not recommended to use IP
   const ip = c.req.header("CF-Connecting-IP") || "0.0.0.0";
-  const now = Date.now();
-
-  // rate limiting
-  if (lastPostTime[ip] && now - lastPostTime[ip] < RATE_LIMIT_POST) {
+  const { success } = await c.env.RATE_LIMITER_POST.limit({ key: ip });
+  if (!success) {
     // 429 Too Many Requests
     return c.text("Rate limit exceeded", 429);
   }
-  lastPostTime[ip] = now;
 
   const { path, name, email, msg } = await c.req.json();
   if (!validatePath(path)) {
@@ -117,7 +125,7 @@ app.post("/comments", async (c) => {
     name: sanitize(name),
     email: sanitize(email),
     msg: sanitize(msg),
-    pubDate: now,
+    pubDate: Date.now(),
   };
 
   // save to KV
@@ -139,7 +147,7 @@ app.get("/comments/rss", async (c) => {
 
   const key = getKey(path);
   const raw = await c.env.COMMENTS.get(key);
-  const comments = raw ? JSON.parse(raw) : [];
+  const comments: Comment[] = raw ? JSON.parse(raw) : [];
 
   const siteUrl = "https://example.com";
   const pageTitle = `Comments: ${path}`;
