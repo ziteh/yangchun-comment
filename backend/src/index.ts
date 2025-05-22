@@ -23,6 +23,13 @@ const nanoid = customAlphabet(
   10
 );
 
+const sanitize = (raw: string) =>
+  xss(raw, {
+    whiteList: {}, // empty, means filter out all HTML tags
+    stripIgnoreTag: true, // filter out all HTML not in the whitelist
+    stripIgnoreTagBody: ["script"], // the script tag is a special case, we need to filter out its content
+  }).replace(/\]\(\s*javascript:[^)]+\)/gi, "]("); // need it ? for `[XSS](javascript:alert('xss'))`
+
 app.use("*", async (c, next) => {
   await next();
   c.header("Access-Control-Allow-Origin", "*");
@@ -50,13 +57,6 @@ app.post("/comments", async (c) => {
   console.log("post");
   const { path, name, email, msg } = await c.req.json();
   if (!path || !msg) return c.text("Missing fields", 400);
-
-  const sanitize = (raw: string) =>
-    xss(raw, {
-      whiteList: {}, // empty, means filter out all HTML tags
-      stripIgnoreTag: true, // filter out all HTML not in the whitelist
-      stripIgnoreTagBody: ["script"], // the script tag is a special case, we need to filter out its content
-    }).replace(/\]\(\s*javascript:[^)]+\)/gi, "]("); // need it ? for `[XSS](javascript:alert('xss'))`
 
   const comment: Comment = {
     id: nanoid(),
