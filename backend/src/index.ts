@@ -33,12 +33,9 @@ type Bindings = {
 
 const app = new Hono<{ Bindings: Bindings }>();
 
-// 100 IDs per Hour: ~148 years or 129M IDs needed, in order to have a 1% probability of at least one collision.
+// 100 IDs per Hour: ~352 years or 308M IDs needed, in order to have a 1% probability of at least one collision.
 // https://zelark.github.io/nano-id-cc/
-const genId = customAlphabet(
-  "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
-  10
-);
+const genId = customAlphabet("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ", 12);
 
 const sanitize = (raw: string) =>
   xss(raw, {
