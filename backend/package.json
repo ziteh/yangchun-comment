@@ -9,14 +9,16 @@
 		"test": "vitest",
 		"cf-typegen": "wrangler types"
 	},
+	"dependencies": {
+		"hono": "^4.7.10",
+		"nanoid": "^5.1.5",
+		"xss": "^1.0.15"
+	},
 	"devDependencies": {
 		"@cloudflare/vitest-pool-workers": "^0.8.19",
 		"@cloudflare/workers-types": "^4.20250523.0",
-		"hono": "^4.7.10",
-		"nanoid": "^5.1.5",
 		"typescript": "^5.5.2",
 		"vitest": "~3.0.7",
-		"wrangler": "^4.16.1",
-		"xss": "^1.0.15"
+		"wrangler": "^4.16.1"
 	}
 }

@@ -7,6 +7,16 @@ settings:
 importers:
 
   .:
+    dependencies:
+      hono:
+        specifier: ^4.7.10
+        version: 4.7.10
+      nanoid:
+        specifier: ^5.1.5
+        version: 5.1.5
+      xss:
+        specifier: ^1.0.15
+        version: 1.0.15
     devDependencies:
       '@cloudflare/vitest-pool-workers':
         specifier: ^0.8.19
@@ -14,12 +24,6 @@ importers:
       '@cloudflare/workers-types':
         specifier: ^4.20250523.0
         version: 4.20250523.0
-      hono:
-        specifier: ^4.7.10
-        version: 4.7.10
-      nanoid:
-        specifier: ^5.1.5
-        version: 5.1.5
       typescript:
         specifier: ^5.5.2
         version: 5.8.3
@@ -29,9 +33,6 @@ importers:
       wrangler:
         specifier: ^4.16.1
         version: 4.16.1(@cloudflare/workers-types@4.20250523.0)
-      xss:
-        specifier: ^1.0.15
-        version: 1.0.15
 
 packages:
 
@@ -891,8 +892,8 @@ packages:
   zod@3.22.3:
     resolution: {integrity: sha512-EjIevzuJRiRPbVH4mGc8nApb/lVLKVpmUhAaR5R5doKGfAnGJ6Gr3CViAVjP+4FWSxCsybeWQdcgCtbX+7oZug==}
 
-  zod@3.25.20:
-    resolution: {integrity: sha512-z03fqpTMDF1G02VLKUMt6vyACE7rNWkh3gpXVHgPTw28NPtDFRGvcpTtPwn2kMKtQ0idtYJUTxchytmnqYswcw==}
+  zod@3.25.28:
+    resolution: {integrity: sha512-/nt/67WYKnr5by3YS7LroZJbtcCBurDKKPBPWWzaxvVCGuG/NOsiKkrjoOhI8mJ+SQUXEbUzeB3S+6XDUEEj7Q==}
 
 snapshots:
 
@@ -917,7 +918,7 @@ snapshots:
       semver: 7.7.2
       vitest: 3.0.9
       wrangler: 4.16.1(@cloudflare/workers-types@4.20250523.0)
-      zod: 3.25.20
+      zod: 3.25.28
     transitivePeerDependencies:
       - '@cloudflare/workers-types'
       - bufferutil
@@ -1615,4 +1616,4 @@ snapshots:
 
   zod@3.22.3: {}
 
-  zod@3.25.20: {}
+  zod@3.25.28: {}
