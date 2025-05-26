@@ -1,0 +1,202 @@
+:root {
+  --cf-font-family:
+    system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, Cantarell, sans-serif;
+  --cf-primary-color: #3b82f6;
+  --cf-text-color: #333;
+  --cf-border-color: #e5e7eb;
+  --cf-background-color: #fff;
+  --cf-highlight-color: #f3f4f6;
+  --cf-error-color: #ef4444;
+  --cf-success-color: #10b981;
+  --cf-border-radius: 8px;
+  --cf-spacing: 16px;
+  --cf-transition: all 0.2s ease;
+  --cf-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  --cf-reply-indent: 20px;
+  --cf-reply-line-color: #e5e7eb;
+}
+
+.cf-container {
+  font-family: var(--cf-font-family);
+  color: var(--cf-text-color);
+  max-width: 100%;
+}
+
+#comment-form {
+  margin-bottom: var(--cf-spacing);
+  padding: var(--cf-spacing);
+  border: 1px solid var(--cf-border-color);
+  border-radius: var(--cf-border-radius);
+  background-color: var(--cf-background-color);
+  box-shadow: var(--cf-shadow);
+}
+
+#comment-form input[type='text'] {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 12px;
+  border: 1px solid var(--cf-border-color);
+  border-radius: var(--cf-border-radius);
+  font-size: 14px;
+  transition: var(--cf-transition);
+}
+
+#comment-form input[type='text']:focus {
+  outline: none;
+  border-color: var(--cf-primary-color);
+}
+
+#comment-form textarea {
+  display: block;
+  width: 100%;
+  min-height: 120px;
+  padding: 10px;
+  margin-bottom: 12px;
+  border: 1px solid var(--cf-border-color);
+  border-radius: var(--cf-border-radius);
+  font-size: 14px;
+  resize: vertical;
+  transition: var(--cf-transition);
+}
+
+#comment-form textarea:focus {
+  outline: none;
+  border-color: var(--cf-primary-color);
+}
+
+#comment-form button,
+.reply-button {
+  padding: 8px 16px;
+  border-radius: var(--cf-border-radius);
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  transition: var(--cf-transition);
+}
+
+#comment-form button[type='submit'] {
+  background-color: var(--cf-primary-color);
+  color: white;
+}
+
+#comment-form button[type='submit']:hover {
+  opacity: 0.9;
+}
+
+#reply-info {
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background-color: var(--cf-highlight-color);
+  border-radius: var(--cf-border-radius);
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+}
+
+#reply-info button {
+  margin-left: auto;
+  background-color: transparent;
+  color: var(--cf-text-color);
+  border: 1px solid var(--cf-border-color);
+}
+
+#reply-info button:hover {
+  background-color: var(--cf-border-color);
+}
+
+#preview {
+  margin-bottom: var(--cf-spacing);
+  padding: var(--cf-spacing);
+  border: 1px dashed var(--cf-border-color);
+  border-radius: var(--cf-border-radius);
+  background-color: var(--cf-highlight-color);
+  min-height: 40px;
+}
+
+#comments {
+  margin-top: var(--cf-spacing);
+}
+
+.comment {
+  margin-bottom: var(--cf-spacing);
+  padding: var(--cf-spacing);
+  border: 1px solid var(--cf-border-color);
+  border-radius: var(--cf-border-radius);
+  background-color: var(--cf-background-color);
+  transition: var(--cf-transition);
+}
+
+.comment:hover {
+  box-shadow: var(--cf-shadow);
+}
+
+.reply-button {
+  margin-top: 8px;
+  background-color: transparent;
+  color: var(--cf-primary-color);
+  border: 1px solid var(--cf-border-color);
+  font-size: 12px;
+}
+
+.reply-button:hover {
+  background-color: var(--cf-highlight-color);
+}
+
+.replies {
+  margin-top: 12px;
+}
+
+.reply {
+  margin-top: 12px;
+  margin-left: var(--cf-reply-indent);
+  border-left: 2px solid var(--cf-reply-line-color);
+  padding-left: 15px;
+}
+
+.comment-header,
+.reply-header {
+  margin-bottom: 8px;
+}
+
+.comment-name,
+.reply-name {
+  font-weight: bold;
+}
+
+.comment-time,
+.reply-time {
+  font-size: 0.8em;
+  color: #666;
+  margin-left: 8px;
+}
+
+.reply-to {
+  font-size: 0.8em;
+  color: #888;
+  margin-left: 8px;
+}
+
+.comment-content,
+.reply-content {
+  margin-bottom: 10px;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+@media (max-width: 576px) {
+  #comment-form,
+  .comment {
+    padding: 12px;
+  }
+
+  #comment-form textarea {
+    min-height: 100px;
+  }
+
+  .reply {
+    margin-left: 12px;
+    padding-left: 10px;
+  }
+}

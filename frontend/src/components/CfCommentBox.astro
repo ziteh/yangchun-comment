@@ -1,17 +1,25 @@
-<form id="comment-form">
-  <input type="text" id="name" placeholder="Name (optional)" />
-  <!-- <input type="email" id="email" placeholder="Email (optional)" /> -->
-  <textarea id="message" required></textarea>
-  <div id="reply-info" style="display: none;">
-    回覆給: <span id="reply-to-name"></span>
-    <button type="button" id="cancel-reply">取消回覆</button>
-  </div>
-  <button type="submit">Send</button>
-</form>
+---
+import './CfCommentBox.css';
+---
 
-<pre id="preview"></pre>
+<link rel="stylesheet" href="./CfCommentBox.css" />
 
-<div id="comments"></div>
+<div class="cf-container">
+  <form id="comment-form">
+    <input type="text" id="name" placeholder="姓名 (選填)" />
+    <!-- <input type="email" id="email" placeholder="Email (選填)" /> -->
+    <textarea id="message" placeholder="留言內容..." required></textarea>
+    <div id="reply-info" style="display: none;">
+      回覆給: <span id="reply-to-name"></span>
+      <button type="button" id="cancel-reply">取消回覆</button>
+    </div>
+    <button type="submit">發送留言</button>
+  </form>
+
+  <div id="preview"></div>
+
+  <div id="comments"></div>
+</div>
 
 <script type="module">
   const API_URL = 'http://localhost:8787/api';
@@ -74,7 +82,6 @@
     data.forEach((comment) => {
       commentMap[comment.id] = comment;
     });
-
     function getAllReplies(commentId) {
       // find all comments that reply to the given commentId
       const directReplies = data.filter((c) => c.replyTo === commentId);
@@ -101,13 +108,13 @@
               : '';
 
             return `
-          <div class="reply" style="margin-left: 20px; border-left: 2px solid #eee; padding-left: 10px;">
-            <div>
-              <strong title="${reply.id}">${DOMPurify.sanitize(reply.name) || 'Anonymous'}</strong>
-              <span style="font-size: 0.8em; color: #666; margin-left: 8px;">${formatDate(reply.pubDate)}</span>
-              ${replyToName ? `<span style="font-size: 0.8em; color: #888;"> 回覆給 <span title="${reply.replyTo}">${DOMPurify.sanitize(replyToName)}</span></span>` : ''}
+          <div class="reply">
+            <div class="reply-header">
+              <span class="reply-name" title="${reply.id}">${DOMPurify.sanitize(reply.name) || 'Anonymous'}</span>
+              <span class="reply-time">${formatDate(reply.pubDate)}</span>
+              ${replyToName ? `<span class="reply-to">回覆給 <span title="${reply.replyTo}">${DOMPurify.sanitize(replyToName)}</span></span>` : ''}
             </div>
-            <div>${render(reply.msg)}</div>
+            <div class="reply-content">${render(reply.msg)}</div>
             <button class="reply-button" data-id="${reply.id}" data-name="${DOMPurify.sanitize(reply.name) || 'Anonymous'}">回覆</button>
           </div>
         `;
@@ -115,11 +122,11 @@
           .join('');
         return `
         <div class="comment" data-id="${rootComment.id}">
-          <div>
-            <strong title="${rootComment.id}">${DOMPurify.sanitize(rootComment.name) || 'Anonymous'}</strong>
-            <span style="font-size: 0.8em; color: #666; margin-left: 8px;">${formatDate(rootComment.pubDate)}</span>
+          <div class="comment-header">
+            <span class="comment-name" title="${rootComment.id}">${DOMPurify.sanitize(rootComment.name) || 'Anonymous'}</span>
+            <span class="comment-time">${formatDate(rootComment.pubDate)}</span>
           </div>
-          <div>${render(rootComment.msg)}</div>
+          <div class="comment-content">${render(rootComment.msg)}</div>
           <button class="reply-button" data-id="${rootComment.id}" data-name="${DOMPurify.sanitize(rootComment.name) || 'Anonymous'}">回覆</button>
           <div class="replies">
             ${repliesHtml}
