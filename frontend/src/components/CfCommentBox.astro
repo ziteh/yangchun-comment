@@ -17,7 +17,10 @@ import './CfCommentBox.css';
 
   let currentReplyTo = null;
   let previewText = '';
-  const mdRender = (md) => unsafeHTML(DOMPurify.sanitize(snarkdown(md)));
+
+  function renderMarkdown(md) {
+    return unsafeHTML(DOMPurify.sanitize(snarkdown(md)));
+  }
 
   function formatDate(timestamp) {
     const date = new Date(timestamp);
@@ -37,7 +40,7 @@ import './CfCommentBox.css';
     return `${y}/${m}/${d} ${h}:${minute} ${period}`;
   }
 
-  function setReplyTo(commentId, name) {
+  function setReplyTo(commentId) {
     currentReplyTo = commentId;
     renderApp();
   }
@@ -51,6 +54,7 @@ import './CfCommentBox.css';
     previewText = e.target.value;
     renderApp();
   }
+
   async function loadComments() {
     const res = await fetch(`${API_URL}/comments?post=${POST}`);
     return await res.json();
@@ -75,11 +79,8 @@ import './CfCommentBox.css';
               >`
             : ''}
         </div>
-        <div class="reply-content">${mdRender(reply.msg || '')}</div>
-        <button
-          class="reply-button"
-          @click=${() => setReplyTo(reply.id, reply.name)}
-        >
+        <div class="reply-content">${renderMarkdown(reply.msg || '')}</div>
+        <button class="reply-button" @click=${() => setReplyTo(reply.id)}>
           回覆
         </button>
       </div>
@@ -95,11 +96,10 @@ import './CfCommentBox.css';
           >
           <span class="comment-time">${formatDate(rootComment.pubDate)}</span>
         </div>
-        <div class="comment-content">${mdRender(rootComment.msg || '')}</div>
-        <button
-          class="reply-button"
-          @click=${() => setReplyTo(rootComment.id, rootComment.name)}
-        >
+        <div class="comment-content">
+          ${renderMarkdown(rootComment.msg || '')}
+        </div>
+        <button class="reply-button" @click=${() => setReplyTo(rootComment.id)}>
           回覆
         </button>
         <div class="replies">
@@ -138,6 +138,7 @@ import './CfCommentBox.css';
       return createCommentTemplate(rootComment, allReplies, commentMap);
     });
   }
+
   async function handleSubmit(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
@@ -158,6 +159,7 @@ import './CfCommentBox.css';
     currentReplyTo = null;
 
     // reload comments and re-render
+    comments.length = 0; // clear comments cache
     renderApp();
   }
 
@@ -182,7 +184,9 @@ import './CfCommentBox.css';
           : ''}
         <button type="submit">發送留言</button>
       </form>
-      <div id="preview">${previewText ? mdRender(previewText) : html``}</div>
+      <div id="preview">
+        ${previewText ? renderMarkdown(previewText) : html``}
+      </div>
     `;
   }
 
