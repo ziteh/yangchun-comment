@@ -22,14 +22,16 @@ app.post('/', Utils.validateQueryPost, async (c) => {
   const { name, email, msg, replyTo } = await c.req.json(); // TODO Validate and sanitize input
 
   if (!msg || typeof msg !== 'string') {
+    console.warn('Invalid message:', msg);
     return c.text('Missing fields', 400); // 400 Bad Request
   }
 
   if (
-    !replyTo ||
-    typeof replyTo !== 'string' ||
+    replyTo &&
+    typeof replyTo !== 'string' &&
     /^[0-9A-Z]{12}$/.test(replyTo) === false
   ) {
+    console.warn('Invalid reply ID:', replyTo);
     return c.text('Invalid reply ID', 400); // 400 Bad Request
   }
 
