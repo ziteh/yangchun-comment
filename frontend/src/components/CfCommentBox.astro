@@ -3,7 +3,8 @@
   <!-- <input type="email" id="email" placeholder="Email (optional)" /> -->
   <textarea id="message" required></textarea>
   <div id="reply-info" style="display: none;">
-    回覆給: <span id="reply-to-name"></span> <button type="button" id="cancel-reply">取消回覆</button>
+    回覆給: <span id="reply-to-name"></span>
+    <button type="button" id="cancel-reply">取消回覆</button>
   </div>
   <button type="submit">Send</button>
 </form>
@@ -25,8 +26,25 @@
   const cancelReplyBtn = document.getElementById('cancel-reply');
 
   let currentReplyTo = null;
-
   const render = (md) => DOMPurify.sanitize(snarkdown(md));
+
+  function formatDate(timestamp) {
+    const date = new Date(timestamp);
+
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+
+    let hour = date.getHours();
+    const minute = String(date.getMinutes()).padStart(2, '0');
+    const period = hour >= 12 ? 'PM' : 'AM';
+
+    hour = hour % 12;
+    if (hour === 0) hour = 12; // 0 => 12 AM or 12 PM
+    const h = String(hour).padStart(2, '0');
+
+    return `${y}/${m}/${d} ${h}:${minute} ${period}`;
+  }
 
   messageInput.addEventListener('input', () => {
     preview.innerHTML = render(messageInput.value);
@@ -54,7 +72,7 @@
 
     // 創建一個集合以追踪哪些評論有回覆
     const replyMap = {};
-    data.forEach(comment => {
+    data.forEach((comment) => {
       if (comment.replyTo) {
         replyMap[comment.replyTo] = replyMap[comment.replyTo] || [];
         replyMap[comment.replyTo].push(comment);
@@ -62,26 +80,29 @@
     });
 
     commentsEl.innerHTML = data
-      .filter(c => !c.replyTo) // 只顯示原始留言
-      .map(
-        (c) => {
-          // 獲取這個評論的所有回覆
-          const replies = replyMap[c.id] || [];
-
-          const repliesHtml = replies.map(reply => `
+      .filter((c) => !c.replyTo) // 只顯示原始留言
+      .map((c) => {
+        // 獲取這個評論的所有回覆
+        const replies = replyMap[c.id] || [];
+        const repliesHtml = replies
+          .map(
+            (reply) => `
             <div class="reply" style="margin-left: 20px; border-left: 2px solid #eee; padding-left: 10px;">
               <div>
                 <strong>${DOMPurify.sanitize(reply.name) || 'Anonymous'}</strong>
+                <span style="font-size: 0.8em; color: #666; margin-left: 8px;">${formatDate(reply.pubDate)}</span>
               </div>
               <div>${render(reply.msg)}</div>
               <button class="reply-button" data-id="${reply.id}" data-name="${DOMPurify.sanitize(reply.name) || 'Anonymous'}">回覆</button>
             </div>
-          `).join('');
-
-          return `
+          `,
+          )
+          .join('');
+        return `
             <div class="comment" data-id="${c.id}">
               <div>
                 <strong>${DOMPurify.sanitize(c.name) || 'Anonymous'}</strong>
+                <span style="font-size: 0.8em; color: #666; margin-left: 8px;">${formatDate(c.pubDate)}</span>
               </div>
               <div>${render(c.msg)}</div>
               <button class="reply-button" data-id="${c.id}" data-name="${DOMPurify.sanitize(c.name) || 'Anonymous'}">回覆</button>
@@ -90,12 +111,11 @@
               </div>
             </div>
           `;
-        }
-      )
+      })
       .join('');
 
     // 為所有回覆按鈕添加事件監聽器
-    document.querySelectorAll('.reply-button').forEach(button => {
+    document.querySelectorAll('.reply-button').forEach((button) => {
       button.addEventListener('click', () => {
         const commentId = button.getAttribute('data-id');
         const name = button.getAttribute('data-name');
@@ -113,7 +133,7 @@
         name: form.name.value,
         // email: form.email.value,
         msg: form.message.value,
-        replyTo: currentReplyTo
+        replyTo: currentReplyTo,
       }),
     });
     form.reset();
