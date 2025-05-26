@@ -93,7 +93,6 @@
     commentsEl.innerHTML = rootComments
       .map((rootComment) => {
         const allReplies = getAllReplies(rootComment.id);
-
         const repliesHtml = allReplies
           .map((reply) => {
             const replyToComment = commentMap[reply.replyTo];
@@ -104,9 +103,9 @@
             return `
           <div class="reply" style="margin-left: 20px; border-left: 2px solid #eee; padding-left: 10px;">
             <div>
-              <strong>${DOMPurify.sanitize(reply.name) || 'Anonymous'}</strong>
+              <strong title="${reply.id}">${DOMPurify.sanitize(reply.name) || 'Anonymous'}</strong>
               <span style="font-size: 0.8em; color: #666; margin-left: 8px;">${formatDate(reply.pubDate)}</span>
-              ${replyToName ? `<span style="font-size: 0.8em; color: #888;"> 回覆給 ${DOMPurify.sanitize(replyToName)}</span>` : ''}
+              ${replyToName ? `<span style="font-size: 0.8em; color: #888;"> 回覆給 <span title="${reply.replyTo}">${DOMPurify.sanitize(replyToName)}</span></span>` : ''}
             </div>
             <div>${render(reply.msg)}</div>
             <button class="reply-button" data-id="${reply.id}" data-name="${DOMPurify.sanitize(reply.name) || 'Anonymous'}">回覆</button>
@@ -114,11 +113,10 @@
         `;
           })
           .join('');
-
         return `
         <div class="comment" data-id="${rootComment.id}">
           <div>
-            <strong>${DOMPurify.sanitize(rootComment.name) || 'Anonymous'}</strong>
+            <strong title="${rootComment.id}">${DOMPurify.sanitize(rootComment.name) || 'Anonymous'}</strong>
             <span style="font-size: 0.8em; color: #666; margin-left: 8px;">${formatDate(rootComment.pubDate)}</span>
           </div>
           <div>${render(rootComment.msg)}</div>
