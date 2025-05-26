@@ -27,6 +27,8 @@ export default class Utils {
       return c.text('Invalid path', 400); // 400 Bad Request
     }
 
+    // TODO Regex validation for path
+
     return {
       path,
     };

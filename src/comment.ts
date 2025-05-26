@@ -19,7 +19,7 @@ app.get('/', Utils.validateQueryPath, async (c) => {
 
 app.post('/', Utils.validateQueryPath, async (c) => {
   const { path } = c.req.valid('query');
-  const { name, email, msg } = await c.req.json();
+  const { name, email, msg } = await c.req.json(); // TODO Validate and sanitize input
 
   if (!msg) {
     return c.text('Missing fields', 400); // 400 Bad Request

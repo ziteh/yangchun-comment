@@ -1,22 +1,22 @@
 export type Comment = {
-  /** Unique ID for the comment */
+  /** Unique identifier for the comment */
   id: string;
 
-  /** Author name */
+  /** Name of the author */
   name?: string;
 
-  /** Author email */
+  /** Email address of the author */
   email?: string;
 
-  /** Content */
+  /** Content of the comment */
   msg: string;
 
   /** Publish timestamp */
   pubDate: number;
 
-  /** ID of the comment this is a reply to */
+  /** ID of the comment being replied to */
   replyTo?: string;
 
-  /** Is this comment by an admin? */
+  /** Indicates whether the comment was made by an admin */
   isAdmin?: boolean;
 };
