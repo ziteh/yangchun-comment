@@ -2,39 +2,22 @@
 import './CfCommentBox.css';
 ---
 
-<link rel="stylesheet" href="./CfCommentBox.css" />
-
-<div class="cf-container">
-  <form id="comment-form">
-    <input type="text" id="name" placeholder="姓名 (選填)" />
-    <!-- <input type="email" id="email" placeholder="Email (選填)" /> -->
-    <textarea id="message" placeholder="留言內容..." required></textarea>
-    <div id="reply-info" style="display: none;">
-      回覆給: <span id="reply-to-name"></span>
-      <button type="button" id="cancel-reply">取消回覆</button>
-    </div>
-    <button type="submit">發送留言</button>
-  </form>
-
-  <div id="preview"></div>
-
-  <div id="comments"></div>
-</div>
+<div id="cf-app"></div>
 
 <script type="module">
+  import {
+    html,
+    render,
+  } from 'https://cdn.jsdelivr.net/npm/lit-html@2.8.0/lit-html.min.js';
+  import { until } from 'https://cdn.jsdelivr.net/npm/lit-html@2.8.0/directives/until.js';
+  import { unsafeHTML } from 'https://cdn.jsdelivr.net/npm/lit-html@2.8.0/directives/unsafe-html.js';
+
   const API_URL = 'http://localhost:8787/api';
   const POST = '/blog/my-post';
 
-  const form = document.getElementById('comment-form');
-  const preview = document.getElementById('preview');
-  const messageInput = document.getElementById('message');
-  const commentsEl = document.getElementById('comments');
-  const replyInfo = document.getElementById('reply-info');
-  const replyToName = document.getElementById('reply-to-name');
-  const cancelReplyBtn = document.getElementById('cancel-reply');
-
   let currentReplyTo = null;
-  const render = (md) => DOMPurify.sanitize(snarkdown(md));
+  let previewText = '';
+  const mdRender = (md) => unsafeHTML(DOMPurify.sanitize(snarkdown(md)));
 
   function formatDate(timestamp) {
     const date = new Date(timestamp);
@@ -54,27 +37,79 @@ import './CfCommentBox.css';
     return `${y}/${m}/${d} ${h}:${minute} ${period}`;
   }
 
-  messageInput.addEventListener('input', () => {
-    preview.innerHTML = render(messageInput.value);
-  });
-
   function setReplyTo(commentId, name) {
     currentReplyTo = commentId;
-    replyToName.textContent = name || 'Anonymous';
-    replyInfo.style.display = 'block';
-    messageInput.focus();
+    renderApp();
   }
 
   function cancelReply() {
     currentReplyTo = null;
-    replyInfo.style.display = 'none';
+    renderApp();
   }
 
-  cancelReplyBtn.addEventListener('click', cancelReply);
+  function handleInputChange(e) {
+    previewText = e.target.value;
+    renderApp();
+  }
   async function loadComments() {
     const res = await fetch(`${API_URL}/comments?post=${POST}`);
-    const data = await res.json();
+    return await res.json();
+  }
 
+  function createReplyTemplate(reply, commentMap) {
+    const replyToComment = commentMap[reply.replyTo];
+    const replyToName = replyToComment
+      ? replyToComment.name || 'Anonymous'
+      : '';
+    return html`
+      <div class="reply">
+        <div class="reply-header">
+          <span class="reply-name" title="${reply.id}"
+            >${reply.name || 'Anonymous'}</span
+          >
+          <span class="reply-time">${formatDate(reply.pubDate)}</span>
+          ${replyToName
+            ? html`<span class="reply-to"
+                >回覆給
+                <span title="${reply.replyTo}">${replyToName}</span></span
+              >`
+            : ''}
+        </div>
+        <div class="reply-content">${mdRender(reply.msg || '')}</div>
+        <button
+          class="reply-button"
+          @click=${() => setReplyTo(reply.id, reply.name)}
+        >
+          回覆
+        </button>
+      </div>
+    `;
+  }
+
+  function createCommentTemplate(rootComment, allReplies, commentMap) {
+    return html`
+      <div class="comment" data-id="${rootComment.id}">
+        <div class="comment-header">
+          <span class="comment-name" title="${rootComment.id}"
+            >${rootComment.name || 'Anonymous'}</span
+          >
+          <span class="comment-time">${formatDate(rootComment.pubDate)}</span>
+        </div>
+        <div class="comment-content">${mdRender(rootComment.msg || '')}</div>
+        <button
+          class="reply-button"
+          @click=${() => setReplyTo(rootComment.id, rootComment.name)}
+        >
+          回覆
+        </button>
+        <div class="replies">
+          ${allReplies.map((reply) => createReplyTemplate(reply, commentMap))}
+        </div>
+      </div>
+    `;
+  }
+
+  function processComments(data) {
     // no replyTo means it's a root comment
     const rootComments = data.filter((c) => !c.replyTo);
 
@@ -82,6 +117,7 @@ import './CfCommentBox.css';
     data.forEach((comment) => {
       commentMap[comment.id] = comment;
     });
+
     function getAllReplies(commentId) {
       // find all comments that reply to the given commentId
       const directReplies = data.filter((c) => c.replyTo === commentId);
@@ -97,72 +133,86 @@ import './CfCommentBox.css';
       return allReplies;
     }
 
-    commentsEl.innerHTML = rootComments
-      .map((rootComment) => {
-        const allReplies = getAllReplies(rootComment.id);
-        const repliesHtml = allReplies
-          .map((reply) => {
-            const replyToComment = commentMap[reply.replyTo];
-            const replyToName = replyToComment
-              ? replyToComment.name || 'Anonymous'
-              : '';
-
-            return `
-          <div class="reply">
-            <div class="reply-header">
-              <span class="reply-name" title="${reply.id}">${DOMPurify.sanitize(reply.name) || 'Anonymous'}</span>
-              <span class="reply-time">${formatDate(reply.pubDate)}</span>
-              ${replyToName ? `<span class="reply-to">回覆給 <span title="${reply.replyTo}">${DOMPurify.sanitize(replyToName)}</span></span>` : ''}
-            </div>
-            <div class="reply-content">${render(reply.msg)}</div>
-            <button class="reply-button" data-id="${reply.id}" data-name="${DOMPurify.sanitize(reply.name) || 'Anonymous'}">回覆</button>
-          </div>
-        `;
-          })
-          .join('');
-        return `
-        <div class="comment" data-id="${rootComment.id}">
-          <div class="comment-header">
-            <span class="comment-name" title="${rootComment.id}">${DOMPurify.sanitize(rootComment.name) || 'Anonymous'}</span>
-            <span class="comment-time">${formatDate(rootComment.pubDate)}</span>
-          </div>
-          <div class="comment-content">${render(rootComment.msg)}</div>
-          <button class="reply-button" data-id="${rootComment.id}" data-name="${DOMPurify.sanitize(rootComment.name) || 'Anonymous'}">回覆</button>
-          <div class="replies">
-            ${repliesHtml}
-          </div>
-        </div>
-      `;
-      })
-      .join('');
-
-    // reply button
-    document.querySelectorAll('.reply-button').forEach((button) => {
-      button.addEventListener('click', () => {
-        const commentId = button.getAttribute('data-id');
-        const name = button.getAttribute('data-name');
-        setReplyTo(commentId, name);
-      });
+    return rootComments.map((rootComment) => {
+      const allReplies = getAllReplies(rootComment.id);
+      return createCommentTemplate(rootComment, allReplies, commentMap);
     });
   }
-
-  form.addEventListener('submit', async (e) => {
+  async function handleSubmit(e) {
     e.preventDefault();
+    const formData = new FormData(e.target);
+
     await fetch(`${API_URL}/comments?post=${POST}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        name: form.name.value,
-        // email: form.email.value,
-        msg: form.message.value,
+        name: formData.get('name'),
+        msg: formData.get('message'),
         replyTo: currentReplyTo,
       }),
     });
-    form.reset();
-    preview.textContent = '';
-    cancelReply();
-    loadComments();
-  });
 
-  loadComments();
+    // reset the form and clear preview
+    e.target.reset();
+    previewText = '';
+    currentReplyTo = null;
+
+    // reload comments and re-render
+    renderApp();
+  }
+
+  function createFormTemplate() {
+    return html`
+      <form id="comment-form" @submit=${handleSubmit}>
+        <input type="text" name="name" placeholder="姓名 (選填)" />
+        <textarea
+          name="message"
+          placeholder="留言內容..."
+          required
+          @input=${handleInputChange}
+        ></textarea>
+        ${currentReplyTo
+          ? html`<div id="reply-info">
+              回覆給:
+              <span id="reply-to-name"
+                >${commentMap[currentReplyTo]?.name || 'Anonymous'}</span
+              >
+              <button type="button" @click=${cancelReply}>取消回覆</button>
+            </div>`
+          : ''}
+        <button type="submit">發送留言</button>
+      </form>
+      <div id="preview">${previewText ? mdRender(previewText) : html``}</div>
+    `;
+  }
+
+  let commentMap = {};
+  let comments = [];
+
+  async function renderApp() {
+    // loading comments
+    if (comments.length === 0) {
+      comments = await loadComments();
+      comments.forEach((comment) => {
+        commentMap[comment.id] = comment;
+      });
+    }
+
+    const appTemplate = html`
+      <div class="cf-container">
+        ${createFormTemplate()}
+        <div id="comments">
+          ${until(
+            Promise.resolve(comments).then((data) => processComments(data)),
+            html`<div>載入中...</div>`,
+          )}
+        </div>
+      </div>
+    `;
+
+    render(appTemplate, document.getElementById('cf-app'));
+  }
+
+  // Initial render
+  renderApp();
 </script>
