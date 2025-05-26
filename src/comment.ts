@@ -8,17 +8,17 @@ const app = new Hono<{
   };
 }>();
 
-app.get('/', Utils.validateQueryPath, async (c) => {
-  const { path } = c.req.valid('query');
-  const key = Utils.getCommentKey(path);
+app.get('/', Utils.validateQueryPost, async (c) => {
+  const { post } = c.req.valid('query');
+  const key = Utils.getCommentKey(post);
   const raw = await c.env.COMMENTS.get(key);
   const comments = raw ? JSON.parse(raw) : [];
 
   return c.json(comments, 200); // 200 OK
 });
 
-app.post('/', Utils.validateQueryPath, async (c) => {
-  const { path } = c.req.valid('query');
+app.post('/', Utils.validateQueryPost, async (c) => {
+  const { post } = c.req.valid('query');
   const { name, email, msg } = await c.req.json(); // TODO Validate and sanitize input
 
   if (!msg) {
@@ -36,7 +36,7 @@ app.post('/', Utils.validateQueryPath, async (c) => {
   };
 
   // Save to KV
-  const key = Utils.getCommentKey(path);
+  const key = Utils.getCommentKey(post);
   const raw = await c.env.COMMENTS.get(key);
   const comments = raw ? JSON.parse(raw) : [];
   comments.push(comment);

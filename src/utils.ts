@@ -17,20 +17,20 @@ export default class Utils {
     return customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', 12)();
   }
 
-  static getCommentKey(path: string) {
-    return `comments:${path}`;
+  static getCommentKey(post: string) {
+    return `comments:${post}`;
   }
 
-  static validateQueryPath = validator('query', (value, c) => {
-    const path = value['path'];
-    if (!path || typeof path !== 'string') {
-      return c.text('Invalid path', 400); // 400 Bad Request
+  static validateQueryPost = validator('query', (value, c) => {
+    const post = value['post'];
+    if (!post || typeof post !== 'string') {
+      return c.text('Invalid post', 400); // 400 Bad Request
     }
 
-    // TODO Regex validation for path
+    // TODO Regex validation for post
 
     return {
-      path,
+      post,
     };
   });
 }

@@ -1,5 +1,5 @@
 ---
-const path = "/blog/my-post"; // 可用前端參數動態決定
+const path = '/blog/my-post'; // 可用前端參數動態決定
 ---
 
 <div id="comments"></div>
@@ -14,40 +14,40 @@ const path = "/blog/my-post"; // 可用前端參數動態決定
 <pre id="preview"></pre>
 
 <script type="module">
-  const apiUrl = "http://localhost:8787/api/comments";
+  const apiUrl = 'http://localhost:8787/api/comments';
 
-  const form = document.getElementById("comment-form");
-  const preview = document.getElementById("preview");
-  const messageInput = document.getElementById("message");
-  const commentsEl = document.getElementById("comments");
-  const path = "/blog/my-post";
+  const form = document.getElementById('comment-form');
+  const preview = document.getElementById('preview');
+  const messageInput = document.getElementById('message');
+  const commentsEl = document.getElementById('comments');
+  const path = '/blog/my-post';
 
   const render = (s) => DOMPurify.sanitize(snarkdown(s));
 
-  messageInput.addEventListener("input", () => {
+  messageInput.addEventListener('input', () => {
     preview.innerHTML = render(messageInput.value);
   });
 
   async function loadComments() {
-    const res = await fetch(`${apiUrl}?path=${path}`);
+    const res = await fetch(`${apiUrl}?post=${path}`);
     const data = await res.json();
     commentsEl.innerHTML = data
       .map(
         (c) => `
       <div>
-        <strong>${DOMPurify.sanitize(c.name) || "Anonymous"}</strong>
+        <strong>${DOMPurify.sanitize(c.name) || 'Anonymous'}</strong>
         <div>${render(c.msg)}</div>
       </div>
-    `
+    `,
       )
-      .join("");
+      .join('');
   }
 
-  form.addEventListener("submit", async (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    await fetch(`${apiUrl}?path=${path}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+    await fetch(`${apiUrl}?post=${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name: form.name.value,
         email: form.email.value,
@@ -55,7 +55,7 @@ const path = "/blog/my-post"; // 可用前端參數動態決定
       }),
     });
     form.reset();
-    preview.textContent = "";
+    preview.textContent = '';
     loadComments();
   });
 

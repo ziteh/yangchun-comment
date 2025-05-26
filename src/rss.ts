@@ -8,20 +8,20 @@ const app = new Hono<{
   };
 }>();
 
-app.get('/thread', Utils.validateQueryPath, async (c) => {
-  const { path } = c.req.valid('query');
-  const key = Utils.getCommentKey(path);
+app.get('/thread', Utils.validateQueryPost, async (c) => {
+  const { post } = c.req.valid('query');
+  const key = Utils.getCommentKey(post);
   const raw = await c.env.COMMENTS.get(key);
   const comments: Comment[] = raw ? JSON.parse(raw) : [];
 
   const siteUrl = 'https://example.com';
-  const pageTitle = `Comments: ${path}`;
+  const pageTitle = `Comments: ${post}`;
 
   let rss = `<?xml version="1.0" encoding="UTF-8" ?>
 <rss version="2.0">
 <channel>
   <title>${pageTitle}</title>
-  <link>${siteUrl}${path}</link>
+  <link>${siteUrl}${post}</link>
   <description>Latest comments</description>
   <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
   `;
@@ -36,7 +36,7 @@ app.get('/thread', Utils.validateQueryPath, async (c) => {
     <title>${comment.name || 'Anonymous'}'s Comment</title>
     <description><![CDATA[${comment.msg}]]></description>
     <pubDate>${new Date(comment.pubDate).toUTCString()}</pubDate>
-    <guid>${siteUrl}${path}#comment-${comment.id}</guid>
+    <guid>${siteUrl}${post}#comment-${comment.id}</guid>
   </item>`;
     });
 
