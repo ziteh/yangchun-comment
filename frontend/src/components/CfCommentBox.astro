@@ -2,6 +2,9 @@
   <input type="text" id="name" placeholder="Name (optional)" />
   <!-- <input type="email" id="email" placeholder="Email (optional)" /> -->
   <textarea id="message" required></textarea>
+  <div id="reply-info" style="display: none;">
+    回覆給: <span id="reply-to-name"></span> <button type="button" id="cancel-reply">取消回覆</button>
+  </div>
   <button type="submit">Send</button>
 </form>
 
@@ -17,6 +20,11 @@
   const preview = document.getElementById('preview');
   const messageInput = document.getElementById('message');
   const commentsEl = document.getElementById('comments');
+  const replyInfo = document.getElementById('reply-info');
+  const replyToName = document.getElementById('reply-to-name');
+  const cancelReplyBtn = document.getElementById('cancel-reply');
+
+  let currentReplyTo = null;
 
   const render = (md) => DOMPurify.sanitize(snarkdown(md));
 
@@ -24,19 +32,76 @@
     preview.innerHTML = render(messageInput.value);
   });
 
+  // 設置回覆功能
+  function setReplyTo(commentId, name) {
+    currentReplyTo = commentId;
+    replyToName.textContent = name || 'Anonymous';
+    replyInfo.style.display = 'block';
+    messageInput.focus();
+  }
+
+  // 取消回覆
+  function cancelReply() {
+    currentReplyTo = null;
+    replyInfo.style.display = 'none';
+  }
+
+  cancelReplyBtn.addEventListener('click', cancelReply);
+
   async function loadComments() {
     const res = await fetch(`${API_URL}/comments?post=${POST}`);
     const data = await res.json();
+
+    // 創建一個集合以追踪哪些評論有回覆
+    const replyMap = {};
+    data.forEach(comment => {
+      if (comment.replyTo) {
+        replyMap[comment.replyTo] = replyMap[comment.replyTo] || [];
+        replyMap[comment.replyTo].push(comment);
+      }
+    });
+
     commentsEl.innerHTML = data
+      .filter(c => !c.replyTo) // 只顯示原始留言
       .map(
-        (c) => `
-      <div>
-        <div>${DOMPurify.sanitize(c.name) || 'Anonymous'}</div>
-        <div>${render(c.msg)}</div>
-      </div>
-    `,
+        (c) => {
+          // 獲取這個評論的所有回覆
+          const replies = replyMap[c.id] || [];
+
+          const repliesHtml = replies.map(reply => `
+            <div class="reply" style="margin-left: 20px; border-left: 2px solid #eee; padding-left: 10px;">
+              <div>
+                <strong>${DOMPurify.sanitize(reply.name) || 'Anonymous'}</strong>
+              </div>
+              <div>${render(reply.msg)}</div>
+              <button class="reply-button" data-id="${reply.id}" data-name="${DOMPurify.sanitize(reply.name) || 'Anonymous'}">回覆</button>
+            </div>
+          `).join('');
+
+          return `
+            <div class="comment" data-id="${c.id}">
+              <div>
+                <strong>${DOMPurify.sanitize(c.name) || 'Anonymous'}</strong>
+              </div>
+              <div>${render(c.msg)}</div>
+              <button class="reply-button" data-id="${c.id}" data-name="${DOMPurify.sanitize(c.name) || 'Anonymous'}">回覆</button>
+              <div class="replies">
+                ${repliesHtml}
+              </div>
+            </div>
+          `;
+        }
       )
       .join('');
+
+    // 為所有回覆按鈕添加事件監聽器
+    document.querySelectorAll('.reply-button').forEach(button => {
+      button.addEventListener('click', () => {
+        const commentId = button.getAttribute('data-id');
+        const name = button.getAttribute('data-name');
+        setReplyTo(commentId, name);
+      });
+    });
   }
 
   form.addEventListener('submit', async (e) => {
@@ -48,10 +113,12 @@
         name: form.name.value,
         // email: form.email.value,
         msg: form.message.value,
+        replyTo: currentReplyTo
       }),
     });
     form.reset();
     preview.textContent = '';
+    cancelReply();
     loadComments();
   });
 

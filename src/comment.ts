@@ -19,10 +19,18 @@ app.get('/', Utils.validateQueryPost, async (c) => {
 
 app.post('/', Utils.validateQueryPost, async (c) => {
   const { post } = c.req.valid('query');
-  const { name, email, msg } = await c.req.json(); // TODO Validate and sanitize input
+  const { name, email, msg, replyTo } = await c.req.json(); // TODO Validate and sanitize input
 
-  if (!msg) {
+  if (!msg || typeof msg !== 'string') {
     return c.text('Missing fields', 400); // 400 Bad Request
+  }
+
+  if (
+    !replyTo ||
+    typeof replyTo !== 'string' ||
+    /^[0-9A-Z]{12}$/.test(replyTo) === false
+  ) {
+    return c.text('Invalid reply ID', 400); // 400 Bad Request
   }
 
   const id = Utils.genId();
@@ -33,6 +41,7 @@ app.post('/', Utils.validateQueryPost, async (c) => {
     email: Utils.sanitize(email),
     msg: Utils.sanitize(msg),
     pubDate: Date.now(),
+    replyTo: replyTo,
   };
 
   // Save to KV
