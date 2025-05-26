@@ -107,15 +107,9 @@ import './CfCommentBox.css';
       </div>
     `;
   }
-
   function processComments(data) {
     // no replyTo means it's a root comment
     const rootComments = data.filter((c) => !c.replyTo);
-
-    const commentMap = {};
-    data.forEach((comment) => {
-      commentMap[comment.id] = comment;
-    });
 
     function getAllReplies(commentId) {
       // find all comments that reply to the given commentId
