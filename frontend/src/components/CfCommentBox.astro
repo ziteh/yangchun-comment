@@ -5,12 +5,11 @@ import './CfCommentBox.css';
 <div id="cf-app"></div>
 
 <script type="module">
-  import {
-    html,
-    render,
-  } from 'https://cdn.jsdelivr.net/npm/lit-html@2.8.0/lit-html.min.js';
-  import { until } from 'https://cdn.jsdelivr.net/npm/lit-html@2.8.0/directives/until.js';
-  import { unsafeHTML } from 'https://cdn.jsdelivr.net/npm/lit-html@2.8.0/directives/unsafe-html.js';
+  import DOMPurify from 'dompurify';
+  import snarkdown from 'snarkdown';
+  import { html, render } from 'lit-html';
+  import { until } from 'lit-html/directives/until.js';
+  import { unsafeHTML } from 'lit-html/directives/unsafe-html.js';
 
   const API_URL = 'http://localhost:8787/api';
   const POST = '/blog/my-post';

@@ -1,5 +1,5 @@
 ---
-import CfCommentBox from "../components/CfCommentBox.astro";
+import CfCommentBox from '../components/CfCommentBox.astro';
 ---
 
 <html lang="en">
@@ -10,16 +10,17 @@ import CfCommentBox from "../components/CfCommentBox.astro";
     <meta name="generator" content={Astro.generator} />
     <title>Astro</title>
 
-    <script
-      src="https://cdn.jsdelivr.net/npm/snarkdown@2.0.0/dist/snarkdown.umd.js"
-      integrity="sha256-QqCCWG2y306e9DZ9VbcdrkacMAz1nubFmYCkac3I3AM="
-      crossorigin="anonymous"
-    ></script>
-    <script
-      src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js"
-      integrity="sha256-ieH6dkfLSVNw06mXrOQ4f10V2fTFrxI1LFPapACVYoc="
-      crossorigin="anonymous"
-    ></script>
+    <script type="importmap">
+      {
+        "imports": {
+          "dompurify": "https://cdn.jsdelivr.net/npm/dompurify@3.2.6/+esm",
+          "snarkdown": "https://cdn.jsdelivr.net/npm/snarkdown@2.0.0/+esm",
+          "lit-html": "https://cdn.jsdelivr.net/npm/lit-html@3.3.0/lit-html.min.js",
+          "lit-html/directives/until.js": "https://cdn.jsdelivr.net/npm/lit-html@3.3.0/directives/until.js",
+          "lit-html/directives/unsafe-html.js": "https://cdn.jsdelivr.net/npm/lit-html@3.3.0/directives/unsafe-html.js"
+        }
+      }
+    </script>
   </head>
   <body>
     <h1>Astro</h1>
