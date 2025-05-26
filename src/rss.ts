@@ -1,6 +1,6 @@
-import { Hono } from "hono";
-import Utils from "./utils";
-import type { Comment } from "./model";
+import { Hono } from 'hono';
+import Utils from './utils';
+import type { Comment } from './model';
 
 const app = new Hono<{
   Bindings: {
@@ -8,13 +8,13 @@ const app = new Hono<{
   };
 }>();
 
-app.get("/thread", Utils.validateQueryPath, async (c) => {
-  const { path } = c.req.valid("query");
+app.get('/thread', Utils.validateQueryPath, async (c) => {
+  const { path } = c.req.valid('query');
   const key = Utils.getCommentKey(path);
   const raw = await c.env.COMMENTS.get(key);
   const comments: Comment[] = raw ? JSON.parse(raw) : [];
 
-  const siteUrl = "https://example.com";
+  const siteUrl = 'https://example.com';
   const pageTitle = `Comments: ${path}`;
 
   let rss = `<?xml version="1.0" encoding="UTF-8" ?>
@@ -33,7 +33,7 @@ app.get("/thread", Utils.validateQueryPath, async (c) => {
     .forEach((comment) => {
       rss += `
   <item>
-    <title>${comment.name || "Anonymous"}'s Comment</title>
+    <title>${comment.name || 'Anonymous'}'s Comment</title>
     <description><![CDATA[${comment.msg}]]></description>
     <pubDate>${new Date(comment.pubDate).toUTCString()}</pubDate>
     <guid>${siteUrl}${path}#comment-${comment.id}</guid>
@@ -45,8 +45,8 @@ app.get("/thread", Utils.validateQueryPath, async (c) => {
 </rss>`;
 
   return c.body(rss, 200, {
-    "Content-Type": "application/xml; charset=utf-8",
-    "X-Content-Type-Options": "nosniff",
+    'Content-Type': 'application/xml; charset=utf-8',
+    'X-Content-Type-Options': 'nosniff',
   });
 });
 

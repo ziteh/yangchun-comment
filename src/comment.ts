@@ -1,6 +1,6 @@
-import { Hono } from "hono";
-import Utils from "./utils";
-import type { Comment } from "./model";
+import { Hono } from 'hono';
+import Utils from './utils';
+import type { Comment } from './model';
 
 const app = new Hono<{
   Bindings: {
@@ -8,8 +8,8 @@ const app = new Hono<{
   };
 }>();
 
-app.get("/", Utils.validateQueryPath, async (c) => {
-  const { path } = c.req.valid("query");
+app.get('/', Utils.validateQueryPath, async (c) => {
+  const { path } = c.req.valid('query');
   const key = Utils.getCommentKey(path);
   const raw = await c.env.COMMENTS.get(key);
   const comments = raw ? JSON.parse(raw) : [];
@@ -17,12 +17,12 @@ app.get("/", Utils.validateQueryPath, async (c) => {
   return c.json(comments, 200); // 200 OK
 });
 
-app.post("/", Utils.validateQueryPath, async (c) => {
-  const { path } = c.req.valid("query");
+app.post('/', Utils.validateQueryPath, async (c) => {
+  const { path } = c.req.valid('query');
   const { name, email, msg } = await c.req.json();
 
   if (!msg) {
-    return c.text("Missing fields", 400); // 400 Bad Request
+    return c.text('Missing fields', 400); // 400 Bad Request
   }
 
   const id = Utils.genId();
