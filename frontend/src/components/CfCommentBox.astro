@@ -13,14 +13,13 @@ import './CfCommentBox.css';
 
   const API_URL = 'http://localhost:8787/api';
   const POST = '/blog/my-post';
+  const ANONYMOUS = 'Anonymous';
 
   let currentReplyTo = null;
   let previewText = '';
-
   function renderMarkdown(md) {
-    return unsafeHTML(DOMPurify.sanitize(snarkdown(md)));
+    return unsafeHTML(DOMPurify.sanitize(snarkdown(md || '')));
   }
-
   function formatDate(timestamp) {
     const date = new Date(timestamp);
 
@@ -37,6 +36,10 @@ import './CfCommentBox.css';
     const h = String(hour).padStart(2, '0');
 
     return `${y}/${m}/${d} ${h}:${minute} ${period}`;
+  }
+
+  function getDisplayName(comment) {
+    return comment?.name || ANONYMOUS;
   }
 
   function setReplyTo(commentId) {
@@ -59,45 +62,58 @@ import './CfCommentBox.css';
     return await res.json();
   }
 
-  function createReplyTemplate(reply, commentMap) {
-    const replyToComment = commentMap[reply.replyTo];
-    const replyToName = replyToComment
-      ? replyToComment.name || 'Anonymous'
-      : '';
+  function createCommentItemTemplate(
+    comment,
+    isRoot = false,
+    replyToName = null,
+  ) {
+    const className = isRoot ? 'comment' : 'reply';
+    const headerClass = isRoot ? 'comment-header' : 'reply-header';
+    const nameClass = isRoot ? 'comment-name' : 'reply-name';
+    const timeClass = isRoot ? 'comment-time' : 'reply-time';
+    const contentClass = isRoot ? 'comment-content' : 'reply-content';
+
     return html`
-      <div class="reply">
-        <div class="reply-header">
-          <span class="reply-name" title="${reply.id}"
-            >${reply.name || 'Anonymous'}</span
+      <div class="${className}" ${isRoot ? `data-id="${comment.id}"` : ''}>
+        <div class="${headerClass}">
+          <span class="${nameClass}" title="${comment.id}"
+            >${getDisplayName(comment)}</span
           >
-          <span class="reply-time">${formatDate(reply.pubDate)}</span>
+          <span class="${timeClass}">${formatDate(comment.pubDate)}</span>
           ${replyToName
             ? html`<span class="reply-to"
                 >回覆給
-                <span title="${reply.replyTo}">${replyToName}</span></span
+                <span title="${comment.replyTo}">${replyToName}</span></span
               >`
             : ''}
         </div>
-        <div class="reply-content">${renderMarkdown(reply.msg || '')}</div>
-        <button class="reply-button" @click=${() => setReplyTo(reply.id)}>
+        <div class="${contentClass}">${renderMarkdown(comment.msg)}</div>
+        <button class="reply-button" @click=${() => setReplyTo(comment.id)}>
           回覆
         </button>
+        ${isRoot ? html`<div class="replies"></div>` : ''}
       </div>
     `;
   }
 
+  function createReplyTemplate(reply, commentMap) {
+    const replyToComment = commentMap[reply.replyTo];
+    const replyToName = replyToComment ? getDisplayName(replyToComment) : '';
+    return createCommentItemTemplate(reply, false, replyToName);
+  }
+
   function createCommentTemplate(rootComment, allReplies, commentMap) {
+    const template = createCommentItemTemplate(rootComment, true);
+
     return html`
       <div class="comment" data-id="${rootComment.id}">
         <div class="comment-header">
           <span class="comment-name" title="${rootComment.id}"
-            >${rootComment.name || 'Anonymous'}</span
+            >${getDisplayName(rootComment)}</span
           >
           <span class="comment-time">${formatDate(rootComment.pubDate)}</span>
         </div>
-        <div class="comment-content">
-          ${renderMarkdown(rootComment.msg || '')}
-        </div>
+        <div class="comment-content">${renderMarkdown(rootComment.msg)}</div>
         <button class="reply-button" @click=${() => setReplyTo(rootComment.id)}>
           回覆
         </button>
@@ -111,17 +127,27 @@ import './CfCommentBox.css';
     // no replyTo means it's a root comment
     const rootComments = data.filter((c) => !c.replyTo);
 
-    function getAllReplies(commentId) {
-      // find all comments that reply to the given commentId
-      const directReplies = data.filter((c) => c.replyTo === commentId);
+    const replyMap = {};
+    data.forEach((comment) => {
+      if (comment.replyTo) {
+        if (!replyMap[comment.replyTo]) {
+          replyMap[comment.replyTo] = [];
+        }
+        replyMap[comment.replyTo].push(comment);
+      }
+    });
 
-      // find all replies for each direct reply
-      const allReplies = [...directReplies];
-      directReplies.forEach((reply) => {
-        // find replies to the reply
-        const subReplies = getAllReplies(reply.id);
-        allReplies.push(...subReplies);
-      });
+    function getAllReplies(commentId) {
+      const allReplies = [];
+      const queue = [...(replyMap[commentId] || [])];
+
+      while (queue.length > 0) {
+        const reply = queue.shift();
+        allReplies.push(reply);
+
+        const childReplies = replyMap[reply.id] || [];
+        queue.push(...childReplies);
+      }
 
       return allReplies;
     }
@@ -170,11 +196,12 @@ import './CfCommentBox.css';
           ? html`<div id="reply-info">
               回覆給:
               <span id="reply-to-name"
-                >${commentMap[currentReplyTo]?.name || 'Anonymous'}</span
+                >${getDisplayName(commentMap[currentReplyTo])}</span
               >
               <button type="button" @click=${cancelReply}>取消回覆</button>
             </div>`
           : ''}
+
         <button type="submit">發送留言</button>
       </form>
       <div id="preview">
@@ -185,11 +212,11 @@ import './CfCommentBox.css';
 
   let commentMap = {};
   let comments = [];
-
   async function renderApp() {
     // loading comments
     if (comments.length === 0) {
       comments = await loadComments();
+      commentMap = {};
       comments.forEach((comment) => {
         commentMap[comment.id] = comment;
       });
