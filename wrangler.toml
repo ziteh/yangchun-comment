@@ -13,7 +13,7 @@ preview_id = "<KV_COMMENTS_PREVIEW_ID>"
 name = "RATE_LIMITER_POST"
 type = "ratelimit"
 namespace_id = "1000"
-simple = { limit = 2, period = 60 } # 2 requests per minute
+simple = { limit = 2, period = 10 } # 2 requests per minute
 
 [[unsafe.bindings]]
 name = "RATE_LIMITER_GET"
