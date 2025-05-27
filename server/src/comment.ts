@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { validator } from 'hono/validator';
 import Utils from './utils';
 import type { Comment } from '@cf-comment/shared';
 
@@ -18,47 +19,53 @@ app.get('/', Utils.validateQueryPost, async (c) => {
   return c.json(comments, 200); // 200 OK
 });
 
-app.post('/', Utils.validateQueryPost, async (c) => {
-  const { post } = c.req.valid('query');
-  const { name, email, msg, replyTo } = await c.req.json(); // TODO Validate and sanitize input
+app.post(
+  '/',
+  Utils.validateQueryPost,
+  validator('json', (value, c) => {
+    const { name, email, msg, replyTo } = value;
 
-  if (!msg || typeof msg !== 'string') {
-    console.warn('Invalid message:', msg);
-    return c.text('Missing fields', 400); // 400 Bad Request
-  }
+    if (!msg || typeof msg !== 'string') {
+      return c.text('Missing or invalid msg field', 400);
+    }
 
-  if (
-    replyTo &&
-    typeof replyTo !== 'string' &&
-    /^[0-9A-Z]{12}$/.test(replyTo) === false
-  ) {
-    console.warn('Invalid reply ID:', replyTo);
-    return c.text('Invalid reply ID', 400); // 400 Bad Request
-  }
+    if (
+      replyTo &&
+      (typeof replyTo !== 'string' || !/^[0-9A-Z]{12}$/.test(replyTo))
+    ) {
+      return c.text('Invalid reply ID', 400);
+    }
 
-  const id = Utils.genId();
-  const timestamp = Date.now();
+    return { name, email, msg, replyTo };
+  }),
+  async (c) => {
+    const { post } = c.req.valid('query');
+    const { name, email, msg, replyTo } = c.req.valid('json');
 
-  const comment: Comment = {
-    id,
-    name: Utils.sanitize(name),
-    email: Utils.sanitize(email),
-    msg: Utils.sanitize(msg),
-    pubDate: timestamp,
-    replyTo: replyTo,
-  };
+    const id = Utils.genId();
+    const timestamp = Date.now();
 
-  // Save to KV
-  const key = Utils.getCommentKey(post);
-  const raw = await c.env.COMMENTS.get(key);
-  const comments = raw ? JSON.parse(raw) : [];
-  comments.push(comment);
-  await c.env.COMMENTS.put(key, JSON.stringify(comments));
+    const comment: Comment = {
+      id,
+      name: Utils.sanitize(name),
+      email: Utils.sanitize(email),
+      msg: Utils.sanitize(msg),
+      pubDate: timestamp,
+      replyTo: replyTo,
+    };
 
-  const token = await Utils.genHmac(c.env.SECRET_KEY, id, timestamp);
+    // Save to KV
+    const key = Utils.getCommentKey(post);
+    const raw = await c.env.COMMENTS.get(key);
+    const comments = raw ? JSON.parse(raw) : [];
+    comments.push(comment);
+    await c.env.COMMENTS.put(key, JSON.stringify(comments));
 
-  return c.json({ id, timestamp, token }, 201); // 201 Created
-});
+    const token = await Utils.genHmac(c.env.SECRET_KEY, id, timestamp);
+
+    return c.json({ id, timestamp, token }, 201); // 201 Created
+  },
+);
 
 app.put('/', Utils.validateQueryPost, async (c) => {
   const { post } = c.req.valid('query');
