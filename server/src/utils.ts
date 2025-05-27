@@ -1,4 +1,3 @@
-import { Buffer } from 'node:buffer';
 import { validator } from 'hono/validator';
 import { customAlphabet } from 'nanoid';
 import xss from 'xss';
