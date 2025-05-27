@@ -1,3 +1,4 @@
+import { Buffer } from 'node:buffer';
 import { validator } from 'hono/validator';
 import { customAlphabet } from 'nanoid';
 import xss from 'xss';
@@ -33,4 +34,54 @@ export default class Utils {
       post,
     };
   });
+
+  static async genHmac(
+    secretKey: string,
+    commentId: string,
+    timestamp: number,
+  ) {
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(secretKey);
+    const dataData = encoder.encode(`${commentId}-${timestamp}`);
+
+    const key = await crypto.subtle.importKey(
+      'raw',
+      keyData,
+      { name: 'HMAC', hash: 'SHA-384' },
+      false,
+      ['sign'],
+    );
+
+    const signature = await crypto.subtle.sign('HMAC', key, dataData);
+    const base64Signature = Buffer.from(signature).toString('base64');
+    return base64Signature;
+  }
+
+  static async verifyHmac(
+    secretKey: string,
+    commentId: string,
+    timestamp: number,
+    hmac: string,
+  ) {
+    const expiry = 2 * 60 * 1000; // 2 minutes in milliseconds
+    const now = Date.now();
+    if (now - timestamp > expiry || timestamp > now) {
+      return false; // timestamp is too old or in the future, reject it
+    }
+
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(secretKey);
+    const dataData = encoder.encode(`${commentId}-${timestamp}`);
+
+    const key = await crypto.subtle.importKey(
+      'raw',
+      keyData,
+      { name: 'HMAC', hash: 'SHA-384' },
+      false,
+      ['verify'],
+    );
+
+    const signature = Buffer.from(hmac, 'base64');
+    return crypto.subtle.verify('HMAC', key, signature, dataData);
+  }
 }

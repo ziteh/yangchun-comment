@@ -17,7 +17,7 @@ app.use('*', async (c, next) => {
   const corsMiddleware = cors({
     origin: c.env.CORS_ORIGIN,
     allowHeaders: ['Content-Type'],
-    allowMethods: ['GET', 'POST', 'OPTIONS'],
+    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     exposeHeaders: ['Content-Length'],
     maxAge: 600,
   });
