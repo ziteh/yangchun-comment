@@ -1,0 +1,6 @@
+# Cloudflare Wrangler
+.wrangler/
+
+# Environment variables
+.dev.vars
+.env

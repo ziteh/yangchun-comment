@@ -2,17 +2,13 @@
   "name": "cf-comment",
   "version": "0.0.0",
   "private": true,
-  "workspaces": [
-    "frontend"
-  ],
   "scripts": {
     "deploy": "wrangler deploy",
     "dev": "wrangler dev",
     "start": "wrangler dev",
     "test": "vitest",
     "cf-typegen": "wrangler types",
-    "format": "prettier --write .",
-    "dev:fe": "pnpm --filter frontend dev"
+    "format": "prettier --write ."
   },
   "dependencies": {
     "hono": "^4.7.10",
