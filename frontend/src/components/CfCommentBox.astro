@@ -10,13 +10,34 @@ import './CfCommentBox.css';
   import { html, render } from 'lit-html';
   import { until } from 'lit-html/directives/until.js';
   import { unsafeHTML } from 'lit-html/directives/unsafe-html.js';
-
   const API_URL = 'http://localhost:8787/api';
   const POST = '/blog/my-post';
   const ANONYMOUS = 'Anonymous';
 
   let currentReplyTo = null;
   let previewText = '';
+  let editingComment = null;
+
+  function saveCommentAuthInfo(data) {
+    const authInfo = {
+      id: data.id,
+      timestamp: data.timestamp,
+      token: data.token,
+    };
+
+    sessionStorage.setItem(`comment_${data.id}`, JSON.stringify(authInfo));
+    return authInfo;
+  }
+
+  function getCommentAuthInfo(commentId) {
+    const authInfoStr = sessionStorage.getItem(`comment_${commentId}`);
+    return authInfoStr ? JSON.parse(authInfoStr) : null;
+  }
+
+  function canEditComment(commentId) {
+    return !!getCommentAuthInfo(commentId);
+  }
+
   function renderMarkdown(md) {
     return unsafeHTML(DOMPurify.sanitize(snarkdown(md || '')));
   }
@@ -61,17 +82,19 @@ import './CfCommentBox.css';
     const res = await fetch(`${API_URL}/comments?post=${POST}`);
     return await res.json();
   }
-
   function createCommentItemTemplate(
     comment,
     isRoot = false,
     replyToName = null,
+    allReplies = null,
+    commentMap = null,
   ) {
     const className = isRoot ? 'comment' : 'reply';
     const headerClass = isRoot ? 'comment-header' : 'reply-header';
     const nameClass = isRoot ? 'comment-name' : 'reply-name';
     const timeClass = isRoot ? 'comment-time' : 'reply-time';
     const contentClass = isRoot ? 'comment-content' : 'reply-content';
+    const canEdit = canEditComment(comment.id);
 
     return html`
       <div class="${className}" ${isRoot ? `data-id="${comment.id}"` : ''}>
@@ -86,43 +109,51 @@ import './CfCommentBox.css';
                 <span title="${comment.replyTo}">${replyToName}</span></span
               >`
             : ''}
+          ${canEdit
+            ? html`<span class="comment-controls">
+                <button class="edit-button" @click=${() => handleEdit(comment)}>
+                  編輯
+                </button>
+                <button
+                  class="delete-button"
+                  @click=${() => handleDelete(comment.id)}
+                >
+                  刪除
+                </button>
+              </span>`
+            : ''}
         </div>
         <div class="${contentClass}">${renderMarkdown(comment.msg)}</div>
         <button class="reply-button" @click=${() => setReplyTo(comment.id)}>
           回覆
         </button>
-        ${isRoot ? html`<div class="replies"></div>` : ''}
+        ${isRoot && allReplies
+          ? html`<div class="replies">
+              ${allReplies.map((reply) => {
+                const replyToComment = commentMap[reply.replyTo];
+                const replyToName = replyToComment
+                  ? getDisplayName(replyToComment)
+                  : '';
+                return createCommentItemTemplate(reply, false, replyToName);
+              })}
+            </div>`
+          : isRoot
+            ? html`<div class="replies"></div>`
+            : ''}
       </div>
     `;
-  }
-
-  function createReplyTemplate(reply, commentMap) {
-    const replyToComment = commentMap[reply.replyTo];
-    const replyToName = replyToComment ? getDisplayName(replyToComment) : '';
-    return createCommentItemTemplate(reply, false, replyToName);
   }
 
   function createCommentTemplate(rootComment, allReplies, commentMap) {
-    const template = createCommentItemTemplate(rootComment, true);
-
-    return html`
-      <div class="comment" data-id="${rootComment.id}">
-        <div class="comment-header">
-          <span class="comment-name" title="${rootComment.id}"
-            >${getDisplayName(rootComment)}</span
-          >
-          <span class="comment-time">${formatDate(rootComment.pubDate)}</span>
-        </div>
-        <div class="comment-content">${renderMarkdown(rootComment.msg)}</div>
-        <button class="reply-button" @click=${() => setReplyTo(rootComment.id)}>
-          回覆
-        </button>
-        <div class="replies">
-          ${allReplies.map((reply) => createReplyTemplate(reply, commentMap))}
-        </div>
-      </div>
-    `;
+    return createCommentItemTemplate(
+      rootComment,
+      true,
+      null,
+      allReplies,
+      commentMap,
+    );
   }
+
   function processComments(data) {
     // no replyTo means it's a root comment
     const rootComments = data.filter((c) => !c.replyTo);
@@ -157,31 +188,111 @@ import './CfCommentBox.css';
       return createCommentTemplate(rootComment, allReplies, commentMap);
     });
   }
-
   async function handleSubmit(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
 
-    await fetch(`${API_URL}/comments?post=${POST}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: formData.get('name'),
-        msg: formData.get('message'),
-        replyTo: currentReplyTo,
-      }),
-    });
+    if (editingComment) {
+      const authInfo = getCommentAuthInfo(editingComment.id);
+      if (!authInfo) {
+        alert('無法編輯此評論，權限已過期');
+        return;
+      }
 
-    // reset the form and clear preview
-    e.target.reset();
-    previewText = '';
-    currentReplyTo = null;
+      const response = await fetch(`${API_URL}/comments?post=${POST}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: authInfo.id,
+          timestamp: authInfo.timestamp,
+          token: authInfo.token,
+          name: formData.get('name'),
+          msg: formData.get('message'),
+        }),
+      });
 
-    // reload comments and re-render
-    comments.length = 0; // clear comments cache
+      if (response.ok) {
+        e.target.reset();
+        previewText = '';
+        editingComment = null;
+      } else {
+        alert('編輯評論失敗，可能權限已過期');
+      }
+    } else {
+      const response = await fetch(`${API_URL}/comments?post=${POST}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.get('name'),
+          msg: formData.get('message'),
+          replyTo: currentReplyTo,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        saveCommentAuthInfo(data);
+
+        e.target.reset();
+        previewText = '';
+        currentReplyTo = null;
+      } else {
+        alert('發送評論失敗');
+      }
+    }
+
+    comments.length = 0;
     renderApp();
   }
 
+  async function handleDelete(commentId) {
+    if (!confirm('確定要刪除此評論嗎?')) return;
+
+    const authInfo = getCommentAuthInfo(commentId);
+    if (!authInfo) {
+      alert('無法刪除此評論，權限已過期');
+      return;
+    }
+
+    const response = await fetch(`${API_URL}/comments?post=${POST}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: authInfo.id,
+        timestamp: authInfo.timestamp,
+        token: authInfo.token,
+      }),
+    });
+
+    if (response.ok) {
+      sessionStorage.removeItem(`comment_${commentId}`);
+
+      comments.length = 0;
+      renderApp();
+    } else {
+      alert('刪除評論失敗，可能權限已過期');
+    }
+  }
+
+  function handleEdit(comment) {
+    editingComment = comment;
+    document.querySelector('#comment-form input[name="name"]').value =
+      comment.name || '';
+    document.querySelector('#comment-form textarea[name="message"]').value =
+      comment.msg || '';
+    previewText = comment.msg || '';
+    document
+      .querySelector('#comment-form')
+      .scrollIntoView({ behavior: 'smooth' });
+    renderApp();
+  }
+
+  function cancelEdit() {
+    editingComment = null;
+    document.querySelector('#comment-form').reset();
+    previewText = '';
+    renderApp();
+  }
   function createFormTemplate() {
     return html`
       <form id="comment-form" @submit=${handleSubmit}>
@@ -201,8 +312,17 @@ import './CfCommentBox.css';
               <button type="button" @click=${cancelReply}>取消回覆</button>
             </div>`
           : ''}
+        ${editingComment
+          ? html`<div id="edit-info">
+              編輯中:
+              <span id="edit-comment-id">${editingComment.id}</span>
+              <button type="button" @click=${cancelEdit}>取消編輯</button>
+            </div>`
+          : ''}
 
-        <button type="submit">發送留言</button>
+        <button type="submit">
+          ${editingComment ? '更新留言' : '發送留言'}
+        </button>
       </form>
       <div id="preview">
         ${previewText ? renderMarkdown(previewText) : html``}

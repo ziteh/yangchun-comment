@@ -85,7 +85,7 @@
   opacity: 0.9;
 }
 
-#reply-info {
+#reply-info, #edit-info {
   margin-bottom: 12px;
   padding: 8px 12px;
   background-color: var(--cf-highlight-color);
@@ -95,15 +95,75 @@
   align-items: center;
 }
 
-#reply-info button {
+.comment-controls {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+
+.edit-button, .delete-button {
+  background-color: transparent;
+  color: var(--cf-text-color);
+  border: 1px solid var(--cf-border-color);
+  border-radius: 4px;
+  font-size: 12px;
+  padding: 2px 6px;
+  cursor: pointer;
+  transition: var(--cf-transition);
+}
+
+.edit-button:hover {
+  background-color: var(--cf-highlight-color);
+}
+
+.delete-button {
+  color: var(--cf-error-color);
+  border-color: var(--cf-error-color);
+}
+
+.delete-button:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+#reply-info button, #edit-info button {
   margin-left: auto;
   background-color: transparent;
   color: var(--cf-text-color);
   border: 1px solid var(--cf-border-color);
 }
 
-#reply-info button:hover {
+#reply-info button:hover, #edit-info button:hover {
   background-color: var(--cf-border-color);
+}
+
+.comment-controls {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+
+.edit-button, .delete-button {
+  background-color: transparent;
+  color: var(--cf-text-color);
+  border: 1px solid var(--cf-border-color);
+  border-radius: 4px;
+  font-size: 12px;
+  padding: 2px 6px;
+  cursor: pointer;
+  transition: var(--cf-transition);
+}
+
+.edit-button:hover {
+  background-color: var(--cf-highlight-color);
+}
+
+.delete-button {
+  color: var(--cf-error-color);
+  border-color: var(--cf-error-color);
+}
+
+.delete-button:hover {
+  background-color: rgba(239, 68, 68, 0.1);
 }
 
 #preview {
@@ -158,6 +218,9 @@
 .comment-header,
 .reply-header {
   margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .comment-name,
@@ -198,5 +261,23 @@
   .reply {
     margin-left: 12px;
     padding-left: 10px;
+  }
+
+  .comment-header,
+  .reply-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .comment-time,
+  .reply-time,
+  .reply-to {
+    margin-left: 0;
+    margin-top: 4px;
+  }
+
+  .comment-controls {
+    margin-left: 0;
+    margin-top: 8px;
   }
 }
