@@ -1,11 +1,11 @@
-# CF Comment
+# Wonton Comment
 
 ```bash
-cd backend
+cd client 
 pnpm dev
 ```
 
 ```bash
-cd frontend
+cd server
 pnpm dev
 ```
