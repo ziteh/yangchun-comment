@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import Utils from './utils';
-import type { Comment } from './model';
+import type { Comment } from '@cf-comment/shared';
 
 const app = new Hono<{
   Bindings: {

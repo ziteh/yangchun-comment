@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@cf-comment/shared": "workspace:*",
     "dompurify": "^3.2.6",
     "lit-html": "^3.3.0",
     "snarkdown": "^2.0.0"

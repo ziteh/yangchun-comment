@@ -3,15 +3,8 @@ import snarkdown from 'snarkdown';
 import { html, render, type TemplateResult } from 'lit-html';
 import { until } from 'lit-html/directives/until.js';
 import { unsafeHTML } from 'lit-html/directives/unsafe-html.js';
+import type { Comment } from '@cf-comment/shared';
 import './comment.css';
-
-type Comment = {
-  id: string;
-  name?: string;
-  msg: string;
-  pubDate: number;
-  replyTo?: string;
-};
 
 type AuthInfo = {
   id: string;
