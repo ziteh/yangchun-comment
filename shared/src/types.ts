@@ -20,3 +20,19 @@ export type Comment = {
   /** Indicates whether the comment was made by an admin */
   isAdmin?: boolean;
 };
+
+export function isComment(obj: unknown): obj is Comment {
+  if (typeof obj !== 'object' || obj === null) return false;
+
+  const c = obj as Record<string, unknown>;
+
+  return (
+    typeof c.id === 'string' &&
+    typeof c.msg === 'string' &&
+    typeof c.pubDate === 'number' &&
+    (c.name === undefined || typeof c.name === 'string') &&
+    (c.email === undefined || typeof c.email === 'string') &&
+    (c.replyTo === undefined || typeof c.replyTo === 'string') &&
+    (c.isAdmin === undefined || typeof c.isAdmin === 'boolean')
+  );
+}
