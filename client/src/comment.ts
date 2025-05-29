@@ -1,4 +1,4 @@
-import DOMPurify from 'dompurify';
+import DOMPurify, { type Config as dompurifyConfig } from 'dompurify';
 import snarkdown from 'snarkdown';
 import { html, render, type TemplateResult } from 'lit-html';
 import { until } from 'lit-html/directives/until.js';
@@ -24,11 +24,63 @@ let currentReplyTo: string | null = null;
 let previewText: string = '';
 let editingComment: Comment | null = null;
 
-function saveCommentAuthInfo(data: {
-  id: string;
-  timestamp: number;
-  token: string;
-}): AuthInfo {
+DOMPurify.addHook('afterSanitizeAttributes', (node) => {
+  // window.opener
+  if (node.tagName === 'A') {
+    node.setAttribute('rel', 'noopener noreferrer');
+    node.setAttribute('target', '_blank');
+  }
+
+  // Add loading lazy attribute
+  if (node.tagName === 'IMG') {
+    node.setAttribute('loading', 'lazy');
+  }
+});
+
+// Only http:// or https://
+DOMPurify.addHook('uponSanitizeAttribute', (_node, data) => {
+  if (data.attrName === 'href' || data.attrName === 'src') {
+    try {
+      const url = new URL(data.attrValue || ''); // Disregard the relative path
+      if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+        data.keepAttr = false; // Remove the attribute entirely
+      }
+    } catch (_err) {
+      data.keepAttr = false; // Remove the attribute entirely
+    }
+  }
+});
+
+const DompurifyConfig: dompurifyConfig = {
+  ALLOWED_TAGS: [
+    'a',
+    'b',
+    'i',
+    'em',
+    'strong',
+    's',
+    'p',
+    'ul',
+    'ol',
+    'li',
+    'code',
+    'pre',
+    'blockquote',
+    'h6', // only H6
+    'hr',
+    'br',
+    'img',
+  ],
+  ALLOWED_ATTR: ['href', 'src', 'alt'],
+  ALLOW_DATA_ATTR: false, // data-*
+  ALLOW_ARIA_ATTR: false, // aria-*
+
+  // explicitly blocklist
+  FORBID_TAGS: ['style', 'script', 'iframe', 'object', 'form', 'embed'],
+  FORBID_ATTR: ['style', 'onclick', 'onmouseover', 'onload', 'onunload', 'onerror'],
+};
+
+function saveCommentAuthInfo(data: { id: string; timestamp: number; token: string }): AuthInfo {
   const authInfo: AuthInfo = {
     id: data.id,
     timestamp: data.timestamp,
@@ -49,7 +101,7 @@ function canEditComment(commentId: string): boolean {
 }
 
 function renderMarkdown(md: string): ReturnType<typeof unsafeHTML> {
-  return unsafeHTML(DOMPurify.sanitize(snarkdown(md || '')));
+  return unsafeHTML(DOMPurify.sanitize(snarkdown(md || ''), DompurifyConfig));
 }
 function formatDate(timestamp: number): string {
   const date = new Date(timestamp);
@@ -111,44 +163,28 @@ function createCommentItemTemplate(
   return html`
     <div class="${className}" ${isRoot ? `data-id="${comment.id}"` : ''}>
       <div class="${headerClass}">
-        <span class="${nameClass}" title="${comment.id}"
-          >${getDisplayName(comment)}</span
-        >
+        <span class="${nameClass}" title="${comment.id}">${getDisplayName(comment)}</span>
         <span class="${timeClass}">${formatDate(comment.pubDate)}</span>
         ${replyToName
           ? html`<span class="reply-to"
-              >回覆給
-              <span title="${comment.replyTo ?? ''}">${replyToName}</span></span
+              >回覆給 <span title="${comment.replyTo ?? ''}">${replyToName}</span></span
             >`
           : ''}
         ${canEdit
           ? html`<span class="comment-controls">
-              <button class="edit-button" @click=${() => handleEdit(comment)}>
-                編輯
-              </button>
-              <button
-                class="delete-button"
-                @click=${() => handleDelete(comment.id)}
-              >
-                刪除
-              </button>
+              <button class="edit-button" @click=${() => handleEdit(comment)}>編輯</button>
+              <button class="delete-button" @click=${() => handleDelete(comment.id)}>刪除</button>
             </span>`
           : ''}
       </div>
       <div class="${contentClass}">${renderMarkdown(comment.msg)}</div>
-      <button class="reply-button" @click=${() => setReplyTo(comment.id)}>
-        回覆
-      </button>
+      <button class="reply-button" @click=${() => setReplyTo(comment.id)}>回覆</button>
       ${isRoot && allReplies
         ? html`<div class="replies">
             ${allReplies.map((reply) => {
               const replyToComment =
-                reply.replyTo && commentMap
-                  ? commentMap[reply.replyTo]
-                  : undefined;
-              const replyToName = replyToComment
-                ? getDisplayName(replyToComment)
-                : '';
+                reply.replyTo && commentMap ? commentMap[reply.replyTo] : undefined;
+              const replyToName = replyToComment ? getDisplayName(replyToComment) : '';
               return createCommentItemTemplate(reply, false, replyToName);
             })}
           </div>`
@@ -164,13 +200,7 @@ function createCommentTemplate(
   allReplies: Comment[],
   commentMap: CommentMap,
 ) {
-  return createCommentItemTemplate(
-    rootComment,
-    true,
-    null,
-    allReplies,
-    commentMap,
-  );
+  return createCommentItemTemplate(rootComment, true, null, allReplies, commentMap);
 }
 
 function processComments(data: Comment[]) {
@@ -297,9 +327,7 @@ async function handleDelete(commentId: string): Promise<void> {
 
 function handleEdit(comment: Comment): void {
   editingComment = comment;
-  const nameInput = document.querySelector(
-    '#comment-form input[name="name"]',
-  ) as HTMLInputElement;
+  const nameInput = document.querySelector('#comment-form input[name="name"]') as HTMLInputElement;
   const messageInput = document.querySelector(
     '#comment-form textarea[name="message"]',
   ) as HTMLTextAreaElement;
@@ -345,9 +373,7 @@ function createFormTemplate() {
       ${currentReplyTo && commentMap[currentReplyTo]
         ? html`<div id="reply-info">
             回覆給:
-            <span id="reply-to-name"
-              >${getDisplayName(commentMap[currentReplyTo])}</span
-            >
+            <span id="reply-to-name">${getDisplayName(commentMap[currentReplyTo])}</span>
             <button type="button" @click=${cancelReply}>取消回覆</button>
           </div>`
         : ''}
@@ -361,9 +387,7 @@ function createFormTemplate() {
 
       <button type="submit">${editingComment ? '更新留言' : '發送留言'}</button>
     </form>
-    <div id="preview">
-      ${previewText ? renderMarkdown(previewText) : html``}
-    </div>
+    <div id="preview">${previewText ? renderMarkdown(previewText) : html``}</div>
   `;
 }
 
