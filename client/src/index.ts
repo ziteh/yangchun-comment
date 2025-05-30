@@ -5,7 +5,7 @@ import { unsafeHTML } from 'lit-html/directives/unsafe-html.js';
 import type { Comment } from '@wonton-comment/shared';
 import { createApiService } from './apiService';
 import { createI18n } from './i18n';
-import './comment.css';
+import './index.css';
 
 export function initWontonComment(elementId: string = 'wtc-app', options = {}) {
   const wontonApp = new WontonComment(elementId, options);

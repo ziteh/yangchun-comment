@@ -301,7 +301,6 @@
   word-break: break-word;
 }
 
-/* 新增 tab 樣式 */
 .comment-tabs {
   display: flex;
   border-bottom: 1px solid var(--wtc-border-color);
