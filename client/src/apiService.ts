@@ -1,7 +1,6 @@
 import type { Comment } from '@cf-comment/shared';
 
 type AuthInfo = {
-  id: string;
   timestamp: number;
   token: string;
 };
@@ -97,16 +96,18 @@ export const createApiService = (apiUrl: string) => {
   };
 
   const saveAuthInfo = (id: string, timestamp: number, token: string): void => {
-    commentAuthMap.set(id, { id, timestamp, token });
+    commentAuthMap.set(id, { timestamp, token });
 
     // optionally store in sessionStorage for persistence across page reloads
-    const encryptedInfo = btoa(JSON.stringify({ id, timestamp }));
+    const encryptedInfo = btoa(JSON.stringify({ timestamp }));
     sessionStorage.setItem(`comment_auth_${id}`, encryptedInfo);
   };
 
-  const getAuthInfo = (commentId: string): AuthInfo | null => {
+  const getAuthInfo = (
+    commentId: string,
+  ): { id: string; timestamp: number; token: string } | null => {
     const authInfo = commentAuthMap.get(commentId);
-    if (authInfo) return authInfo;
+    if (authInfo) return { id: commentId, ...authInfo };
 
     return null;
   };
