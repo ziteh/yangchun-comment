@@ -1,24 +1,53 @@
 :root {
-  --wtc-font-family: sans-serif;
-  --wtc-primary-color: #3b82f6;
   --wtc-text-color: #333;
-  --wtc-border-color: #e5e7eb;
   --wtc-background-color: #fff;
-  --wtc-highlight-color: #f3f4f6;
+  --wtc-primary-color: #3b82f6;
   --wtc-error-color: #ef4444;
   --wtc-success-color: #10b981;
+
+  --wtc-font-family: inherit;
+  --wtc-base-font-size: 14px;
   --wtc-border-radius: 8px;
   --wtc-spacing: 16px;
+
+  --wtc-text-light-color: color-mix(
+    in srgb,
+    var(--wtc-text-color) 60%,
+    var(--wtc-background-color)
+  );
+  --wtc-text-lighter-color: color-mix(
+    in srgb,
+    var(--wtc-text-color) 40%,
+    var(--wtc-background-color)
+  );
+  --wtc-border-color: color-mix(in srgb, var(--wtc-text-color) 15%, var(--wtc-background-color));
+  --wtc-highlight-color: color-mix(in srgb, var(--wtc-text-color) 5%, var(--wtc-background-color));
+  --wtc-overlay-color: color-mix(in srgb, var(--wtc-text-color) 50%, transparent);
+  --wtc-button-secondary-border: var(--wtc-border-color);
+  --wtc-button-secondary-hover-bg: var(--wtc-highlight-color);
+
+  --wtc-small-font-size: 0.8em;
   --wtc-transition: all 0.2s ease;
-  /* --wtc-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); */
+  --wtc-shadow: 0 4px 12px color-mix(in srgb, var(--wtc-text-color) 15%, transparent);
   --wtc-reply-indent: 20px;
-  --wtc-reply-line-color: #e5e7eb;
+  --wtc-reply-line-color: var(--wtc-border-color);
+  --wtc-hover-opacity: 0.9;
+  --wtc-button-text-color: var(--wtc-background-color);
+  --wtc-button-hover-bg: color-mix(
+    in srgb,
+    var(--wtc-primary-color) 90%,
+    var(--wtc-background-color)
+  );
+  --wtc-button-secondary-bg: transparent;
+  --wtc-button-secondary-text: var(--wtc-text-color);
 }
 
 .wtc-container {
   font-family: var(--wtc-font-family);
   color: var(--wtc-text-color);
   max-width: 100%;
+  font-size: var(--wtc-base-font-size);
+  background-color: var(--wtc-background-color);
 }
 
 /* Tab */
@@ -35,7 +64,7 @@
   border-bottom: 2px solid transparent;
   cursor: pointer;
   font-weight: 500;
-  color: #666;
+  color: var(--wtc-text-light-color);
   transition: var(--wtc-transition);
 }
 
@@ -129,11 +158,11 @@
 
 #comment-form button[type='submit'] {
   background-color: var(--wtc-primary-color);
-  color: white;
+  color: var(--wtc-button-text-color);
 }
 
 #comment-form button[type='submit']:hover {
-  opacity: 0.9;
+  opacity: var(--wtc-hover-opacity);
 }
 
 .submit-button {
@@ -163,15 +192,15 @@
 #reply-info button,
 #edit-info button {
   margin-left: auto;
-  background-color: transparent;
-  color: var(--wtc-text-color);
-  border: 1px solid var(--wtc-border-color);
+  background-color: var(--wtc-button-secondary-bg);
+  color: var(--wtc-button-secondary-text);
+  border: 1px solid var(--wtc-button-secondary-border);
   padding: 4px 8px;
 }
 
 #reply-info button:hover,
 #edit-info button:hover {
-  background-color: var(--wtc-border-color);
+  background-color: var(--wtc-button-secondary-hover-bg);
 }
 
 /* Preview */
@@ -193,7 +222,7 @@
 }
 
 .empty-preview {
-  color: #888;
+  color: var(--wtc-text-lighter-color);
   font-style: italic;
   padding: 10px 0;
   text-align: center;
@@ -225,14 +254,14 @@
 
 .comment-time,
 .reply-time {
-  font-size: 0.8em;
-  color: #666;
+  font-size: var(--wtc-small-font-size);
+  color: var(--wtc-text-light-color);
   margin-left: 8px;
 }
 
 .reply-to {
-  font-size: 0.8em;
-  color: #888;
+  font-size: var(--wtc-small-font-size);
+  color: var(--wtc-text-lighter-color);
   margin-left: 8px;
 }
 
@@ -273,11 +302,11 @@
 
 .edit-button,
 .delete-button {
-  background-color: transparent;
-  color: var(--wtc-text-color);
-  border: 1px solid var(--wtc-border-color);
-  border-radius: 4px;
-  font-size: 12px;
+  background-color: var(--wtc-button-secondary-bg);
+  color: var(--wtc-button-secondary-text);
+  border: 1px solid var(--wtc-button-secondary-border);
+  border-radius: calc(var(--wtc-border-radius) / 2);
+  font-size: calc(var(--wtc-base-font-size) - 2px);
   padding: 2px 6px;
   cursor: pointer;
   transition: var(--wtc-transition);
@@ -293,7 +322,7 @@
 }
 
 .delete-button:hover {
-  background-color: rgba(239, 68, 68, 0.1);
+  background-color: color-mix(in srgb, var(--wtc-error-color) 10%, var(--wtc-background-color));
 }
 
 /* Help */
@@ -326,19 +355,20 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: var(--wtc-overlay-color);
 }
 
 .markdown-help-content {
   position: relative;
-  background-color: white;
-  border-radius: 6px;
+  background-color: var(--wtc-background-color);
+  color: var(--wtc-text-color);
+  border-radius: var(--wtc-border-radius);
   padding: 1.5rem;
   max-width: 500px;
   width: 90%;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--wtc-shadow);
   z-index: 1010;
 }
 
@@ -350,7 +380,7 @@
   background: none;
   font-size: 1.5rem;
   cursor: pointer;
-  color: #666;
+  color: var(--wtc-text-light-color);
 }
 
 .markdown-help-button {
@@ -359,13 +389,13 @@
   justify-content: center;
   width: 26px;
   height: 26px;
-  color: #444;
+  color: var(--wtc-text-light-color);
   background: none;
   font-weight: bold;
   margin-right: 10px;
   cursor: pointer;
   line-height: 1;
-  font-size: 14px;
+  font-size: var(--wtc-base-font-size);
 }
 
 .markdown-examples {
