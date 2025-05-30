@@ -4,19 +4,13 @@ import { html, render, type TemplateResult } from 'lit-html';
 import { until } from 'lit-html/directives/until.js';
 import { unsafeHTML } from 'lit-html/directives/unsafe-html.js';
 import type { Comment } from '@cf-comment/shared';
+import { apiService } from './apiService';
 import './comment.css';
-
-type AuthInfo = {
-  id: string;
-  timestamp: number;
-  token: string;
-};
 
 type CommentMap = {
   [id: string]: Comment;
 };
 
-const API_URL = 'http://localhost:8787/api';
 const POST = '/blog/my-post';
 const ANONYMOUS = 'Anonymous';
 
@@ -80,24 +74,8 @@ const DompurifyConfig: dompurifyConfig = {
   FORBID_ATTR: ['style', 'onclick', 'onmouseover', 'onload', 'onunload', 'onerror'],
 };
 
-function saveCommentAuthInfo(data: { id: string; timestamp: number; token: string }): AuthInfo {
-  const authInfo: AuthInfo = {
-    id: data.id,
-    timestamp: data.timestamp,
-    token: data.token,
-  };
-
-  sessionStorage.setItem(`comment_${data.id}`, JSON.stringify(authInfo));
-  return authInfo;
-}
-
-function getCommentAuthInfo(commentId: string): AuthInfo | null {
-  const authInfoStr = sessionStorage.getItem(`comment_${commentId}`);
-  return authInfoStr ? JSON.parse(authInfoStr) : null;
-}
-
 function canEditComment(commentId: string): boolean {
-  return !!getCommentAuthInfo(commentId);
+  return apiService.canEditComment(commentId);
 }
 
 function renderMarkdown(md: string): ReturnType<typeof unsafeHTML> {
@@ -142,8 +120,7 @@ function handleInputChange(e: Event): void {
 }
 
 async function loadComments(): Promise<Comment[]> {
-  const res = await fetch(`${API_URL}/comments?post=${POST}`);
-  return await res.json();
+  return await apiService.getComments(POST);
 }
 
 function createCommentItemTemplate(
@@ -242,86 +219,49 @@ function processComments(data: Comment[]) {
 async function handleSubmit(e: SubmitEvent): Promise<void> {
   e.preventDefault();
   const formData = new FormData(e.target as HTMLFormElement);
+  const name = formData.get('name') as string;
+  const message = formData.get('message') as string;
+
+  let success = false;
 
   if (editingComment) {
-    const authInfo = getCommentAuthInfo(editingComment.id);
-    if (!authInfo) {
-      alert('無法編輯此評論，權限已過期');
-      return;
-    }
+    success = await apiService.updateComment(POST, editingComment.id, name, message);
 
-    const response = await fetch(`${API_URL}/comments?post=${POST}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        id: authInfo.id,
-        timestamp: authInfo.timestamp,
-        token: authInfo.token,
-        name: formData.get('name'),
-        msg: formData.get('message'),
-      }),
-    });
-
-    if (response.ok) {
+    if (success) {
       (e.target as HTMLFormElement).reset();
       previewText = '';
       editingComment = null;
     } else {
-      alert('編輯評論失敗，可能權限已過期');
+      alert('編輯留言失敗，可能權限已過期');
     }
   } else {
-    const response = await fetch(`${API_URL}/comments?post=${POST}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: formData.get('name'),
-        msg: formData.get('message'),
-        replyTo: currentReplyTo,
-      }),
-    });
+    success = await apiService.addComment(POST, name, message, currentReplyTo);
 
-    if (response.ok) {
-      const data = await response.json();
-      saveCommentAuthInfo(data);
-
+    if (success) {
       (e.target as HTMLFormElement).reset();
       previewText = '';
       currentReplyTo = null;
     } else {
-      alert('發送評論失敗');
+      alert('發送留言失敗');
     }
   }
 
-  comments.length = 0;
-  renderApp();
+  if (success) {
+    comments.length = 0;
+    renderApp();
+  }
 }
 
 async function handleDelete(commentId: string): Promise<void> {
-  if (!confirm('確定要刪除此評論嗎?')) return;
+  if (!confirm('確定要刪除此留言嗎?')) return;
 
-  const authInfo = getCommentAuthInfo(commentId);
-  if (!authInfo) {
-    alert('無法刪除此評論，權限已過期');
-    return;
-  }
+  const success = await apiService.deleteComment(POST, commentId);
 
-  const response = await fetch(`${API_URL}/comments?post=${POST}`, {
-    method: 'DELETE',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      id: authInfo.id,
-      timestamp: authInfo.timestamp,
-      token: authInfo.token,
-    }),
-  });
-
-  if (response.ok) {
-    sessionStorage.removeItem(`comment_${commentId}`);
-
+  if (success) {
     comments.length = 0;
     renderApp();
   } else {
-    alert('刪除評論失敗，可能權限已過期');
+    alert('刪除留言失敗，可能權限已過期');
   }
 }
 
