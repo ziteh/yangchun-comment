@@ -25,6 +25,7 @@ class WontonComment {
   private previewText: string = '';
   private editingComment: Comment | null = null;
   private activeTab: 'write' | 'preview' = 'write';
+  private showMarkdownHelp: boolean = false;
 
   constructor(
     elementId: string,
@@ -443,6 +444,72 @@ class WontonComment {
     this.renderPreview();
   }
 
+  private toggleMarkdownHelp(): void {
+    this.showMarkdownHelp = !this.showMarkdownHelp;
+    this.renderMarkdownHelp();
+  }
+
+  private renderMarkdownHelp(): void {
+    const helpElement = document.getElementById('markdown-help-modal');
+    if (!helpElement) return;
+
+    if (this.showMarkdownHelp) {
+      render(this.createMarkdownHelpTemplate(), helpElement);
+      helpElement.classList.add('active');
+    } else {
+      render(html``, helpElement);
+      helpElement.classList.remove('active');
+    }
+  }
+
+  private createMarkdownHelpTemplate() {
+    return html`
+      <div class="markdown-help-container">
+        <div class="markdown-help-backdrop" @click=${() => this.toggleMarkdownHelp()}></div>
+        <div class="markdown-help-content">
+          <button class="markdown-help-close" @click=${() => this.toggleMarkdownHelp()}>×</button>
+          <h4>留言</h4>
+          <p>
+            這是一個簡單的留言系統，你可以發表意見或回應其他留言。發佈前可點擊「預覽」查看留言樣式。
+          </p>
+          <p>發佈留言後，在不離開或重新整理頁面的情況下，你可以編輯或刪除兩分鐘內的留言。</p>
+          <h4>語法</h4>
+          <p>
+            支援基本&nbsp;<a
+              href="https://www.markdownguide.org/cheat-sheet/"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Markdown</a
+            >&nbsp;語法，不支援&nbsp;HTML。
+          </p>
+          <div class="markdown-examples">
+            <code>
+              <pre>
+[連結](https://www.example.com)
+
+![圖片](https://www.example.com/sample.jpg)
+
+*斜體* 或 _斜體_
+
+**粗體** 或 __粗體__
+
+- 清單
+
+1. 清單
+
+&#96;行內程式碼&#96;
+
+&#96;&#96;&#96;
+程式碼區塊
+&#96;&#96;&#96;</pre
+              >
+            </code>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   private createFormTemplate() {
     return html`
       <div class="comment-tabs">
@@ -471,7 +538,6 @@ class WontonComment {
               required
               @input=${(e: Event) => this.handleInputChange(e)}
             ></textarea>
-
             <div class="form-actions">
               ${this.currentReplyTo && this.commentMap[this.currentReplyTo]
                 ? html`<div id="reply-info">
@@ -494,13 +560,26 @@ class WontonComment {
                   </div>`
                 : ''}
 
-              <button type="submit" class="submit-button">
-                ${this.editingComment ? this.i18n.t('updateComment') : this.i18n.t('submitComment')}
-              </button>
+              <div class="button-group">
+                <button
+                  type="button"
+                  class="markdown-help-button"
+                  title="Help"
+                  @click=${() => this.toggleMarkdownHelp()}
+                >
+                  ?
+                </button>
+                <button type="submit" class="submit-button">
+                  ${this.editingComment
+                    ? this.i18n.t('updateComment')
+                    : this.i18n.t('submitComment')}
+                </button>
+              </div>
             </div>
           </form>
         </div>
       </div>
+      <div id="markdown-help-modal"></div>
     `;
   }
 
@@ -516,10 +595,10 @@ class WontonComment {
     const appElement = document.getElementById(this.elementId);
     if (appElement) {
       render(appTemplate, appElement);
-
       this.renderForm();
       this.renderPreview();
       await this.renderCommentsList();
+      this.renderMarkdownHelp();
     }
   }
 
