@@ -19,7 +19,7 @@ const i18n = createI18n();
 let currentReplyTo: string | null = null;
 let previewText: string = '';
 let editingComment: Comment | null = null;
-let activeTab: 'write' | 'preview' = 'write'; // 新增 - Tab 狀態管理
+let activeTab: 'write' | 'preview' = 'write';
 
 DOMPurify.addHook('afterSanitizeAttributes', (node) => {
   // window.opener
@@ -190,7 +190,7 @@ function setReplyTo(commentId: string): void {
   currentReplyTo = commentId;
   renderForm();
 
-  const form = document.querySelector('#comment-form');
+  const form = document.querySelector('#comment-form-container');
   if (form) {
     form.scrollIntoView({ behavior: 'smooth' });
   }
@@ -205,7 +205,6 @@ function handleInputChange(e: Event): void {
   const target = e.target as HTMLInputElement;
   previewText = target.value;
 
-  // 只有在預覽頁籤處於活動狀態時才重新渲染預覽
   if (activeTab === 'preview') {
     renderPreview();
   }
@@ -388,7 +387,7 @@ function handleEdit(comment: Comment): void {
   renderForm();
   renderPreview();
 
-  const form = document.querySelector('#comment-form');
+  const form = document.querySelector('#comment-form-container');
   if (form) {
     form.scrollIntoView({ behavior: 'smooth' });
   }
