@@ -108,6 +108,13 @@ function getDisplayName(comment: Comment | undefined): string {
 function setReplyTo(commentId: string): void {
   currentReplyTo = commentId;
   renderApp();
+
+  setTimeout(() => {
+    const form = document.querySelector('#comment-form');
+    if (form) {
+      form.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, 0);
 }
 
 function cancelReply(): void {
