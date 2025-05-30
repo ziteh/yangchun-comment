@@ -4,10 +4,38 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + TS</title>
+    <title>Wonton Comment</title>
   </head>
   <body>
     <div id="cf-app"></div>
-    <script type="module" src="/src/comment.ts"></script>
+
+    <!-- Development -->
+    <script type="module">
+      import { initWontonComment } from '/src/index.ts';
+
+      const commentApp = initWontonComment('cf-app', {
+        post: '/blog/my-post',
+        apiUrl: 'http://localhost:8787/',
+      });
+    </script>
+
+    <!-- Production ESM -->
+    <!-- <script type="module">
+      import { initWontonComment } from '/wonton-comment.es.js';
+
+      initWontonComment('cf-app', {
+        post: window.location.pathname,
+        apiUrl: 'https://your-api-url.com/',
+      });
+    </script> -->
+
+    <!-- Production UMD -->
+    <!-- <script src="/wonton-comment.umd.js"></script>
+    <script>
+      window.WontonComment.default('cf-app', {
+        post: window.location.pathname,
+        apiUrl: 'https://your-api-url.com/',
+      });
+    </script> -->
   </body>
 </html>

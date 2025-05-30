@@ -15,6 +15,7 @@
     "snarkdown": "^2.0.0"
   },
   "devDependencies": {
+    "terser": "^5.40.0",
     "typescript": "~5.8.3",
     "vite": "^6.3.5"
   }
