@@ -7,7 +7,7 @@ import { createApiService } from './apiService';
 import { createI18n } from './i18n';
 import './comment.css';
 
-export function initWontonComment(elementId: string = 'cf-app', options = {}) {
+export function initWontonComment(elementId: string = 'wtc-app', options = {}) {
   const wontonApp = new WontonComment(elementId, options);
   wontonApp.renderApp();
   return wontonApp;
@@ -506,7 +506,7 @@ class WontonComment {
 
   public async renderApp(): Promise<void> {
     const appTemplate = html`
-      <div class="cf-container">
+      <div class="wtc-container">
         <div id="comment-form-container"></div>
         <div id="preview-container"></div>
         <div id="comments-container"></div>

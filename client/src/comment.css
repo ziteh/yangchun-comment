@@ -1,33 +1,32 @@
 :root {
-  --cf-font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
-    Cantarell, sans-serif;
-  --cf-primary-color: #3b82f6;
-  --cf-text-color: #333;
-  --cf-border-color: #e5e7eb;
-  --cf-background-color: #fff;
-  --cf-highlight-color: #f3f4f6;
-  --cf-error-color: #ef4444;
-  --cf-success-color: #10b981;
-  --cf-border-radius: 8px;
-  --cf-spacing: 16px;
-  --cf-transition: all 0.2s ease;
-  --cf-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  --cf-reply-indent: 20px;
-  --cf-reply-line-color: #e5e7eb;
+  --wtc-font-family: sans-serif;
+  --wtc-primary-color: #3b82f6;
+  --wtc-text-color: #333;
+  --wtc-border-color: #e5e7eb;
+  --wtc-background-color: #fff;
+  --wtc-highlight-color: #f3f4f6;
+  --wtc-error-color: #ef4444;
+  --wtc-success-color: #10b981;
+  --wtc-border-radius: 8px;
+  --wtc-spacing: 16px;
+  --wtc-transition: all 0.2s ease;
+  --wtc-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  --wtc-reply-indent: 20px;
+  --wtc-reply-line-color: #e5e7eb;
 }
 
-.cf-container {
-  font-family: var(--cf-font-family);
-  color: var(--cf-text-color);
+.wtc-container {
+  font-family: var(--wtc-font-family);
+  color: var(--wtc-text-color);
   max-width: 100%;
 }
 
 #comment-form {
   margin-bottom: 0;
-  padding: var(--cf-spacing);
+  padding: var(--wtc-spacing);
   border: none;
   border-radius: 0;
-  background-color: var(--cf-background-color);
+  background-color: var(--wtc-background-color);
   box-shadow: none;
 }
 
@@ -36,15 +35,15 @@
   width: 100%;
   padding: 10px;
   margin-bottom: 12px;
-  border: 1px solid var(--cf-border-color);
-  border-radius: var(--cf-border-radius);
+  border: 1px solid var(--wtc-border-color);
+  border-radius: var(--wtc-border-radius);
   font-size: 14px;
-  transition: var(--cf-transition);
+  transition: var(--wtc-transition);
 }
 
 #comment-form input[type='text']:focus {
   outline: none;
-  border-color: var(--cf-primary-color);
+  border-color: var(--wtc-primary-color);
 }
 
 #comment-form textarea {
@@ -53,30 +52,30 @@
   min-height: 120px;
   padding: 10px;
   margin-bottom: 12px;
-  border: 1px solid var(--cf-border-color);
-  border-radius: var(--cf-border-radius);
+  border: 1px solid var(--wtc-border-color);
+  border-radius: var(--wtc-border-radius);
   font-size: 14px;
   resize: vertical;
-  transition: var(--cf-transition);
+  transition: var(--wtc-transition);
 }
 
 #comment-form textarea:focus {
   outline: none;
-  border-color: var(--cf-primary-color);
+  border-color: var(--wtc-primary-color);
 }
 
 #comment-form button,
 .reply-button {
   padding: 8px 16px;
-  border-radius: var(--cf-border-radius);
+  border-radius: var(--wtc-border-radius);
   border: none;
   font-size: 14px;
   cursor: pointer;
-  transition: var(--cf-transition);
+  transition: var(--wtc-transition);
 }
 
 #comment-form button[type='submit'] {
-  background-color: var(--cf-primary-color);
+  background-color: var(--wtc-primary-color);
   color: white;
 }
 
@@ -95,8 +94,8 @@
 #edit-info {
   margin-bottom: 0;
   padding: 8px 12px;
-  background-color: var(--cf-highlight-color);
-  border-radius: var(--cf-border-radius);
+  background-color: var(--wtc-highlight-color);
+  border-radius: var(--wtc-border-radius);
   font-size: 14px;
   display: flex;
   align-items: center;
@@ -112,8 +111,8 @@
 #edit-info button {
   margin-left: 10px;
   background-color: transparent;
-  color: var(--cf-text-color);
-  border: 1px solid var(--cf-border-color);
+  color: var(--wtc-text-color);
+  border: 1px solid var(--wtc-border-color);
   padding: 4px 8px;
 }
 
@@ -121,8 +120,8 @@
 #edit-info {
   margin-bottom: 12px;
   padding: 8px 12px;
-  background-color: var(--cf-highlight-color);
-  border-radius: var(--cf-border-radius);
+  background-color: var(--wtc-highlight-color);
+  border-radius: var(--wtc-border-radius);
   font-size: 14px;
   display: flex;
   align-items: center;
@@ -137,22 +136,22 @@
 .edit-button,
 .delete-button {
   background-color: transparent;
-  color: var(--cf-text-color);
-  border: 1px solid var(--cf-border-color);
+  color: var(--wtc-text-color);
+  border: 1px solid var(--wtc-border-color);
   border-radius: 4px;
   font-size: 12px;
   padding: 2px 6px;
   cursor: pointer;
-  transition: var(--cf-transition);
+  transition: var(--wtc-transition);
 }
 
 .edit-button:hover {
-  background-color: var(--cf-highlight-color);
+  background-color: var(--wtc-highlight-color);
 }
 
 .delete-button {
-  color: var(--cf-error-color);
-  border-color: var(--cf-error-color);
+  color: var(--wtc-error-color);
+  border-color: var(--wtc-error-color);
 }
 
 .delete-button:hover {
@@ -163,13 +162,13 @@
 #edit-info button {
   margin-left: auto;
   background-color: transparent;
-  color: var(--cf-text-color);
-  border: 1px solid var(--cf-border-color);
+  color: var(--wtc-text-color);
+  border: 1px solid var(--wtc-border-color);
 }
 
 #reply-info button:hover,
 #edit-info button:hover {
-  background-color: var(--cf-border-color);
+  background-color: var(--wtc-border-color);
 }
 
 .comment-controls {
@@ -181,22 +180,22 @@
 .edit-button,
 .delete-button {
   background-color: transparent;
-  color: var(--cf-text-color);
-  border: 1px solid var(--cf-border-color);
+  color: var(--wtc-text-color);
+  border: 1px solid var(--wtc-border-color);
   border-radius: 4px;
   font-size: 12px;
   padding: 2px 6px;
   cursor: pointer;
-  transition: var(--cf-transition);
+  transition: var(--wtc-transition);
 }
 
 .edit-button:hover {
-  background-color: var(--cf-highlight-color);
+  background-color: var(--wtc-highlight-color);
 }
 
 .delete-button {
-  color: var(--cf-error-color);
-  border-color: var(--cf-error-color);
+  color: var(--wtc-error-color);
+  border-color: var(--wtc-error-color);
 }
 
 .delete-button:hover {
@@ -205,10 +204,10 @@
 
 #preview {
   margin: 0;
-  padding: var(--cf-spacing);
+  padding: var(--wtc-spacing);
   border: none;
   border-radius: 0;
-  background-color: var(--cf-background-color);
+  background-color: var(--wtc-background-color);
 }
 
 .preview-comment {
@@ -230,32 +229,32 @@
 }
 
 #comments {
-  margin-top: var(--cf-spacing);
+  margin-top: var(--wtc-spacing);
 }
 
 .comment {
-  margin-bottom: var(--cf-spacing);
-  padding: var(--cf-spacing);
-  border: 1px solid var(--cf-border-color);
-  border-radius: var(--cf-border-radius);
-  background-color: var(--cf-background-color);
-  transition: var(--cf-transition);
+  margin-bottom: var(--wtc-spacing);
+  padding: var(--wtc-spacing);
+  border: 1px solid var(--wtc-border-color);
+  border-radius: var(--wtc-border-radius);
+  background-color: var(--wtc-background-color);
+  transition: var(--wtc-transition);
 }
 
 .comment:hover {
-  box-shadow: var(--cf-shadow);
+  box-shadow: var(--wtc-shadow);
 }
 
 .reply-button {
   margin-top: 8px;
   background-color: transparent;
-  color: var(--cf-primary-color);
-  border: 1px solid var(--cf-border-color);
+  color: var(--wtc-primary-color);
+  border: 1px solid var(--wtc-border-color);
   font-size: 12px;
 }
 
 .reply-button:hover {
-  background-color: var(--cf-highlight-color);
+  background-color: var(--wtc-highlight-color);
 }
 
 .replies {
@@ -264,8 +263,8 @@
 
 .reply {
   margin-top: 12px;
-  margin-left: var(--cf-reply-indent);
-  border-left: 2px solid var(--cf-reply-line-color);
+  margin-left: var(--wtc-reply-indent);
+  border-left: 2px solid var(--wtc-reply-line-color);
   padding-left: 15px;
 }
 
@@ -305,7 +304,7 @@
 /* 新增 tab 樣式 */
 .comment-tabs {
   display: flex;
-  border-bottom: 1px solid var(--cf-border-color);
+  border-bottom: 1px solid var(--wtc-border-color);
   margin-bottom: 0;
 }
 
@@ -317,25 +316,25 @@
   cursor: pointer;
   font-weight: 500;
   color: #666;
-  transition: var(--cf-transition);
+  transition: var(--wtc-transition);
 }
 
 .tab:hover {
-  color: var(--cf-primary-color);
+  color: var(--wtc-primary-color);
 }
 
 .tab.active {
-  color: var(--cf-primary-color);
-  border-bottom: 2px solid var(--cf-primary-color);
+  color: var(--wtc-primary-color);
+  border-bottom: 2px solid var(--wtc-primary-color);
 }
 
 .tab-content {
   position: relative;
-  border: 1px solid var(--cf-border-color);
+  border: 1px solid var(--wtc-border-color);
   border-top: none;
-  border-radius: 0 0 var(--cf-border-radius) var(--cf-border-radius);
-  background-color: var(--cf-background-color);
-  box-shadow: var(--cf-shadow);
+  border-radius: 0 0 var(--wtc-border-radius) var(--wtc-border-radius);
+  background-color: var(--wtc-background-color);
+  box-shadow: var(--wtc-shadow);
 }
 
 #form-content,

@@ -7,13 +7,13 @@
     <title>Wonton Comment</title>
   </head>
   <body>
-    <div id="cf-app"></div>
+    <div id="wtc-app"></div>
 
     <!-- Development -->
     <script type="module">
       import { initWontonComment } from '/src/index.ts';
 
-      const commentApp = initWontonComment('cf-app', {
+      const commentApp = initWontonComment('wtc-app', {
         post: '/blog/my-post',
         apiUrl: 'http://localhost:8787/',
       });
@@ -23,7 +23,7 @@
     <!-- <script type="module">
       import { initWontonComment } from '/wonton-comment.es.js';
 
-      initWontonComment('cf-app', {
+      initWontonComment('wtc-app', {
         post: window.location.pathname,
         apiUrl: 'https://your-api-url.com/',
       });
@@ -32,7 +32,7 @@
     <!-- Production UMD -->
     <!-- <script src="/wonton-comment.umd.js"></script>
     <script>
-      window.WontonComment.default('cf-app', {
+      window.WontonComment.default('wtc-app', {
         post: window.location.pathname,
         apiUrl: 'https://your-api-url.com/',
       });
