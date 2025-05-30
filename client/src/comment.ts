@@ -13,7 +13,7 @@ type CommentMap = {
 
 const POST = '/blog/my-post';
 const ANONYMOUS = 'Anonymous';
-const API_URL = 'http://localhost:8787/api';
+const API_URL = 'http://localhost:8787/';
 export const apiService = createApiService(API_URL);
 
 let currentReplyTo: string | null = null;

@@ -10,7 +10,9 @@ export const createApiService = (apiUrl: string) => {
   const commentAuthMap: Map<string, AuthInfo> = new Map();
 
   const getComments = async (post: string): Promise<Comment[]> => {
-    const res = await fetch(`${apiUrl}/comments?post=${post}`);
+    const url = new URL('/api/comments', apiUrl);
+    url.searchParams.append('post', post);
+    const res = await fetch(url);
     return await res.json();
   };
 
@@ -21,7 +23,10 @@ export const createApiService = (apiUrl: string) => {
     replyTo: string | null,
   ): Promise<boolean> => {
     try {
-      const res = await fetch(`${apiUrl}/comments?post=${post}`, {
+      const url = new URL('/api/comments', apiUrl);
+      url.searchParams.append('post', post);
+
+      const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -52,7 +57,10 @@ export const createApiService = (apiUrl: string) => {
     if (!authInfo) return false;
 
     try {
-      const response = await fetch(`${apiUrl}/comments?post=${post}`, {
+      const url = new URL('/api/comments', apiUrl);
+      url.searchParams.append('post', post);
+
+      const response = await fetch(url, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -75,7 +83,10 @@ export const createApiService = (apiUrl: string) => {
     if (!authInfo) return false;
 
     try {
-      const response = await fetch(`${apiUrl}/comments?post=${post}`, {
+      const url = new URL('/api/comments', apiUrl);
+      url.searchParams.append('post', post);
+
+      const response = await fetch(url, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
