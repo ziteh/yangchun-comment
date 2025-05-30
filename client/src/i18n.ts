@@ -72,5 +72,3 @@ export const createI18n = (initLang: I18nStrings = en) => {
     getLanguage: () => currentStrings,
   };
 };
-
-export const i18n = createI18n();
