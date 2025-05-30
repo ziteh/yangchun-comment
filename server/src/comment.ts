@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { validator } from 'hono/validator';
 import Utils from './utils';
-import type { Comment } from '@cf-comment/shared';
+import type { Comment } from '@wonton-comment/shared';
 
 const app = new Hono<{
   Bindings: {
@@ -29,10 +29,7 @@ app.post(
       return c.text('Missing or invalid msg field', 400);
     }
 
-    if (
-      replyTo &&
-      (typeof replyTo !== 'string' || !/^[0-9A-Z]{12}$/.test(replyTo))
-    ) {
+    if (replyTo && (typeof replyTo !== 'string' || !/^[0-9A-Z]{12}$/.test(replyTo))) {
       return c.text('Invalid reply ID', 400);
     }
 

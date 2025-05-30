@@ -2,7 +2,7 @@ import DOMPurify, { type Config as dompurifyConfig } from 'dompurify';
 import snarkdown from 'snarkdown';
 import { html, render, type TemplateResult } from 'lit-html';
 import { unsafeHTML } from 'lit-html/directives/unsafe-html.js';
-import type { Comment } from '@cf-comment/shared';
+import type { Comment } from '@wonton-comment/shared';
 import { createApiService } from './apiService';
 import { createI18n } from './i18n';
 import './comment.css';

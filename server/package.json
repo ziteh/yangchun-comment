@@ -1,5 +1,5 @@
 {
-  "name": "cf-comment",
+  "name": "@wonton-comment/server",
   "version": "0.0.0",
   "private": true,
   "scripts": {
@@ -11,7 +11,7 @@
     "format": "prettier --write ."
   },
   "dependencies": {
-    "@cf-comment/shared": "workspace:*",
+    "@wonton-comment/shared": "workspace:*",
     "hono": "^4.7.10",
     "nanoid": "^5.1.5",
     "xss": "^1.0.15"

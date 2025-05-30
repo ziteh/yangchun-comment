@@ -10,7 +10,7 @@ importers:
 
   client:
     dependencies:
-      '@cf-comment/shared':
+      '@wonton-comment/shared':
         specifier: workspace:*
         version: link:../shared
       dompurify:
@@ -32,7 +32,7 @@ importers:
 
   server:
     dependencies:
-      '@cf-comment/shared':
+      '@wonton-comment/shared':
         specifier: workspace:*
         version: link:../shared
       hono:
