@@ -6,14 +6,12 @@ type AuthInfo = {
   token: string;
 };
 
-const API_URL = 'http://localhost:8787/api';
-
 // TODO HttpOnly Cookie?
-export const apiService = (() => {
+export const createApiService = (apiUrl: string) => {
   const commentAuthMap: Map<string, AuthInfo> = new Map();
 
   const getComments = async (post: string): Promise<Comment[]> => {
-    const res = await fetch(`${API_URL}/comments?post=${post}`);
+    const res = await fetch(`${apiUrl}/comments?post=${post}`);
     return await res.json();
   };
 
@@ -24,7 +22,7 @@ export const apiService = (() => {
     replyTo: string | null,
   ): Promise<boolean> => {
     try {
-      const res = await fetch(`${API_URL}/comments?post=${post}`, {
+      const res = await fetch(`${apiUrl}/comments?post=${post}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -55,7 +53,7 @@ export const apiService = (() => {
     if (!authInfo) return false;
 
     try {
-      const response = await fetch(`${API_URL}/comments?post=${post}`, {
+      const response = await fetch(`${apiUrl}/comments?post=${post}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -78,7 +76,7 @@ export const apiService = (() => {
     if (!authInfo) return false;
 
     try {
-      const response = await fetch(`${API_URL}/comments?post=${post}`, {
+      const response = await fetch(`${apiUrl}/comments?post=${post}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -132,4 +130,4 @@ export const apiService = (() => {
     removeAuthInfo,
     canEditComment,
   };
-})();
+};

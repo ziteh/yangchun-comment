@@ -4,7 +4,7 @@ import { html, render, type TemplateResult } from 'lit-html';
 import { until } from 'lit-html/directives/until.js';
 import { unsafeHTML } from 'lit-html/directives/unsafe-html.js';
 import type { Comment } from '@cf-comment/shared';
-import { apiService } from './apiService';
+import { createApiService } from './apiService';
 import './comment.css';
 
 type CommentMap = {
@@ -13,6 +13,8 @@ type CommentMap = {
 
 const POST = '/blog/my-post';
 const ANONYMOUS = 'Anonymous';
+const API_URL = 'http://localhost:8787/api';
+export const apiService = createApiService(API_URL);
 
 let currentReplyTo: string | null = null;
 let previewText: string = '';
