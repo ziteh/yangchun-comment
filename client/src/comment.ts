@@ -433,24 +433,27 @@ function createFormTemplate() {
             required
             @input=${handleInputChange}
           ></textarea>
-          ${currentReplyTo && commentMap[currentReplyTo]
-            ? html`<div id="reply-info">
-                ${i18n.t('replyingTo')}
-                <span id="reply-to-name">${getDisplayName(commentMap[currentReplyTo])}</span>
-                <button type="button" @click=${cancelReply}>${i18n.t('cancelReply')}</button>
-              </div>`
-            : ''}
-          ${editingComment
-            ? html`<div id="edit-info">
-                ${i18n.t('editing')}
-                <span id="edit-comment-id">${editingComment.id}</span>
-                <button type="button" @click=${cancelEdit}>${i18n.t('cancelEdit')}</button>
-              </div>`
-            : ''}
 
-          <button type="submit">
-            ${editingComment ? i18n.t('updateComment') : i18n.t('submitComment')}
-          </button>
+          <div class="form-actions">
+            ${currentReplyTo && commentMap[currentReplyTo]
+              ? html`<div id="reply-info">
+                  ${i18n.t('replyingTo')}
+                  <span id="reply-to-name">${getDisplayName(commentMap[currentReplyTo])}</span>
+                  <button type="button" @click=${cancelReply}>${i18n.t('cancelReply')}</button>
+                </div>`
+              : ''}
+            ${editingComment
+              ? html`<div id="edit-info">
+                  ${i18n.t('editing')}
+                  <span id="edit-comment-id">${editingComment.id}</span>
+                  <button type="button" @click=${cancelEdit}>${i18n.t('cancelEdit')}</button>
+                </div>`
+              : ''}
+
+            <button type="submit" class="submit-button">
+              ${editingComment ? i18n.t('updateComment') : i18n.t('submitComment')}
+            </button>
+          </div>
         </form>
       </div>
     </div>
