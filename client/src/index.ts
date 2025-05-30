@@ -461,47 +461,35 @@ class WontonComment {
       helpElement.classList.remove('active');
     }
   }
-
   private createMarkdownHelpTemplate() {
     return html`
       <div class="markdown-help-container">
         <div class="markdown-help-backdrop" @click=${() => this.toggleMarkdownHelp()}></div>
         <div class="markdown-help-content">
           <button class="markdown-help-close" @click=${() => this.toggleMarkdownHelp()}>×</button>
-          <h4>留言</h4>
-          <p>
-            這是一個簡單的留言系統，你可以發表意見或回應其他留言。發佈前可點擊「預覽」查看留言樣式。
-          </p>
-          <p>發佈留言後，在不離開或重新整理頁面的情況下，你可以編輯或刪除兩分鐘內的留言。</p>
-          <h4>語法</h4>
-          <p>
-            支援基本&nbsp;<a
-              href="https://www.markdownguide.org/cheat-sheet/"
-              target="_blank"
-              rel="noopener noreferrer"
-              >Markdown</a
-            >&nbsp;語法，不支援&nbsp;HTML。
-          </p>
+          <h4>${this.i18n.t('commentSystemTitle')}</h4>
+          <p>${this.i18n.t('commentSystemDesc')}</p>
+          <p>${this.i18n.t('commentTimeLimit')}</p>
+          <h4>${this.i18n.t('markdownSyntax')}</h4>
+          <p>${this.i18n.t('markdownBasicSupport')}</p>
           <div class="markdown-examples">
             <code>
               <pre>
-[連結](https://www.example.com)
+${this.i18n.t('markdownLinkExample')}
 
-![圖片](https://www.example.com/sample.jpg)
+${this.i18n.t('markdownImageExample')}
 
-*斜體* 或 _斜體_
+${this.i18n.t('markdownItalicExample')}
 
-**粗體** 或 __粗體__
+${this.i18n.t('markdownBoldExample')}
 
-- 清單
+${this.i18n.t('markdownListExample')}
 
-1. 清單
+${this.i18n.t('markdownOrderedListExample')}
 
-&#96;行內程式碼&#96;
+${this.i18n.t('markdownInlineCodeExample')}
 
-&#96;&#96;&#96;
-程式碼區塊
-&#96;&#96;&#96;</pre
+${this.i18n.t('markdownCodeBlockExample')}</pre
               >
             </code>
           </div>
@@ -559,12 +547,11 @@ class WontonComment {
                     </button>
                   </div>`
                 : ''}
-
               <div class="button-group">
                 <button
                   type="button"
                   class="markdown-help-button"
-                  title="Help"
+                  title="${this.i18n.t('markdownHelp')}"
                   @click=${() => this.toggleMarkdownHelp()}
                 >
                   ?
