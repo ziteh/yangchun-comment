@@ -5,6 +5,7 @@ import { until } from 'lit-html/directives/until.js';
 import { unsafeHTML } from 'lit-html/directives/unsafe-html.js';
 import type { Comment } from '@cf-comment/shared';
 import { createApiService } from './apiService';
+import { i18n } from './i18n';
 import './comment.css';
 
 type CommentMap = {
@@ -12,7 +13,6 @@ type CommentMap = {
 };
 
 const POST = '/blog/my-post';
-const ANONYMOUS = 'Anonymous';
 const API_URL = 'http://localhost:8787/';
 export const apiService = createApiService(API_URL);
 
@@ -102,7 +102,7 @@ function formatDate(timestamp: number): string {
 }
 
 function getDisplayName(comment: Comment | undefined): string {
-  return comment?.name || ANONYMOUS;
+  return comment?.name || i18n.t('anonymous');
 }
 
 function setReplyTo(commentId: string): void {
@@ -146,18 +146,25 @@ function createCommentItemTemplate(
         <span class="${timeClass}">${formatDate(comment.pubDate)}</span>
         ${replyToName
           ? html`<span class="reply-to"
-              >回覆給 <span title="${comment.replyTo ?? ''}">${replyToName}</span></span
+              >${i18n.t('replyTo')}
+              <span title="${comment.replyTo ?? ''}">${replyToName}</span></span
             >`
           : ''}
         ${canEdit
           ? html`<span class="comment-controls">
-              <button class="edit-button" @click=${() => handleEdit(comment)}>編輯</button>
-              <button class="delete-button" @click=${() => handleDelete(comment.id)}>刪除</button>
+              <button class="edit-button" @click=${() => handleEdit(comment)}>
+                ${i18n.t('edit')}
+              </button>
+              <button class="delete-button" @click=${() => handleDelete(comment.id)}>
+                ${i18n.t('delete')}
+              </button>
             </span>`
           : ''}
       </div>
       <div class="${contentClass}">${renderMarkdown(comment.msg)}</div>
-      <button class="reply-button" @click=${() => setReplyTo(comment.id)}>回覆</button>
+      <button class="reply-button" @click=${() => setReplyTo(comment.id)}>
+        ${i18n.t('reply')}
+      </button>
       ${isRoot && allReplies
         ? html`<div class="replies">
             ${allReplies.map((reply) => {
@@ -234,7 +241,7 @@ async function handleSubmit(e: SubmitEvent): Promise<void> {
       previewText = '';
       editingComment = null;
     } else {
-      alert('編輯留言失敗，可能權限已過期');
+      alert(i18n.t('editFailed'));
     }
   } else {
     success = await apiService.addComment(POST, name, message, currentReplyTo);
@@ -244,7 +251,7 @@ async function handleSubmit(e: SubmitEvent): Promise<void> {
       previewText = '';
       currentReplyTo = null;
     } else {
-      alert('發送留言失敗');
+      alert(i18n.t('submitFailed'));
     }
   }
 
@@ -255,7 +262,7 @@ async function handleSubmit(e: SubmitEvent): Promise<void> {
 }
 
 async function handleDelete(commentId: string): Promise<void> {
-  if (!confirm('確定要刪除此留言嗎?')) return;
+  if (!confirm(i18n.t('confirmDelete'))) return;
 
   const success = await apiService.deleteComment(POST, commentId);
 
@@ -263,7 +270,7 @@ async function handleDelete(commentId: string): Promise<void> {
     comments.length = 0;
     renderApp();
   } else {
-    alert('刪除留言失敗，可能權限已過期');
+    alert(i18n.t('deleteFailed'));
   }
 }
 
@@ -305,29 +312,31 @@ function cancelEdit(): void {
 function createFormTemplate() {
   return html`
     <form id="comment-form" @submit=${handleSubmit}>
-      <input type="text" name="name" placeholder="姓名 (選填)" />
+      <input type="text" name="name" placeholder="${i18n.t('namePlaceholder')}" />
       <textarea
         name="message"
-        placeholder="留言內容..."
+        placeholder="${i18n.t('messagePlaceholder')}"
         required
         @input=${handleInputChange}
       ></textarea>
       ${currentReplyTo && commentMap[currentReplyTo]
         ? html`<div id="reply-info">
-            回覆給:
+            ${i18n.t('replyingTo')}
             <span id="reply-to-name">${getDisplayName(commentMap[currentReplyTo])}</span>
-            <button type="button" @click=${cancelReply}>取消回覆</button>
+            <button type="button" @click=${cancelReply}>${i18n.t('cancelReply')}</button>
           </div>`
         : ''}
       ${editingComment
         ? html`<div id="edit-info">
-            編輯中:
+            ${i18n.t('editing')}
             <span id="edit-comment-id">${editingComment.id}</span>
-            <button type="button" @click=${cancelEdit}>取消編輯</button>
+            <button type="button" @click=${cancelEdit}>${i18n.t('cancelEdit')}</button>
           </div>`
         : ''}
 
-      <button type="submit">${editingComment ? '更新留言' : '發送留言'}</button>
+      <button type="submit">
+        ${editingComment ? i18n.t('updateComment') : i18n.t('submitComment')}
+      </button>
     </form>
     <div id="preview">${previewText ? renderMarkdown(previewText) : html``}</div>
   `;
@@ -351,7 +360,7 @@ async function renderApp(): Promise<void> {
       <div id="comments">
         ${until(
           Promise.resolve(comments).then((data) => processComments(data)),
-          html`<div>載入中...</div>`,
+          html`<div>${i18n.t('loading')}</div>`,
         )}
       </div>
     </div>
