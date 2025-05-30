@@ -19,6 +19,7 @@ const i18n = createI18n();
 let currentReplyTo: string | null = null;
 let previewText: string = '';
 let editingComment: Comment | null = null;
+let activeTab: 'write' | 'preview' = 'write'; // 新增 - Tab 狀態管理
 
 DOMPurify.addHook('afterSanitizeAttributes', (node) => {
   // window.opener
@@ -114,12 +115,57 @@ function renderForm() {
 }
 
 function renderPreview() {
-  const previewTemplate = html`<div id="preview">
-    ${previewText ? renderMarkdown(previewText) : html``}
-  </div>`;
+  const now = Date.now();
+  const nameInput = document.querySelector('#comment-form input[name="name"]') as HTMLInputElement;
+  const userName = nameInput ? nameInput.value : '';
+
+  const previewTemplate = html`
+    <div id="preview" class="${activeTab === 'preview' ? 'active' : ''}">
+      ${previewText
+        ? html`
+            <div class="comment preview-comment">
+              <div class="comment-header">
+                <span class="comment-name">${userName || i18n.t('anonymous')}</span>
+                <span class="comment-time">${formatDate(now)}</span>
+                ${currentReplyTo && commentMap[currentReplyTo]
+                  ? html`<span class="reply-to">
+                      ${i18n.t('replyTo')}
+                      <span>${getDisplayName(commentMap[currentReplyTo])}</span>
+                    </span>`
+                  : ''}
+              </div>
+              <div class="comment-content">${renderMarkdown(previewText)}</div>
+            </div>
+          `
+        : html`<div class="empty-preview">${i18n.t('emptyPreview')}</div>`}
+    </div>
+  `;
   const previewElement = document.getElementById('preview-container');
   if (previewElement) {
-    render(previewTemplate, previewElement);
+    render(previewElement.classList.contains('active') ? previewTemplate : html``, previewElement);
+  }
+}
+
+function switchTab(tab: 'write' | 'preview') {
+  activeTab = tab;
+
+  const writeTab = document.getElementById('write-tab');
+  const previewTab = document.getElementById('preview-tab');
+  const formContainer = document.getElementById('form-content');
+  const previewContainer = document.getElementById('preview-container');
+
+  if (writeTab && previewTab) {
+    writeTab.classList.toggle('active', tab === 'write');
+    previewTab.classList.toggle('active', tab === 'preview');
+  }
+
+  if (formContainer && previewContainer) {
+    formContainer.classList.toggle('active', tab === 'write');
+    previewContainer.classList.toggle('active', tab === 'preview');
+
+    if (tab === 'preview') {
+      renderPreview();
+    }
   }
 }
 
@@ -158,7 +204,11 @@ function cancelReply(): void {
 function handleInputChange(e: Event): void {
   const target = e.target as HTMLInputElement;
   previewText = target.value;
-  renderPreview();
+
+  // 只有在預覽頁籤處於活動狀態時才重新渲染預覽
+  if (activeTab === 'preview') {
+    renderPreview();
+  }
 }
 
 async function loadComments(): Promise<Comment[]> {
@@ -357,33 +407,53 @@ function cancelEdit(): void {
 
 function createFormTemplate() {
   return html`
-    <form id="comment-form" @submit=${handleSubmit}>
-      <input type="text" name="name" placeholder="${i18n.t('namePlaceholder')}" />
-      <textarea
-        name="message"
-        placeholder="${i18n.t('messagePlaceholder')}"
-        required
-        @input=${handleInputChange}
-      ></textarea>
-      ${currentReplyTo && commentMap[currentReplyTo]
-        ? html`<div id="reply-info">
-            ${i18n.t('replyingTo')}
-            <span id="reply-to-name">${getDisplayName(commentMap[currentReplyTo])}</span>
-            <button type="button" @click=${cancelReply}>${i18n.t('cancelReply')}</button>
-          </div>`
-        : ''}
-      ${editingComment
-        ? html`<div id="edit-info">
-            ${i18n.t('editing')}
-            <span id="edit-comment-id">${editingComment.id}</span>
-            <button type="button" @click=${cancelEdit}>${i18n.t('cancelEdit')}</button>
-          </div>`
-        : ''}
-
-      <button type="submit">
-        ${editingComment ? i18n.t('updateComment') : i18n.t('submitComment')}
+    <div class="comment-tabs">
+      <button
+        id="write-tab"
+        class="tab ${activeTab === 'write' ? 'active' : ''}"
+        @click=${() => switchTab('write')}
+      >
+        ${i18n.t('write')}
       </button>
-    </form>
+      <button
+        id="preview-tab"
+        class="tab ${activeTab === 'preview' ? 'active' : ''}"
+        @click=${() => switchTab('preview')}
+      >
+        ${i18n.t('preview')}
+      </button>
+    </div>
+    <div class="tab-content">
+      <div id="form-content" class="${activeTab === 'write' ? 'active' : ''}">
+        <form id="comment-form" @submit=${handleSubmit}>
+          <input type="text" name="name" placeholder="${i18n.t('namePlaceholder')}" />
+          <textarea
+            name="message"
+            placeholder="${i18n.t('messagePlaceholder')}"
+            required
+            @input=${handleInputChange}
+          ></textarea>
+          ${currentReplyTo && commentMap[currentReplyTo]
+            ? html`<div id="reply-info">
+                ${i18n.t('replyingTo')}
+                <span id="reply-to-name">${getDisplayName(commentMap[currentReplyTo])}</span>
+                <button type="button" @click=${cancelReply}>${i18n.t('cancelReply')}</button>
+              </div>`
+            : ''}
+          ${editingComment
+            ? html`<div id="edit-info">
+                ${i18n.t('editing')}
+                <span id="edit-comment-id">${editingComment.id}</span>
+                <button type="button" @click=${cancelEdit}>${i18n.t('cancelEdit')}</button>
+              </div>`
+            : ''}
+
+          <button type="submit">
+            ${editingComment ? i18n.t('updateComment') : i18n.t('submitComment')}
+          </button>
+        </form>
+      </div>
+    </div>
   `;
 }
 

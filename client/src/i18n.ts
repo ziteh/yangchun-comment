@@ -17,6 +17,9 @@ export type I18nStrings = {
   editFailed: string;
   submitFailed: string;
   deleteFailed: string;
+  write: string;
+  preview: string;
+  emptyPreview: string;
 };
 
 export const en: I18nStrings = {
@@ -25,9 +28,9 @@ export const en: I18nStrings = {
   edit: 'Edit',
   delete: 'Delete',
   reply: 'Reply',
-  replyingTo: 'Replying to:',
+  replyingTo: 'Replying to: ',
   cancelReply: 'Cancel Reply',
-  editing: 'Editing:',
+  editing: 'Editing: ',
   cancelEdit: 'Cancel Edit',
   updateComment: 'Update Comment',
   submitComment: 'Submit Comment',
@@ -38,6 +41,9 @@ export const en: I18nStrings = {
   editFailed: 'Failed to edit comment. Permission may have expired.',
   submitFailed: 'Failed to submit comment.',
   deleteFailed: 'Failed to delete comment. Permission may have expired.',
+  write: 'Write',
+  preview: 'Preview',
+  emptyPreview: 'Nothing to preview',
 };
 
 export const zhHant: I18nStrings = {
@@ -46,9 +52,9 @@ export const zhHant: I18nStrings = {
   edit: '編輯',
   delete: '刪除',
   reply: '回覆',
-  replyingTo: '回覆給:',
+  replyingTo: '回覆給：',
   cancelReply: '取消回覆',
-  editing: '編輯中:',
+  editing: '編輯中：',
   cancelEdit: '取消編輯',
   updateComment: '更新留言',
   submitComment: '發送留言',
@@ -59,6 +65,9 @@ export const zhHant: I18nStrings = {
   editFailed: '編輯留言失敗，可能權限已過期',
   submitFailed: '發送留言失敗',
   deleteFailed: '刪除留言失敗，可能權限已過期',
+  write: '編輯',
+  preview: '預覽',
+  emptyPreview: '沒有內容可供預覽',
 };
 
 export const createI18n = (initLang: I18nStrings = en) => {

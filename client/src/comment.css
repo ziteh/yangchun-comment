@@ -1,6 +1,6 @@
 :root {
-  --cf-font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
-    Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  --cf-font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
+    Cantarell, sans-serif;
   --cf-primary-color: #3b82f6;
   --cf-text-color: #333;
   --cf-border-color: #e5e7eb;
@@ -23,12 +23,12 @@
 }
 
 #comment-form {
-  margin-bottom: var(--cf-spacing);
+  margin-bottom: 0;
   padding: var(--cf-spacing);
-  border: 1px solid var(--cf-border-color);
-  border-radius: var(--cf-border-radius);
+  border: none;
+  border-radius: 0;
   background-color: var(--cf-background-color);
-  box-shadow: var(--cf-shadow);
+  box-shadow: none;
 }
 
 #comment-form input[type='text'] {
@@ -171,12 +171,29 @@
 }
 
 #preview {
-  margin-bottom: var(--cf-spacing);
+  margin: 0;
   padding: var(--cf-spacing);
-  border: 1px dashed var(--cf-border-color);
-  border-radius: var(--cf-border-radius);
-  background-color: var(--cf-highlight-color);
-  min-height: 40px;
+  border: none;
+  border-radius: 0;
+  background-color: var(--cf-background-color);
+}
+
+.preview-comment {
+  margin: 0;
+  padding: 0;
+  border: none;
+  box-shadow: none;
+}
+
+.preview-comment:hover {
+  box-shadow: none;
+}
+
+.empty-preview {
+  color: #888;
+  font-style: italic;
+  padding: 10px 0;
+  text-align: center;
 }
 
 #comments {
@@ -252,6 +269,52 @@
   word-break: break-word;
 }
 
+/* 新增 tab 樣式 */
+.comment-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--cf-border-color);
+  margin-bottom: 0;
+}
+
+.tab {
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font-weight: 500;
+  color: #666;
+  transition: var(--cf-transition);
+}
+
+.tab:hover {
+  color: var(--cf-primary-color);
+}
+
+.tab.active {
+  color: var(--cf-primary-color);
+  border-bottom: 2px solid var(--cf-primary-color);
+}
+
+.tab-content {
+  position: relative;
+  border: 1px solid var(--cf-border-color);
+  border-top: none;
+  border-radius: 0 0 var(--cf-border-radius) var(--cf-border-radius);
+  background-color: var(--cf-background-color);
+  box-shadow: var(--cf-shadow);
+}
+
+#form-content,
+#preview-container {
+  display: none;
+}
+
+#form-content.active,
+#preview-container.active {
+  display: block;
+}
+
 @media (max-width: 576px) {
   #comment-form,
   .comment {
@@ -283,5 +346,15 @@
   .comment-controls {
     margin-left: 0;
     margin-top: 8px;
+  }
+
+  .comment-tabs {
+    justify-content: stretch;
+  }
+
+  .tab {
+    flex: 1;
+    text-align: center;
+    padding: 8px 5px;
   }
 }
