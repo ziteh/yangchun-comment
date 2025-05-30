@@ -1,7 +1,6 @@
 import DOMPurify, { type Config as dompurifyConfig } from 'dompurify';
 import snarkdown from 'snarkdown';
 import { html, render, type TemplateResult } from 'lit-html';
-import { until } from 'lit-html/directives/until.js';
 import { unsafeHTML } from 'lit-html/directives/unsafe-html.js';
 import type { Comment } from '@cf-comment/shared';
 import { createApiService } from './apiService';
@@ -105,27 +104,60 @@ function getDisplayName(comment: Comment | undefined): string {
   return comment?.name || i18n.t('anonymous');
 }
 
+function renderForm() {
+  const formTemplate = createFormTemplate();
+  const formElement = document.getElementById('comment-form-container');
+  if (formElement) {
+    render(formTemplate, formElement);
+  }
+}
+
+function renderPreview() {
+  const previewTemplate = html`<div id="preview">
+    ${previewText ? renderMarkdown(previewText) : html``}
+  </div>`;
+  const previewElement = document.getElementById('preview-container');
+  if (previewElement) {
+    render(previewTemplate, previewElement);
+  }
+}
+
+async function renderCommentsList() {
+  if (comments.length === 0) {
+    comments = await loadComments();
+    commentMap = {};
+    comments.forEach((comment) => {
+      commentMap[comment.id] = comment;
+    });
+  }
+
+  const commentsTemplate = html` <div id="comments">${processComments(comments)}</div> `;
+
+  const commentsElement = document.getElementById('comments-container');
+  if (commentsElement) {
+    render(commentsTemplate, commentsElement);
+  }
+}
+
 function setReplyTo(commentId: string): void {
   currentReplyTo = commentId;
-  renderApp();
+  renderForm();
 
-  setTimeout(() => {
-    const form = document.querySelector('#comment-form');
-    if (form) {
-      form.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, 0);
+  const form = document.querySelector('#comment-form');
+  if (form) {
+    form.scrollIntoView({ behavior: 'smooth' });
+  }
 }
 
 function cancelReply(): void {
   currentReplyTo = null;
-  renderApp();
+  renderForm();
 }
 
 function handleInputChange(e: Event): void {
   const target = e.target as HTMLInputElement;
   previewText = target.value;
-  renderApp();
+  renderPreview();
 }
 
 async function loadComments(): Promise<Comment[]> {
@@ -247,6 +279,8 @@ async function handleSubmit(e: SubmitEvent): Promise<void> {
       (e.target as HTMLFormElement).reset();
       previewText = '';
       editingComment = null;
+      renderForm();
+      renderPreview();
     } else {
       alert(i18n.t('editFailed'));
     }
@@ -257,6 +291,8 @@ async function handleSubmit(e: SubmitEvent): Promise<void> {
       (e.target as HTMLFormElement).reset();
       previewText = '';
       currentReplyTo = null;
+      renderForm();
+      renderPreview();
     } else {
       alert(i18n.t('submitFailed'));
     }
@@ -264,7 +300,7 @@ async function handleSubmit(e: SubmitEvent): Promise<void> {
 
   if (success) {
     comments.length = 0;
-    renderApp();
+    await renderCommentsList();
   }
 }
 
@@ -275,7 +311,7 @@ async function handleDelete(commentId: string): Promise<void> {
 
   if (success) {
     comments.length = 0;
-    renderApp();
+    await renderCommentsList();
   } else {
     alert(i18n.t('deleteFailed'));
   }
@@ -298,12 +334,13 @@ function handleEdit(comment: Comment): void {
 
   previewText = comment.msg || '';
 
+  renderForm();
+  renderPreview();
+
   const form = document.querySelector('#comment-form');
   if (form) {
     form.scrollIntoView({ behavior: 'smooth' });
   }
-
-  renderApp();
 }
 
 function cancelEdit(): void {
@@ -313,7 +350,8 @@ function cancelEdit(): void {
     form.reset();
   }
   previewText = '';
-  renderApp();
+  renderForm();
+  renderPreview();
 }
 
 function createFormTemplate() {
@@ -345,37 +383,29 @@ function createFormTemplate() {
         ${editingComment ? i18n.t('updateComment') : i18n.t('submitComment')}
       </button>
     </form>
-    <div id="preview">${previewText ? renderMarkdown(previewText) : html``}</div>
   `;
 }
 
 let commentMap: CommentMap = {};
 let comments: Comment[] = [];
-async function renderApp(): Promise<void> {
-  // loading comments
-  if (comments.length === 0) {
-    comments = await loadComments();
-    commentMap = {};
-    comments.forEach((comment) => {
-      commentMap[comment.id] = comment;
-    });
-  }
 
+// Init DOM structure and render the app
+async function renderApp(): Promise<void> {
   const appTemplate = html`
     <div class="cf-container">
-      ${createFormTemplate()}
-      <div id="comments">
-        ${until(
-          Promise.resolve(comments).then((data) => processComments(data)),
-          html`<div>${i18n.t('loading')}</div>`,
-        )}
-      </div>
+      <div id="comment-form-container"></div>
+      <div id="preview-container"></div>
+      <div id="comments-container"></div>
     </div>
   `;
 
   const appElement = document.getElementById('cf-app');
   if (appElement) {
     render(appTemplate, appElement);
+
+    renderForm();
+    renderPreview();
+    await renderCommentsList();
   }
 }
 
