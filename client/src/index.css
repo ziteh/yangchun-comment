@@ -2,8 +2,6 @@
   --wtc-text-color: #333;
   --wtc-background-color: #fff;
   --wtc-primary-color: #3b82f6;
-  --wtc-error-color: #ef4444;
-  --wtc-success-color: #10b981;
 
   --wtc-font-family: inherit;
   --wtc-base-font-size: 14px;
@@ -179,21 +177,24 @@
 #reply-info,
 #edit-info {
   margin-bottom: 0;
-  padding: 8px 12px;
-  background-color: var(--wtc-highlight-color);
+  /* padding: 8px 12px; */
+  /* background-color: var(--wtc-highlight-color); */
+  color: var(--wtc-text-light-color);
   border-radius: var(--wtc-border-radius);
   font-size: 14px;
   display: flex;
   align-items: center;
-  flex: 1;
+  /* flex: 1; */
   margin-right: 10px;
 }
 
 #reply-info button,
 #edit-info button {
-  margin-left: auto;
+  margin-left: 10px;
+  /* margin-left: auto; */
   background-color: var(--wtc-button-secondary-bg);
-  color: var(--wtc-button-secondary-text);
+  color: var(--wtc-text-light-color);
+  /* color: var(--wtc-button-secondary-text); */
   border: 1px solid var(--wtc-button-secondary-border);
   padding: 4px 8px;
 }
@@ -201,6 +202,11 @@
 #reply-info button:hover,
 #edit-info button:hover {
   background-color: var(--wtc-button-secondary-hover-bg);
+}
+
+#reply-to-name,
+#edit-comment-id {
+  margin-left: 4px;
 }
 
 /* Preview */
@@ -302,9 +308,9 @@
 
 .edit-button,
 .delete-button {
+  color: var(--wtc-text-light-color);
   background-color: var(--wtc-button-secondary-bg);
-  color: var(--wtc-button-secondary-text);
-  border: 1px solid var(--wtc-button-secondary-border);
+  border: none;
   border-radius: calc(var(--wtc-border-radius) / 2);
   font-size: calc(var(--wtc-base-font-size) - 2px);
   padding: 2px 6px;
@@ -312,17 +318,9 @@
   transition: var(--wtc-transition);
 }
 
-.edit-button:hover {
-  background-color: var(--wtc-highlight-color);
-}
-
-.delete-button {
-  color: var(--wtc-error-color);
-  border-color: var(--wtc-error-color);
-}
-
+.edit-button:hover,
 .delete-button:hover {
-  background-color: color-mix(in srgb, var(--wtc-error-color) 10%, var(--wtc-background-color));
+  background-color: var(--wtc-highlight-color);
 }
 
 /* Help */
