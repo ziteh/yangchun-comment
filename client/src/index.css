@@ -18,7 +18,7 @@
     var(--wtc-text-color) 40%,
     var(--wtc-background-color)
   );
-  --wtc-border-color: color-mix(in srgb, var(--wtc-text-color) 15%, var(--wtc-background-color));
+  --wtc-border-color: color-mix(in srgb, var(--wtc-text-color) 10%, var(--wtc-background-color));
   --wtc-highlight-color: color-mix(in srgb, var(--wtc-text-color) 5%, var(--wtc-background-color));
   --wtc-overlay-color: color-mix(in srgb, var(--wtc-text-color) 50%, transparent);
   --wtc-button-secondary-border: var(--wtc-border-color);
@@ -27,7 +27,7 @@
   --wtc-small-font-size: 0.8em;
   --wtc-transition: all 0.2s ease;
   /* --wtc-shadow: 0 4px 12px color-mix(in srgb, var(--wtc-text-color) 15%, transparent); */
-  --wtc-reply-indent: 20px;
+  --wtc-reply-indent: 12px;
   --wtc-reply-line-color: var(--wtc-border-color);
   --wtc-hover-opacity: 0.9;
   --wtc-button-text-color: var(--wtc-background-color);
@@ -304,8 +304,8 @@
 
 .comment-content,
 .reply-content {
-  margin-left: 10px;
-  margin-bottom: 10px;
+  margin-left: var(--wtc-reply-indent);
+  margin-bottom: 6px;
   line-height: 1.5;
   word-break: break-word;
 }
@@ -334,22 +334,23 @@
 
 /* Reply */
 .reply-button {
-  margin-left: 10px;
-  padding: 4px;
+  margin-left: var(--wtc-reply-indent);
+  padding: 0px;
   background-color: transparent;
   color: var(--wtc-primary-color);
   font-size: 12px;
 }
 
 .replies {
-  margin-top: 12px;
+  margin-top: 4px;
 }
 
 .reply {
-  margin-top: 12px;
+  /* margin-top: 12px; */
   margin-left: var(--wtc-reply-indent);
   border-left: 2px solid var(--wtc-reply-line-color);
   padding-left: 15px;
+  padding-top: 15px;
 }
 
 /* Comment Controls */
