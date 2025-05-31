@@ -332,6 +332,28 @@
   max-width: 75%;
 }
 
+.comment-content ul,
+.reply-content ul,
+.preview-comment ul {
+  padding-left: 20px;
+  margin: 8px 0;
+  list-style-type: disc;
+}
+
+.comment-content ol,
+.reply-content ol,
+.preview-comment ol {
+  padding-left: 20px;
+  margin: 8px 0;
+  list-style-type: decimal;
+}
+
+.comment-content li,
+.reply-content li,
+.preview-comment li {
+  margin-bottom: 4px;
+}
+
 /* Reply */
 .reply-button {
   margin-left: var(--wtc-reply-indent);
