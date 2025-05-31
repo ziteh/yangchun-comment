@@ -127,6 +127,7 @@
   font-size: 14px;
   transition: var(--wtc-transition);
   background-color: var(--wtc-background-color);
+  box-sizing: border-box;
 }
 
 #comment-form input[type='text']:focus {
@@ -307,6 +308,28 @@
   margin-bottom: 10px;
   line-height: 1.5;
   word-break: break-word;
+}
+
+.comment-content a,
+.reply-content a,
+.preview-comment a {
+  color: var(--wtc-primary-color);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: var(--wtc-transition);
+  padding-bottom: 1px;
+}
+
+.comment-content a:hover,
+.reply-content a:hover,
+.preview-comment a:hover {
+  border-bottom: 1px solid var(--wtc-primary-color);
+}
+
+.comment-content img,
+.reply-content img,
+.preview-comment img {
+  width: 100%;
 }
 
 /* Reply */
