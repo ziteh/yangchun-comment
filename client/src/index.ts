@@ -97,8 +97,8 @@ class WontonComment {
     ALLOW_ARIA_ATTR: false, // aria-*
 
     // explicitly blocklist
-    FORBID_TAGS: ['style', 'script', 'iframe', 'object', 'form', 'embed'],
-    FORBID_ATTR: ['style', 'onclick', 'onmouseover', 'onload', 'onunload', 'onerror'],
+    // FORBID_TAGS: ['style', 'script', 'iframe', 'object', 'form', 'embed'],
+    // FORBID_ATTR: ['style', 'onclick', 'onmouseover', 'onload', 'onunload', 'onerror'],
   };
 
   private canEditComment(commentId: string): boolean {
