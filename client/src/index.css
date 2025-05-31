@@ -458,6 +458,14 @@
   margin-bottom: 1em;
 }
 
+.markdown-help-content a {
+  color: var(--wtc-primary-color);
+  text-decoration: none;
+  /* border-bottom: 1px solid transparent; */
+  transition: var(--wtc-transition);
+  /* padding-bottom: 1px; */
+}
+
 .markdown-help-content h4 {
   margin-top: 1.5em;
   margin-bottom: 0.75em;

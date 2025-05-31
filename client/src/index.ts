@@ -470,6 +470,14 @@ class WontonComment {
           <h4>${this.i18n.t('commentSystemTitle')}</h4>
           <p>${this.i18n.t('commentSystemDesc')}</p>
           <p>${this.i18n.t('commentTimeLimit')}</p>
+          <p>
+            Powered by&nbsp;<a
+              href="https://github.com/ziteh/wonton-comment"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Wonton</a
+            >
+          </p>
           <h4>${this.i18n.t('markdownSyntax')}</h4>
           <p>${this.i18n.t('markdownBasicSupport')}</p>
           <div class="markdown-examples">
