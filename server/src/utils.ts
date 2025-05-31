@@ -9,6 +9,7 @@ export default class Utils {
       allowedAttributes: {}, // no attributes allowed
       disallowedTagsMode: 'discard', // or 'completelyDiscard'
       parser: {
+        decodeEntities: true, // It is recommended to never disable the 'decodeEntities' option
         lowerCaseTags: true,
       },
     });
