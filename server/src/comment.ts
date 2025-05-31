@@ -7,6 +7,8 @@ const app = new Hono<{
   Bindings: {
     COMMENTS: KVNamespace;
     SECRET_KEY: string;
+    MAX_NAME_LENGTH: number;
+    MAX_MSG_LENGTH: number;
   };
 }>();
 
@@ -27,6 +29,14 @@ app.post(
 
     if (!msg || typeof msg !== 'string') {
       return c.text('Missing or invalid msg field', 400);
+    }
+
+    if (msg.length > c.env.MAX_MSG_LENGTH) {
+      return c.text(`Message is too long (maximum ${c.env.MAX_MSG_LENGTH} characters)`, 400);
+    }
+
+    if (name && typeof name === 'string' && name.length > c.env.MAX_NAME_LENGTH) {
+      return c.text(`Name is too long (maximum ${c.env.MAX_NAME_LENGTH} characters)`, 400);
     }
 
     if (replyTo && (typeof replyTo !== 'string' || !/^[0-9A-Z]{12}$/.test(replyTo))) {
@@ -68,6 +78,21 @@ app.put('/', Utils.validateQueryPost, async (c) => {
   const { post } = c.req.valid('query');
   const { id, timestamp, token, name, email, msg } = await c.req.json();
 
+  if (!msg || typeof msg !== 'string') {
+    console.warn('Invalid message for update:', msg);
+    return c.text('Missing fields', 400); // 400 Bad Request
+  }
+
+  if (msg.length > c.env.MAX_MSG_LENGTH) {
+    console.warn('Message too long for update:', msg.length);
+    return c.text(`Message is too long (maximum ${c.env.MAX_MSG_LENGTH} characters)`, 400);
+  }
+
+  if (name && typeof name === 'string' && name.length > c.env.MAX_NAME_LENGTH) {
+    console.warn('Name too long for update:', name.length);
+    return c.text(`Name is too long (maximum ${c.env.MAX_NAME_LENGTH} characters)`, 400);
+  }
+
   const hmacOk = await Utils.verifyHmac(c.env.SECRET_KEY, id, timestamp, token);
   if (!hmacOk) {
     console.warn('Invalid HMAC for update request:', id);
@@ -81,11 +106,6 @@ app.put('/', Utils.validateQueryPost, async (c) => {
   if (index === -1) {
     console.warn('Comment not found for update:', id);
     return c.text('Comment not found', 404); // 404 Not Found
-  }
-
-  if (!msg || typeof msg !== 'string') {
-    console.warn('Invalid message for update:', msg);
-    return c.text('Missing fields', 400); // 400 Bad Request
   }
 
   comments[index] = {
