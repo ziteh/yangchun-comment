@@ -1,14 +1,18 @@
 import { validator } from 'hono/validator';
 import { customAlphabet } from 'nanoid';
-import xss from 'xss';
+import sanitizeHtml from 'sanitize-html';
 
 export default class Utils {
   static sanitize(raw: string) {
-    return xss(raw, {
-      whiteList: {}, // empty, means filter out all HTML tags
-      stripIgnoreTag: true, // filter out all HTML not in the whitelist
-      stripIgnoreTagBody: ['script'], // the script tag is a special case, we need to filter out its content
-    }).replace(/\]\(\s*javascript:[^)]+\)/gi, ']('); // need it ? for `[XSS](javascript:alert('xss'))`
+    const sanitized = sanitizeHtml(raw, {
+      allowedTags: [], // no tags allowed
+      allowedAttributes: {}, // no attributes allowed
+      disallowedTagsMode: 'discard', // or 'completelyDiscard'
+      parser: {
+        lowerCaseTags: true,
+      },
+    });
+    return sanitized.replace(/\]\(\s*javascript:[^)]+\)/gi, ']('); // protection against markdown javascript links
   }
 
   static genId() {
@@ -34,11 +38,7 @@ export default class Utils {
     };
   });
 
-  static async genHmac(
-    secretKey: string,
-    commentId: string,
-    timestamp: number,
-  ) {
+  static async genHmac(secretKey: string, commentId: string, timestamp: number) {
     const encoder = new TextEncoder();
     const keyData = encoder.encode(secretKey);
     const dataData = encoder.encode(`${commentId}-${timestamp}`);
@@ -56,12 +56,7 @@ export default class Utils {
     return base64Signature;
   }
 
-  static async verifyHmac(
-    secretKey: string,
-    commentId: string,
-    timestamp: number,
-    hmac: string,
-  ) {
+  static async verifyHmac(secretKey: string, commentId: string, timestamp: number, hmac: string) {
     const expiry = 2 * 60 * 1000; // 2 minutes in milliseconds
     const now = Date.now();
     if (now - timestamp > expiry || timestamp > now) {

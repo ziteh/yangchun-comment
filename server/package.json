@@ -14,12 +14,13 @@
     "@wonton-comment/shared": "workspace:*",
     "hono": "^4.7.10",
     "nanoid": "^5.1.5",
-    "xss": "^1.0.15"
+    "sanitize-html": "^2.17.0"
   },
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "^0.8.19",
     "@cloudflare/workers-types": "^4.20250523.0",
     "@types/node": "^22.15.21",
+    "@types/sanitize-html": "^2.16.0",
     "prettier": "3.5.3",
     "typescript": "^5.5.2",
     "vitest": "~3.0.7",
