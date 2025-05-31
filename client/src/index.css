@@ -329,7 +329,7 @@
 .comment-content img,
 .reply-content img,
 .preview-comment img {
-  width: 100%;
+  max-width: 75%;
 }
 
 /* Reply */
