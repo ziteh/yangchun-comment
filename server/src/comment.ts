@@ -119,7 +119,14 @@ app.delete('/', Utils.validateQueryPost, async (c) => {
     return c.text('Comment not found', 404); // 404 Not Found
   }
 
-  comments.splice(index, 1); // Remove the comment from the array
+  // Instead of removing the comment, mark it as deleted
+  comments[index] = {
+    ...comments[index],
+    name: 'deleted',
+    email: 'deleted',
+    msg: 'deleted',
+  };
+
   await c.env.COMMENTS.put(key, JSON.stringify(comments));
   return c.text('Comment deleted', 200); // 200 OK
 });
