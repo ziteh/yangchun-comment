@@ -21,6 +21,7 @@ export type I18nStrings = {
   preview: string;
   emptyPreview: string;
   markdownHelp: string;
+  modified: string;
   commentSystemTitle: string;
   commentSystemDesc: string;
   commentTimeLimit: string;
@@ -43,6 +44,7 @@ export const en: I18nStrings = {
   delete: 'Delete',
   reply: 'Reply',
   replyingTo: 'Replying to: ',
+  modified: 'Modified on',
   cancelReply: 'Cancel',
   editing: 'Editing: ',
   cancelEdit: 'Cancel',
@@ -82,6 +84,7 @@ export const zhHant: I18nStrings = {
   edit: '編輯',
   delete: '刪除',
   reply: '回覆',
+  modified: '修改於',
   replyingTo: '回覆給：',
   cancelReply: '取消回覆',
   editing: '編輯中：',

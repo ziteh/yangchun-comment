@@ -93,7 +93,7 @@ app.put('/', Utils.validateQueryPost, async (c) => {
     name: Utils.sanitize(name),
     email: Utils.sanitize(email),
     msg: Utils.sanitize(msg),
-    pubDate: Date.now(),
+    modDate: Date.now(),
   };
   await c.env.COMMENTS.put(key, JSON.stringify(comments));
   return c.text('Comment updated', 200); // 200 OK
@@ -125,6 +125,7 @@ app.delete('/', Utils.validateQueryPost, async (c) => {
     name: 'deleted',
     email: 'deleted',
     msg: 'deleted',
+    modDate: Date.now(),
   };
 
   await c.env.COMMENTS.put(key, JSON.stringify(comments));

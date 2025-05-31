@@ -264,7 +264,14 @@ class WontonComment {
       <div class="${className}" ${isRoot ? `data-id="${comment.id}"` : ''}>
         <div class="${headerClass}">
           <span class="${nameClass}" title="${comment.id}">${this.getDisplayName(comment)}</span>
-          <span class="${timeClass}">${this.formatDate(comment.pubDate)}</span>
+          <span
+            class="${timeClass}"
+            title="${comment.modDate ? this.formatDate(comment.pubDate) : undefined}"
+          >
+            ${comment.modDate
+              ? this.i18n.t('modified') + ' ' + this.formatDate(comment.modDate)
+              : this.formatDate(comment.pubDate)}
+          </span>
           ${replyToName
             ? html`<span class="reply-to"
                 >${this.i18n.t('replyTo')}

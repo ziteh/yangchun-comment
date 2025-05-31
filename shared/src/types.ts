@@ -14,6 +14,9 @@ export type Comment = {
   /** Publish timestamp */
   pubDate: number;
 
+  /** Last modification timestamp */
+  modDate?: number;
+
   /** ID of the comment being replied to */
   replyTo?: string;
 
