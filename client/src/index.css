@@ -5,7 +5,7 @@
 
   --wtc-font-family: inherit;
   --wtc-base-font-size: 14px;
-  --wtc-border-radius: 8px;
+  --wtc-border-radius: 4px;
   --wtc-spacing: 16px;
 
   --wtc-text-light-color: color-mix(
@@ -26,7 +26,7 @@
 
   --wtc-small-font-size: 0.8em;
   --wtc-transition: all 0.2s ease;
-  --wtc-shadow: 0 4px 12px color-mix(in srgb, var(--wtc-text-color) 15%, transparent);
+  /* --wtc-shadow: 0 4px 12px color-mix(in srgb, var(--wtc-text-color) 15%, transparent); */
   --wtc-reply-indent: 20px;
   --wtc-reply-line-color: var(--wtc-border-color);
   --wtc-hover-opacity: 0.9;
@@ -51,19 +51,20 @@
 /* Tab */
 .comment-tabs {
   display: flex;
-  border-bottom: 1px solid var(--wtc-border-color);
   margin-bottom: 0;
+  background-color: var(--wtc-highlight-color);
+  border-radius: var(--wtc-border-radius) var(--wtc-border-radius) 0 0;
 }
 
 .tab {
-  padding: 10px 16px;
+  padding: 12px 16px;
   background: transparent;
   border: none;
-  border-bottom: 2px solid transparent;
   cursor: pointer;
   font-weight: 500;
   color: var(--wtc-text-light-color);
   transition: var(--wtc-transition);
+  position: relative;
 }
 
 .tab:hover {
@@ -72,7 +73,16 @@
 
 .tab.active {
   color: var(--wtc-primary-color);
-  border-bottom: 2px solid var(--wtc-primary-color);
+}
+
+.tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--wtc-primary-color);
 }
 
 .tab-content {
@@ -81,10 +91,13 @@
 
 #form-content,
 #preview-container {
-  border: 1px solid var(--wtc-border-color);
-  border-top: none;
+  background-color: var(--wtc-highlight-color);
   border-radius: 0 0 var(--wtc-border-radius) var(--wtc-border-radius);
+  /* box-shadow: 0 1px 3px color-mix(in srgb, var(--wtc-text-color) 8%, transparent); */
   display: none;
+  box-sizing: border-box;
+  width: 100%;
+  overflow: hidden;
 }
 
 #form-content.active,
@@ -100,40 +113,56 @@
   border-radius: 0;
   /* background-color: var(--wtc-background-color); */
   box-shadow: none;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 #comment-form input[type='text'] {
   display: block;
   width: 30%;
-  padding: 10px;
+  padding: 12px;
   margin-bottom: 12px;
-  border: 1px solid var(--wtc-border-color);
-  border-radius: var(--wtc-border-radius);
+  border: 1px solid var(--wtc-background-color);
+  border-radius: 4px;
   font-size: 14px;
   transition: var(--wtc-transition);
+  background-color: var(--wtc-background-color);
 }
 
 #comment-form input[type='text']:focus {
   outline: none;
-  border-color: var(--wtc-primary-color);
+  border: 1px solid var(--wtc-primary-color);
+  /* background-color: color-mix(in srgb, var(--wtc-primary-color) 5%, var(--wtc-highlight-color)); */
+}
+
+#comment-form input[type='text']:-webkit-autofill,
+#comment-form input[type='text']:-webkit-autofill:hover,
+#comment-form input[type='text']:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px var(--wtc-background-color) inset;
+  -webkit-text-fill-color: var(--wtc-text-color);
+  transition: background-color 5000s ease-in-out 0s;
+  /* background-color: var(--wtc-background-color); */
 }
 
 #comment-form textarea {
   display: block;
-  width: 100%;
-  min-height: 120px;
-  padding: 10px;
-  /* margin-bottom: 12px; */
-  border: 1px solid var(--wtc-border-color);
-  border-radius: var(--wtc-border-radius);
+  width: calc(100% - 2px);
+  max-width: 100%;
+  min-height: 100px;
+  padding: 12px;
+  border: 1px solid var(--wtc-background-color);
+  border-radius: 4px;
   font-size: 14px;
   resize: vertical;
   transition: var(--wtc-transition);
+  background-color: var(--wtc-background-color);
+  box-sizing: border-box;
 }
 
 #comment-form textarea:focus {
   outline: none;
-  border-color: var(--wtc-primary-color);
+  border: 1px solid var(--wtc-primary-color);
+  /* background-color: color-mix(in srgb, var(--wtc-primary-color) 5%, var(--wtc-highlight-color)); */
 }
 
 .form-actions {
@@ -191,11 +220,10 @@
 #reply-info button,
 #edit-info button {
   margin-left: 10px;
-  /* margin-left: auto; */
   background-color: var(--wtc-button-secondary-bg);
   color: var(--wtc-text-light-color);
-  /* color: var(--wtc-button-secondary-text); */
   border: 1px solid var(--wtc-button-secondary-border);
+  border-radius: calc(var(--wtc-border-radius) / 2);
   padding: 4px 8px;
 }
 
@@ -218,9 +246,11 @@
 
 .preview-comment {
   margin: 0;
-  padding: 0;
+  padding: 10px;
   border: none;
   box-shadow: none;
+  background-color: var(--wtc-background-color);
+  border-radius: 4px;
 }
 
 .preview-comment:hover {
@@ -360,13 +390,13 @@
   position: relative;
   background-color: var(--wtc-background-color);
   color: var(--wtc-text-color);
-  border-radius: var(--wtc-border-radius);
+  border-radius: 4px;
   padding: 1.5rem;
   max-width: 500px;
   width: 90%;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: var(--wtc-shadow);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--wtc-text-color) 10%, transparent);
   z-index: 1010;
 }
 
@@ -399,7 +429,6 @@
 .markdown-examples {
   padding: 10px 15px;
   border-radius: var(--wtc-border-radius);
-  border: 1px solid var(--wtc-border-color);
   background-color: var(--wtc-highlight-color);
   overflow-x: auto;
   margin-bottom: 1em;

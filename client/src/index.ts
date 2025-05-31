@@ -150,7 +150,7 @@ class WontonComment {
       <div id="preview" class="${this.activeTab === 'preview' ? 'active' : ''}">
         ${this.previewText
           ? html`
-              <div class="comment preview-comment">
+              <div class="preview-comment">
                 <div class="comment-header">
                   <span class="comment-name">${userName || this.i18n.t('anonymous')}</span>
                   <span class="comment-time">${this.formatDate(now)}</span>
