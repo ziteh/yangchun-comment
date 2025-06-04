@@ -1,5 +1,16 @@
 {
   "name": "wonton-comment-monorepo",
   "version": "0.1.0",
-  "private": true
+  "private": true,  "scripts": {
+    "dev": "pnpm --parallel --recursive dev",
+    "build": "pnpm build:shared && pnpm build:client",
+    "build:shared": "pnpm --filter @wonton-comment/shared build",
+    "build:client": "pnpm --filter @wonton-comment/client build",
+    "test": "pnpm --recursive test",
+    "clean": "pnpm --recursive exec -- rm -rf dist node_modules/.cache",
+    "deploy": "pnpm build && pnpm --filter @wonton-comment/server deploy"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
 }
