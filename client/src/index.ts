@@ -138,7 +138,6 @@ class WontonComment {
       render(formTemplate, formElement);
     }
   }
-
   private renderPreview() {
     const now = Date.now();
     const nameInput = document.querySelector(
@@ -146,56 +145,45 @@ class WontonComment {
     ) as HTMLInputElement;
     const userName = nameInput ? nameInput.value : '';
 
-    const previewTemplate = html`
-      <div id="preview" class="${this.activeTab === 'preview' ? 'active' : ''}">
-        ${this.previewText
-          ? html`
-              <div class="preview-comment">
-                <div class="comment-header">
-                  <span class="comment-name">${userName || this.i18n.t('anonymous')}</span>
-                  <span class="comment-time">${this.formatDate(now)}</span>
-                  ${this.currentReplyTo && this.commentMap[this.currentReplyTo]
-                    ? html`<span class="reply-to">
-                        ${this.i18n.t('replyTo')}
-                        <span>${this.getDisplayName(this.commentMap[this.currentReplyTo])}</span>
-                      </span>`
-                    : ''}
-                </div>
-                <div class="comment-content">${this.renderMarkdown(this.previewText)}</div>
-              </div>
-            `
-          : html`<div class="empty-preview">${this.i18n.t('emptyPreview')}</div>`}
-      </div>
-    `;
-    const previewElement = document.getElementById('preview-container');
-    if (previewElement) {
-      render(
-        previewElement.classList.contains('active') ? previewTemplate : html``,
-        previewElement,
-      );
+    if (this.activeTab === 'preview') {
+      const previewTemplate = html`
+        <div class="comment-box preview-mode">
+          <div id="preview">
+            ${this.previewText
+              ? html`
+                  <div class="preview-comment">
+                    <div class="comment-header">
+                      <span class="comment-name">${userName || this.i18n.t('anonymous')}</span>
+                      <span class="comment-time">${this.formatDate(now)}</span>
+                      ${this.currentReplyTo && this.commentMap[this.currentReplyTo]
+                        ? html`<span class="reply-to">
+                            ${this.i18n.t('replyTo')}
+                            <span>${this.getDisplayName(this.commentMap[this.currentReplyTo])}</span>
+                          </span>`
+                        : ''}
+                    </div>
+                    <div class="comment-content">${this.renderMarkdown(this.previewText)}</div>
+                  </div>
+                `
+              : html`<div class="empty-preview">${this.i18n.t('emptyPreview')}</div>`}
+          </div>
+        </div>
+      `;
+      const formElement = document.getElementById('comment-form-container');
+      if (formElement) {
+        render(previewTemplate, formElement);
+      }
+    } else {
+      this.renderForm();
     }
   }
-
   private switchTab(tab: 'write' | 'preview') {
     this.activeTab = tab;
 
-    const writeTab = document.getElementById('write-tab');
-    const previewTab = document.getElementById('preview-tab');
-    const formContainer = document.getElementById('form-content');
-    const previewContainer = document.getElementById('preview-container');
-
-    if (writeTab && previewTab) {
-      writeTab.classList.toggle('active', tab === 'write');
-      previewTab.classList.toggle('active', tab === 'preview');
-    }
-
-    if (formContainer && previewContainer) {
-      formContainer.classList.toggle('active', tab === 'write');
-      previewContainer.classList.toggle('active', tab === 'preview');
-
-      if (tab === 'preview') {
-        this.renderPreview();
-      }
+    if (tab === 'preview') {
+      this.renderPreview();
+    } else {
+      this.renderForm();
     }
   }
 
@@ -512,84 +500,74 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
       </div>
     `;
   }
-
   private createFormTemplate() {
     return html`
-      <div class="comment-tabs">
-        <button
-          id="write-tab"
-          class="tab ${this.activeTab === 'write' ? 'active' : ''}"
-          @click=${() => this.switchTab('write')}
-        >
-          ${this.i18n.t('write')}
-        </button>
-        <button
-          id="preview-tab"
-          class="tab ${this.activeTab === 'preview' ? 'active' : ''}"
-          @click=${() => this.switchTab('preview')}
-        >
-          ${this.i18n.t('preview')}
-        </button>
-      </div>
-      <div class="tab-content">
+      <div class="comment-box">
         <div id="form-content" class="${this.activeTab === 'write' ? 'active' : ''}">
           <form id="comment-form" @submit=${(e: SubmitEvent) => this.handleSubmit(e)}>
-            <input type="text" name="name" placeholder="${this.i18n.t('namePlaceholder')}" />
-            <textarea
-              name="message"
-              placeholder="${this.i18n.t('messagePlaceholder')}"
-              required
-              @input=${(e: Event) => this.handleInputChange(e)}
-            ></textarea>
-            <div class="form-actions">
-              ${this.currentReplyTo && this.commentMap[this.currentReplyTo]
-                ? html`<div id="reply-info">
-                    ${this.i18n.t('replyingTo')}
-                    <span id="reply-to-name"
-                      >${this.getDisplayName(this.commentMap[this.currentReplyTo])}</span
-                    >
-                    <button type="button" @click=${() => this.cancelReply()}>
-                      ${this.i18n.t('cancelReply')}
-                    </button>
-                  </div>`
-                : ''}
-              ${this.editingComment
-                ? html`<div id="edit-info">
-                    ${this.i18n.t('editing')}
-                    <span id="edit-comment-id">${this.editingComment.id}</span>
-                    <button type="button" @click=${() => this.cancelEdit()}>
-                      ${this.i18n.t('cancelEdit')}
-                    </button>
-                  </div>`
-                : ''}
-              <div class="button-group">
-                <button
-                  type="button"
-                  class="markdown-help-button"
-                  title="${this.i18n.t('markdownHelp')}"
-                  @click=${() => this.toggleMarkdownHelp()}
-                >
-                  ?
-                </button>
-                <button type="submit" class="submit-button">
-                  ${this.editingComment
-                    ? this.i18n.t('updateComment')
-                    : this.i18n.t('submitComment')}
-                </button>
-              </div>
+            <!-- Textarea input area -->
+            <div class="comment-input">
+              <textarea
+                name="message"
+                placeholder="${this.i18n.t('messagePlaceholder')}"
+                required
+                @input=${(e: Event) => this.handleInputChange(e)}
+              ></textarea>
+            </div>
+
+            <!-- Footer with controls -->
+            <div class="comment-footer">
+              <input type="text" name="name" placeholder="${this.i18n.t('namePlaceholder')}" />
+              <button
+                type="button"
+                class="help-btn"
+                title="${this.i18n.t('markdownHelp')}"
+                @click=${() => this.toggleMarkdownHelp()}
+              >
+                ?
+              </button>
+              <button
+                type="button"
+                class="preview-btn ${this.activeTab === 'preview' ? 'active' : ''}"
+                @click=${() => this.switchTab(this.activeTab === 'preview' ? 'write' : 'preview')}
+              >
+                ${this.activeTab === 'preview' ? this.i18n.t('write') : this.i18n.t('preview')}
+              </button>
+              <button type="submit" class="submit-btn">
+                ${this.editingComment
+                  ? this.i18n.t('updateComment')
+                  : this.i18n.t('submitComment')}
+              </button>
             </div>
           </form>
         </div>
       </div>
+
+      <!-- Reply/Edit info outside the form box -->
+      ${this.currentReplyTo && this.commentMap[this.currentReplyTo]
+        ? html`<div class="info">
+            ${this.i18n.t('replyingTo')} ${this.getDisplayName(this.commentMap[this.currentReplyTo])}
+            <button type="button" class="cancel-link" @click=${() => this.cancelReply()}>
+              ${this.i18n.t('cancelReply')}
+            </button>
+          </div>`
+        : ''}
+      ${this.editingComment
+        ? html`<div class="info">
+            ${this.i18n.t('editing')} ${this.editingComment.id}
+            <button type="button" class="cancel-link" @click=${() => this.cancelEdit()}>
+              ${this.i18n.t('cancelEdit')}
+            </button>
+          </div>`
+        : ''}
+
       <div id="markdown-help-modal"></div>
     `;
   }
-
   public async renderApp(): Promise<void> {
     const appTemplate = html`
       <div class="wtc-container">
         <div id="comment-form-container"></div>
-        <div id="preview-container"></div>
         <div id="comments-container"></div>
       </div>
     `;
@@ -598,7 +576,6 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
     if (appElement) {
       render(appTemplate, appElement);
       this.renderForm();
-      this.renderPreview();
       await this.renderCommentsList();
       this.renderMarkdownHelp();
     }
