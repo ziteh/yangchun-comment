@@ -185,32 +185,32 @@ class WontonComment {
                   </div>
                 `
               : html`<div class="empty-preview">${this.i18n.t('emptyPreview')}</div>`}
-          </div>
-          <!-- Preview mode footer with controls -->
-          <div class="comment-footer wtc-flex">
+          </div>          <!-- Preview mode footer with controls -->
+          <div class="comment-footer wtc-flex wtc-gap-xs">
             <span style="flex: 1;"></span>
-            <button
-              type="button"
-              class="help-btn wtc-clickable"
-              title="${this.i18n.t('markdownHelp')}"
-              @click=${() => this.toggleMarkdownHelp()}
-            >
-              ?
-            </button>
-            <button
-              type="button"
-              class="preview-btn wtc-clickable wtc-transition wtc-transparent-bg active"
-              @click=${() => this.switchTab('write')}
-            >
-              ${this.i18n.t('write')}
-            </button>
-            <button
-              type="button"
-              class="submit-btn wtc-clickable wtc-transition"
-              @click=${() => this.handlePreviewSubmit()}
-            >
-              ${this.editingComment ? this.i18n.t('updateComment') : this.i18n.t('submitComment')}
-            </button>
+            <div class="wtc-flex wtc-gap-xs">              <button
+                type="button"
+                class="help-btn wtc-clickable wtc-reset-button"
+                title="${this.i18n.t('markdownHelp')}"
+                @click=${() => this.toggleMarkdownHelp()}
+              >
+                ?
+              </button>
+              <button
+                type="button"
+                class="preview-btn wtc-clickable wtc-transition wtc-transparent-bg active wtc-reset-button"
+                @click=${() => this.switchTab('write')}
+              >
+                ${this.i18n.t('write')}
+              </button>
+              <button
+                type="button"
+                class="submit-btn wtc-clickable wtc-transition wtc-reset-button"
+                @click=${() => this.handlePreviewSubmit()}
+              >
+                ${this.editingComment ? this.i18n.t('updateComment') : this.i18n.t('submitComment')}
+              </button>
+            </div>
           </div>
         </div>
       `;
@@ -291,7 +291,6 @@ class WontonComment {
   private async loadComments(): Promise<Comment[]> {
     return await this.apiService.getComments(this.post);
   }
-
   private createCommentItemTemplate(
     comment: Comment,
     isRoot: boolean = false,
@@ -299,13 +298,12 @@ class WontonComment {
     allReplies: Comment[] | null = null,
     commentMap: CommentMap | null = null,
   ): TemplateResult<1> {
-    const className = isRoot ? 'comment' : 'reply';
-    const headerClass = isRoot
-      ? 'comment-header wtc-flex wtc-flex-wrap'
-      : 'reply-header wtc-flex wtc-flex-wrap';
-    const nameClass = isRoot ? 'comment-name' : 'reply-name';
-    const timeClass = isRoot ? 'comment-time' : 'reply-time';
-    const contentClass = isRoot ? 'comment-content' : 'reply-content';
+    const prefix = isRoot ? 'comment' : 'reply';
+    const className = prefix;
+    const headerClass = `${prefix}-header wtc-flex wtc-flex-wrap`;
+    const nameClass = `${prefix}-name`;
+    const timeClass = `${prefix}-time`;
+    const contentClass = `${prefix}-content`;
     const canEdit = this.canEditComment(comment.id);
 
     return html`
@@ -327,15 +325,14 @@ class WontonComment {
               >`
             : ''}
           ${canEdit
-            ? html`<span class="comment-controls wtc-flex">
-                <button
-                  class="edit-button wtc-clickable wtc-transition wtc-transparent-bg"
+            ? html`<span class="comment-controls wtc-flex wtc-gap-xs">                <button
+                  class="edit-button wtc-clickable wtc-transition wtc-transparent-bg wtc-reset-button"
                   @click=${() => this.handleEdit(comment)}
                 >
                   ${this.i18n.t('edit')}
                 </button>
                 <button
-                  class="delete-button wtc-clickable wtc-transition wtc-transparent-bg"
+                  class="delete-button wtc-clickable wtc-transition wtc-transparent-bg wtc-reset-button"
                   @click=${() => this.handleDelete(comment.id)}
                 >
                   ${this.i18n.t('delete')}
@@ -343,9 +340,8 @@ class WontonComment {
               </span>`
             : ''}
         </div>
-        <div class="${contentClass}">${this.renderMarkdown(comment.msg)}</div>
-        <button
-          class="reply-button wtc-clickable wtc-transition wtc-transparent-bg"
+        <div class="${contentClass}">${this.renderMarkdown(comment.msg)}</div>        <button
+          class="reply-button wtc-clickable wtc-transition wtc-transparent-bg wtc-reset-button"
           @click=${() => this.setReplyTo(comment.id)}
         >
           ${this.i18n.t('reply')}
@@ -585,9 +581,8 @@ class WontonComment {
           class="markdown-help-backdrop wtc-clickable"
           @click=${() => this.toggleMarkdownHelp()}
         ></div>
-        <div class="markdown-help-content">
-          <button
-            class="markdown-help-close wtc-clickable"
+        <div class="markdown-help-content">          <button
+            class="markdown-help-close wtc-clickable wtc-reset-button"
             @click=${() => this.toggleMarkdownHelp()}
           >
             ×
@@ -634,7 +629,7 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
     return html`
       <div class="comment-box">
         <div id="form-content" class="${this.activeTab === 'write' ? 'active' : ''}">
-          <form id="comment-form" @submit=${(e: SubmitEvent) => this.handleSubmit(e)}>
+          <form id="comment-form" class="wtc-reset-form" @submit=${(e: SubmitEvent) => this.handleSubmit(e)}>
             <!-- Textarea input area -->
             <div class="comment-input">
               <textarea
@@ -643,56 +638,52 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
                 required
                 @input=${(e: Event) => this.handleInputChange(e)}
               ></textarea>
-            </div>
-            <!-- Footer with controls -->
-            <div class="comment-footer wtc-flex wtc-flex-wrap">
+            </div>            <!-- Footer with controls -->
+            <div class="comment-footer wtc-flex wtc-flex-wrap wtc-gap-xs">
               <input type="text" name="name" placeholder="${this.i18n.t('namePlaceholder')}" />
-              <button
-                type="button"
-                class="help-btn wtc-clickable"
-                title="${this.i18n.t('markdownHelp')}"
-                @click=${() => this.toggleMarkdownHelp()}
-              >
-                ?
-              </button>
-              <button
-                type="button"
-                class="preview-btn wtc-clickable wtc-transition wtc-transparent-bg ${this
-                  .activeTab === 'preview'
-                  ? 'active'
-                  : ''}"
-                @click=${() => this.switchTab(this.activeTab === 'preview' ? 'write' : 'preview')}
-              >
-                ${this.activeTab === 'preview' ? this.i18n.t('write') : this.i18n.t('preview')}
-              </button>
-              <button type="submit" class="submit-btn wtc-clickable wtc-transition">
-                ${this.editingComment ? this.i18n.t('updateComment') : this.i18n.t('submitComment')}
-              </button>
+              <div class="wtc-flex wtc-gap-xs">                <button
+                  type="button"
+                  class="help-btn wtc-clickable wtc-reset-button"
+                  title="${this.i18n.t('markdownHelp')}"
+                  @click=${() => this.toggleMarkdownHelp()}
+                >
+                  ?
+                </button>
+                <button
+                  type="button"
+                  class="preview-btn wtc-clickable wtc-transition wtc-transparent-bg wtc-reset-button ${this
+                    .activeTab === 'preview'
+                    ? 'active'
+                    : ''}"
+                  @click=${() => this.switchTab(this.activeTab === 'preview' ? 'write' : 'preview')}
+                >
+                  ${this.activeTab === 'preview' ? this.i18n.t('write') : this.i18n.t('preview')}
+                </button>
+                <button type="submit" class="submit-btn wtc-clickable wtc-transition wtc-reset-button">
+                  ${this.editingComment ? this.i18n.t('updateComment') : this.i18n.t('submitComment')}
+                </button>
+              </div>
             </div>
           </form>
         </div>
       </div>
 
-      <!-- Reply/Edit info outside the form box -->
-      ${this.currentReplyTo && this.commentMap[this.currentReplyTo]
-        ? html`<div class="info wtc-flex">
+      <!-- Reply/Edit info outside the form box -->      ${this.currentReplyTo && this.commentMap[this.currentReplyTo]
+        ? html`<div class="info wtc-flex wtc-gap-md">
             ${this.i18n.t('replyingTo')}
-            ${this.getDisplayName(this.commentMap[this.currentReplyTo])}
-            <button
+            ${this.getDisplayName(this.commentMap[this.currentReplyTo])}<button
               type="button"
-              class="cancel-link wtc-clickable wtc-transition"
+              class="cancel-link wtc-clickable wtc-transition wtc-reset-button"
               @click=${() => this.cancelReply()}
             >
               ${this.i18n.t('cancelReply')}
             </button>
           </div>`
-        : ''}
-      ${this.editingComment
-        ? html`<div class="info wtc-flex">
-            ${this.i18n.t('editing')} ${this.editingComment.id}
-            <button
+        : ''}      ${this.editingComment
+        ? html`<div class="info wtc-flex wtc-gap-md">
+            ${this.i18n.t('editing')} ${this.editingComment.id}<button
               type="button"
-              class="cancel-link wtc-clickable wtc-transition"
+              class="cancel-link wtc-clickable wtc-transition wtc-reset-button"
               @click=${() => this.cancelEdit()}
             >
               ${this.i18n.t('cancelEdit')}
