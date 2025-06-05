@@ -17,6 +17,8 @@ export type I18nStrings = {
   editFailed: string;
   submitFailed: string;
   deleteFailed: string;
+  nameTooLong: string;
+  messageTooLong: string;
   write: string;
   preview: string;
   emptyPreview: string;
@@ -57,6 +59,8 @@ export const en: I18nStrings = {
   editFailed: 'Failed to edit comment. Permission may have expired.',
   submitFailed: 'Failed to submit comment.',
   deleteFailed: 'Failed to delete comment. Permission may have expired.',
+  nameTooLong: 'Name is too long',
+  messageTooLong: 'Message is too long',
   write: 'Write',
   preview: 'Preview',
   emptyPreview: 'Nothing to preview',
@@ -98,6 +102,8 @@ export const zhHant: I18nStrings = {
   editFailed: '編輯留言失敗，可能權限已過期',
   submitFailed: '發送留言失敗',
   deleteFailed: '刪除留言失敗，可能權限已過期',
+  nameTooLong: '暱稱過長',
+  messageTooLong: '留言內容過長',
   write: '編輯',
   preview: '預覽',
   emptyPreview: '沒有內容可供預覽',

@@ -20,6 +20,9 @@ export function initWontonComment(elementId: string = 'wtc-app', options = {}) {
 }
 
 class WontonComment {
+  private static readonly MAX_NAME_LENGTH = 25;
+  private static readonly MAX_MESSAGE_LENGTH = 1000;
+
   private elementId: string;
   private post: string;
   private apiUrl: string;
@@ -150,7 +153,6 @@ class WontonComment {
       this.restoreFormInputs();
     }
   }
-
   private restoreFormInputs(): void {
     if (this.previewName) {
       const nameInput = document.querySelector(
@@ -158,6 +160,18 @@ class WontonComment {
       ) as HTMLInputElement;
       if (nameInput) {
         nameInput.value = this.previewName;
+        // Update character count for name
+        this.updateCharCount('name', this.previewName.length);
+
+        // Update over-limit styling
+        const nameCountEl = document.getElementById('name-char-count');
+        if (nameCountEl) {
+          if (this.previewName.length > WontonComment.MAX_NAME_LENGTH) {
+            nameCountEl.classList.add('over-limit');
+          } else {
+            nameCountEl.classList.remove('over-limit');
+          }
+        }
       }
     }
 
@@ -167,6 +181,18 @@ class WontonComment {
       ) as HTMLTextAreaElement;
       if (messageInput) {
         messageInput.value = this.previewText;
+        // Update character count for message
+        this.updateCharCount('message', this.previewText.length);
+
+        // Update over-limit styling
+        const messageCountEl = document.getElementById('message-char-count');
+        if (messageCountEl) {
+          if (this.previewText.length > WontonComment.MAX_MESSAGE_LENGTH) {
+            messageCountEl.classList.add('over-limit');
+          } else {
+            messageCountEl.classList.remove('over-limit');
+          }
+        }
       }
     }
   }
@@ -312,13 +338,50 @@ class WontonComment {
     this.currentReplyTo = null;
     this.renderForm();
   }
-
   private handleInputChange(e: Event): void {
-    const target = e.target as HTMLInputElement;
+    const target = e.target as HTMLTextAreaElement;
     this.previewText = target.value;
+
+    // Update character count
+    this.updateCharCount('message', target.value.length);
+
+    // Validate length
+    const messageCountEl = document.getElementById('message-char-count');
+    if (messageCountEl) {
+      if (target.value.length > WontonComment.MAX_MESSAGE_LENGTH) {
+        messageCountEl.classList.add('over-limit');
+      } else {
+        messageCountEl.classList.remove('over-limit');
+      }
+    }
 
     if (this.activeTab === 'preview') {
       this.renderPreview();
+    }
+  }
+
+  private handleNameInputChange(e: Event): void {
+    const target = e.target as HTMLInputElement;
+    this.previewName = target.value;
+
+    // Update character count
+    this.updateCharCount('name', target.value.length);
+
+    // Validate length
+    const nameCountEl = document.getElementById('name-char-count');
+    if (nameCountEl) {
+      if (target.value.length > WontonComment.MAX_NAME_LENGTH) {
+        nameCountEl.classList.add('over-limit');
+      } else {
+        nameCountEl.classList.remove('over-limit');
+      }
+    }
+  }
+
+  private updateCharCount(type: 'name' | 'message', count: number): void {
+    const countElement = document.getElementById(`${type}-char-count`);
+    if (countElement) {
+      countElement.textContent = count.toString();
     }
   }
 
@@ -495,13 +558,23 @@ class WontonComment {
       return this.createCommentTemplate(rootComment, allReplies, this.commentMap);
     });
   }
-
   // Handle form submission and state cleanup
   private async handleSubmit(e: SubmitEvent): Promise<void> {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
     const name = formData.get('name') as string;
     const message = formData.get('message') as string;
+
+    // Validate lengths
+    if (name && name.length > WontonComment.MAX_NAME_LENGTH) {
+      alert(`${this.i18n.t('nameTooLong')} (${name.length}/${WontonComment.MAX_NAME_LENGTH})`);
+      return;
+    }
+
+    if (message.length > WontonComment.MAX_MESSAGE_LENGTH) {
+      alert(`${this.i18n.t('messageTooLong')} (${message.length}/${WontonComment.MAX_MESSAGE_LENGTH})`);
+      return;
+    }
 
     const success = await this.processSubmission(name, message);
 
@@ -538,7 +611,6 @@ class WontonComment {
       return success;
     }
   }
-
   // Reset form state after successful submission
   private resetFormState(): void {
     const form = document.querySelector('#comment-form') as HTMLFormElement;
@@ -549,10 +621,36 @@ class WontonComment {
     this.previewName = '';
     this.editingComment = null;
     this.currentReplyTo = null;
+
+    // Reset character counts
+    this.updateCharCount('message', 0);
+    this.updateCharCount('name', 0);
+
+    // Remove over-limit styling
+    const nameCountEl = document.getElementById('name-char-count');
+    const messageCountEl = document.getElementById('message-char-count');
+    if (nameCountEl) {
+      nameCountEl.classList.remove('over-limit');
+    }
+    if (messageCountEl) {
+      messageCountEl.classList.remove('over-limit');
+    }
+
     this.renderForm();
     this.renderPreview();
-  } // Handle preview mode submission
+  }// Handle preview mode submission
   private async handlePreviewSubmit(): Promise<void> {
+    // Validate lengths
+    if (this.previewName && this.previewName.length > WontonComment.MAX_NAME_LENGTH) {
+      alert(`${this.i18n.t('nameTooLong')} (${this.previewName.length}/${WontonComment.MAX_NAME_LENGTH})`);
+      return;
+    }
+
+    if (this.previewText.length > WontonComment.MAX_MESSAGE_LENGTH) {
+      alert(`${this.i18n.t('messageTooLong')} (${this.previewText.length}/${WontonComment.MAX_MESSAGE_LENGTH})`);
+      return;
+    }
+
     const success = await this.processSubmission(this.previewName, this.previewText);
 
     if (success) {
@@ -561,7 +659,6 @@ class WontonComment {
       await this.renderCommentsList();
     }
   }
-
   // Reset preview state after successful submission
   private resetPreviewState(): void {
     this.previewText = '';
@@ -572,6 +669,20 @@ class WontonComment {
     const form = document.querySelector('#comment-form') as HTMLFormElement;
     if (form) {
       form.reset();
+    }
+
+    // Reset character counts
+    this.updateCharCount('message', 0);
+    this.updateCharCount('name', 0);
+
+    // Remove over-limit styling
+    const nameCountEl = document.getElementById('name-char-count');
+    const messageCountEl = document.getElementById('message-char-count');
+    if (nameCountEl) {
+      nameCountEl.classList.remove('over-limit');
+    }
+    if (messageCountEl) {
+      messageCountEl.classList.remove('over-limit');
     }
   }
 
@@ -602,13 +713,12 @@ class WontonComment {
       this.currentReplyTo = null;
     }
   }
-
   // Set editing state for a comment
   private setEditingState(comment: Comment): void {
     this.editingComment = comment;
     this.previewText = comment.msg || '';
+    this.previewName = comment.name || '';
   }
-
   // Populate form inputs with comment data
   private populateFormWithComment(comment: Comment): void {
     const nameInput = document.querySelector(
@@ -620,10 +730,36 @@ class WontonComment {
 
     if (nameInput) {
       nameInput.value = comment.name || '';
+      this.previewName = comment.name || '';
+      // Update character count for name
+      this.updateCharCount('name', (comment.name || '').length);
+
+      // Update over-limit styling
+      const nameCountEl = document.getElementById('name-char-count');
+      if (nameCountEl) {
+        if ((comment.name || '').length > WontonComment.MAX_NAME_LENGTH) {
+          nameCountEl.classList.add('over-limit');
+        } else {
+          nameCountEl.classList.remove('over-limit');
+        }
+      }
     }
 
     if (messageInput) {
       messageInput.value = comment.msg || '';
+      this.previewText = comment.msg || '';
+      // Update character count for message
+      this.updateCharCount('message', (comment.msg || '').length);
+
+      // Update over-limit styling
+      const messageCountEl = document.getElementById('message-char-count');
+      if (messageCountEl) {
+        if ((comment.msg || '').length > WontonComment.MAX_MESSAGE_LENGTH) {
+          messageCountEl.classList.add('over-limit');
+        } else {
+          messageCountEl.classList.remove('over-limit');
+        }
+      }
     }
 
     this.renderForm();
@@ -645,7 +781,6 @@ class WontonComment {
     this.renderForm();
     this.renderPreview();
   }
-
   // Clear form data and preview state
   private clearFormAndPreview(): void {
     const form = document.querySelector('#comment-form') as HTMLFormElement;
@@ -654,6 +789,20 @@ class WontonComment {
     }
     this.previewText = '';
     this.previewName = '';
+
+    // Reset character counts
+    this.updateCharCount('message', 0);
+    this.updateCharCount('name', 0);
+
+    // Remove over-limit styling
+    const nameCountEl = document.getElementById('name-char-count');
+    const messageCountEl = document.getElementById('message-char-count');
+    if (nameCountEl) {
+      nameCountEl.classList.remove('over-limit');
+    }
+    if (messageCountEl) {
+      messageCountEl.classList.remove('over-limit');
+    }
   }
 
   // Toggle markdown help modal visibility
@@ -762,7 +911,6 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
       </div>
     `;
   }
-
   // Create textarea input section
   private createTextareaSection(): TemplateResult<1> {
     return html`
@@ -770,18 +918,29 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
         <textarea
           name="message"
           placeholder="${this.i18n.t('messagePlaceholder')}"
+          maxlength="${WontonComment.MAX_MESSAGE_LENGTH}"
           required
           @input=${(e: Event) => this.handleInputChange(e)}
         ></textarea>
+        <div class="char-count">
+          <span id="message-char-count">0</span>/${WontonComment.MAX_MESSAGE_LENGTH}
+        </div>
       </div>
     `;
   }
-
   // Create form footer with controls
   private createFormFooter(): TemplateResult<1> {
     return html`
       <div class="comment-footer wtc-flex wtc-flex-wrap wtc-gap-xs">
-        <input type="text" name="name" placeholder="${this.i18n.t('namePlaceholder')}" />
+        <div class="name-input-container">
+          <input
+            type="text"
+            name="name"
+            placeholder="${this.i18n.t('namePlaceholder')}"
+            maxlength="${WontonComment.MAX_NAME_LENGTH}"
+            @input=${(e: Event) => this.handleNameInputChange(e)}
+          />
+        </div>
         <div class="wtc-flex wtc-gap-xs">${this.createFormButtons()}</div>
       </div>
     `;

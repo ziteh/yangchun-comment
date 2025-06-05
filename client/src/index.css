@@ -4,7 +4,8 @@
   --wtc-background-color: #fff;
   --wtc-primary-color: #3b82f6;
 
-  --wtc-font-family: sans-serif;
+  /* --wtc-font-family: sans-serif; */
+  --wtc-font-family: inherit;
   --wtc-base-font-size: 14px;
   --wtc-border-radius: 6px;
   --wtc-small-border-radius: 4px;
@@ -95,7 +96,7 @@
 
 /* Comment Input Area */
 .comment-input {
-  padding: 1rem;
+  padding: 1rem 1rem 0.25rem 1rem;
 }
 
 .comment-input textarea {
@@ -116,6 +117,25 @@
   opacity: 1;
 }
 
+/* Character count styling */
+.char-count {
+  font-size: 12px;
+  color: var(--wtc-light);
+  text-align: right;
+  margin-top: 4px;
+}
+
+.char-count .over-limit {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+/* Name input container */
+.name-input-container {
+  flex: 1;
+  position: relative;
+}
+
 /* Comment Footer */
 .comment-footer {
   align-items: center;
@@ -125,7 +145,7 @@
 }
 
 .comment-footer input[type='text'] {
-  flex: 1;
+  width: 100%;
   border: none;
   font-size: 14px;
   outline: none;
@@ -499,7 +519,7 @@
     min-height: 100px;
     font-size: 16px; /* Prevent zoom on iOS */
   }
-  /* Mobile Form Layout - Stack name input and buttons */
+
   .comment-footer {
     flex-direction: column;
     align-items: stretch;
@@ -515,6 +535,11 @@
     border-radius: var(--wtc-small-border-radius);
     box-sizing: border-box;
   }
+
+  .name-input-container {
+    margin-bottom: 0.75rem;
+  }
+
   /* Button row */
   .comment-footer .wtc-flex {
     justify-content: space-between;
