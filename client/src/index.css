@@ -3,8 +3,9 @@
   --wtc-background-color: #fff;
   --wtc-primary-color: #3b82f6;
 
-  --wtc-font-family: inherit;  --wtc-base-font-size: 14px;
-  --wtc-border-radius: 12px;
+  --wtc-font-family: inherit;
+  --wtc-base-font-size: 14px;
+  --wtc-border-radius: 6px;
   --wtc-spacing: 16px;
 
   --wtc-text-light-color: color-mix(
@@ -87,7 +88,7 @@
   background-color: var(--wtc-background-color);
 }
 
-.comment-footer input[type="text"] {
+.comment-footer input[type='text'] {
   flex: 1;
   border: none;
   font-size: 14px;
@@ -95,13 +96,14 @@
   font-family: var(--wtc-font-family);
   color: var(--wtc-text-color);
   background-color: var(--wtc-background-color);
+  border-radius: 2px;
 }
 
 .comment-footer button {
   border: none;
   padding: 0.3rem 0.8rem;
   font-size: 14px;
-  border-radius: 8px;
+  border-radius: 4px;
   cursor: pointer;
   transition: var(--wtc-transition);
   font-family: var(--wtc-font-family);
@@ -163,7 +165,7 @@
   color: var(--wtc-primary-color);
   cursor: pointer;
   font-size: 13px;
-  text-decoration: underline;
+  /* text-decoration: underline; */
   font-family: var(--wtc-font-family);
 }
 
@@ -499,7 +501,7 @@
     padding: 0.5rem 0.75rem;
   }
 
-  .comment-footer input[type="text"] {
+  .comment-footer input[type='text'] {
     min-width: 120px;
     flex: 1;
     margin-bottom: 0.25rem;
