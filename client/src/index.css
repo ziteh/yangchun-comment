@@ -304,7 +304,7 @@
 
 .comment-content,
 .reply-content {
-  margin-left: var(--wtc-reply-indent);
+  /* margin-left: var(--wtc-reply-indent); */
   margin-bottom: 6px;
   line-height: 1.5;
   word-break: break-word;
@@ -356,7 +356,7 @@
 
 /* Reply */
 .reply-button {
-  margin-left: var(--wtc-reply-indent);
+  /* margin-left: var(--wtc-reply-indent); */
   padding: 0px;
   background-color: transparent;
   color: var(--wtc-primary-color);
