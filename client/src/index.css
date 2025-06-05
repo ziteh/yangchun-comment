@@ -1,4 +1,5 @@
 :root {
+  /* Base colors */
   --wtc-text-color: #333;
   --wtc-background-color: #fff;
   --wtc-primary-color: #3b82f6;
@@ -7,41 +8,18 @@
   --wtc-base-font-size: 14px;
   --wtc-border-radius: 6px;
   --wtc-spacing: 16px;
-
-  --wtc-text-light-color: color-mix(
-    in srgb,
-    var(--wtc-text-color) 60%,
-    var(--wtc-background-color)
-  );
-  --wtc-text-lighter-color: color-mix(
-    in srgb,
-    var(--wtc-text-color) 40%,
-    var(--wtc-background-color)
-  );
-  --wtc-border-color: #bbb;
-  --wtc-highlight-color: color-mix(in srgb, var(--wtc-text-color) 5%, var(--wtc-background-color));
-  --wtc-overlay-color: color-mix(in srgb, var(--wtc-text-color) 50%, transparent);
-  --wtc-button-secondary-border: var(--wtc-border-color);
-  --wtc-button-secondary-hover-bg: var(--wtc-highlight-color);
-
   --wtc-small-font-size: 0.8em;
   --wtc-transition: all 0.2s ease;
   --wtc-reply-indent: 12px;
-  --wtc-reply-line-color: var(--wtc-border-color);
-  --wtc-hover-opacity: 0.9;
-  --wtc-button-text-color: var(--wtc-background-color);
-  --wtc-button-hover-bg: color-mix(
-    in srgb,
-    var(--wtc-primary-color) 90%,
-    var(--wtc-background-color)
-  );
-  --wtc-button-secondary-bg: transparent;
-  --wtc-button-secondary-text: var(--wtc-text-color);
+  --wtc-hover-opacity: 0.8;
 
-  /* New variables for the redesigned form */
-  --wtc-preview-color: #3399ff;
-  --wtc-submit-color: #66bfff;
-  --wtc-preview-border-color: #99caff;
+  --wtc-light: color-mix(in srgb, var(--wtc-text-color) 60%, var(--wtc-background-color));
+  --wtc-lighter: color-mix(in srgb, var(--wtc-text-color) 40%, var(--wtc-background-color));
+  --wtc-subtle: color-mix(in srgb, var(--wtc-text-color) 20%, var(--wtc-background-color));
+  --wtc-faint: color-mix(in srgb, var(--wtc-text-color) 10%, var(--wtc-background-color));
+  --wtc-minimal: color-mix(in srgb, var(--wtc-text-color) 5%, var(--wtc-background-color));
+  --wtc-primary-soft: color-mix(in srgb, var(--wtc-primary-color) 90%, var(--wtc-background-color));
+  --wtc-overlay: color-mix(in srgb, var(--wtc-text-color) 50%, transparent);
 }
 
 .wtc-container {
@@ -52,9 +30,8 @@
   font-size: var(--wtc-base-font-size);
 }
 
-/* Comment Box (New Design) */
 .comment-box {
-  border: 1px solid var(--wtc-border-color);
+  border: 1px solid var(--wtc-subtle);
   border-radius: var(--wtc-border-radius);
   overflow: hidden;
   background-color: var(--wtc-background-color);
@@ -82,7 +59,7 @@
 .comment-footer {
   display: flex;
   align-items: center;
-  border-top: 1px solid var(--wtc-border-color);
+  border-top: 1px solid var(--wtc-subtle);
   padding: 0.5rem 1rem;
   gap: 0.5rem;
   background-color: var(--wtc-background-color);
@@ -111,7 +88,7 @@
 
 .help-btn {
   font-size: 16px;
-  color: #999;
+  color: var(--wtc-lighter);
   background: none !important;
   padding: 0.2rem 0.5rem !important;
   cursor: pointer;
@@ -122,26 +99,19 @@
 }
 
 .preview-btn {
-  border: 1px solid var(--wtc-preview-border-color);
   background-color: transparent;
-  color: var(--wtc-preview-color);
+  color: var(--wtc-primary-color);
 }
 
 .preview-btn:hover {
-  background-color: var(--wtc-preview-border-color);
+  background-color: var(--wtc-primary-color);
   color: var(--wtc-background-color);
-}
-
-.preview-btn.active {
-  background-color: var(--wtc-preview-color);
-  color: var(--wtc-background-color);
-  border-color: var(--wtc-preview-color);
 }
 
 .submit-btn {
-  background-color: var(--wtc-submit-color);
-  color: white;
-  border: 1px solid var(--wtc-submit-color);
+  background-color: var(--wtc-primary-color);
+  color: var(--wtc-background-color);
+  border: 1px solid var(--wtc-primary-color);
 }
 
 .submit-btn:hover {
@@ -153,7 +123,7 @@
   max-width: 600px;
   margin: 0.5rem auto;
   font-size: 13px;
-  color: #999;
+  color: var(--wtc-lighter);
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -175,7 +145,7 @@
 
 /* Preview Mode */
 .preview-mode {
-  border: 1px solid var(--wtc-border-color);
+  border: 1px solid var(--wtc-subtle);
   border-radius: var(--wtc-border-radius);
   background-color: var(--wtc-background-color);
 }
@@ -193,13 +163,12 @@
 }
 
 .empty-preview {
-  color: var(--wtc-text-lighter-color);
+  color: var(--wtc-lighter);
   font-style: italic;
   padding: 2rem 0;
   text-align: center;
 }
 
-/* Form (hidden styles for compatibility) */
 #comment-form {
   margin: 0;
   padding: 0;
@@ -237,13 +206,13 @@
 .comment-time,
 .reply-time {
   font-size: var(--wtc-small-font-size);
-  color: var(--wtc-text-light-color);
+  color: var(--wtc-light);
   margin-left: 8px;
 }
 
 .reply-to {
   font-size: var(--wtc-small-font-size);
-  color: var(--wtc-text-lighter-color);
+  color: var(--wtc-lighter);
   margin-left: 8px;
 }
 
@@ -320,7 +289,7 @@
 
 .reply {
   margin-left: var(--wtc-reply-indent);
-  border-left: 2px solid var(--wtc-reply-line-color);
+  border-left: 4px solid var(--wtc-faint);
   padding-left: 15px;
   padding-top: 15px;
 }
@@ -334,8 +303,8 @@
 
 .edit-button,
 .delete-button {
-  color: var(--wtc-text-light-color);
-  background-color: var(--wtc-button-secondary-bg);
+  color: var(--wtc-light);
+  background-color: transparent;
   border: none;
   border-radius: calc(var(--wtc-border-radius) / 2);
   font-size: calc(var(--wtc-base-font-size) - 2px);
@@ -347,7 +316,7 @@
 
 .edit-button:hover,
 .delete-button:hover {
-  background-color: var(--wtc-highlight-color);
+  background-color: var(--wtc-minimal);
 }
 
 /* Help */
@@ -380,7 +349,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: var(--wtc-overlay-color);
+  background-color: var(--wtc-overlay);
 }
 
 .markdown-help-content {
@@ -393,7 +362,7 @@
   width: 90%;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--wtc-text-color) 10%, transparent);
+  box-shadow: 0 2px 8px var(--wtc-faint);
   z-index: 1010;
 }
 
@@ -405,7 +374,7 @@
   background: none;
   font-size: 1.5rem;
   cursor: pointer;
-  color: var(--wtc-text-light-color);
+  color: var(--wtc-light);
 }
 
 .markdown-help-button {
@@ -414,7 +383,7 @@
   justify-content: center;
   width: 26px;
   height: 26px;
-  color: var(--wtc-text-light-color);
+  color: var(--wtc-light);
   background: none;
   font-weight: bold;
   margin-right: 10px;
@@ -426,7 +395,7 @@
 .markdown-examples {
   padding: 10px 15px;
   border-radius: var(--wtc-border-radius);
-  background-color: var(--wtc-highlight-color);
+  background-color: var(--wtc-minimal);
   overflow-x: auto;
   margin-bottom: 1em;
 }
