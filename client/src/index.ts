@@ -253,8 +253,14 @@ class WontonComment {
       render(commentsTemplate, commentsElement);
     }
   }
-
   private setReplyTo(commentId: string): void {
+    // Clear editing state if currently editing
+    if (this.editingComment) {
+      this.editingComment = null;
+      this.previewText = '';
+      this.previewName = '';
+    }
+
     this.currentReplyTo = commentId;
     this.renderForm();
 
@@ -496,8 +502,12 @@ class WontonComment {
       alert(this.i18n.t('deleteFailed'));
     }
   }
-
   private handleEdit(comment: Comment): void {
+    // Clear reply state if currently replying
+    if (this.currentReplyTo) {
+      this.currentReplyTo = null;
+    }
+
     this.editingComment = comment;
     const nameInput = document.querySelector(
       '#comment-form input[name="name"]',
@@ -524,7 +534,6 @@ class WontonComment {
       form.scrollIntoView({ behavior: 'smooth' });
     }
   }
-
   private cancelEdit(): void {
     this.editingComment = null;
     const form = document.querySelector('#comment-form') as HTMLFormElement;
@@ -532,6 +541,7 @@ class WontonComment {
       form.reset();
     }
     this.previewText = '';
+    this.previewName = '';
     this.renderForm();
     this.renderPreview();
   }
