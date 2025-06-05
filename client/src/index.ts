@@ -23,6 +23,7 @@ class WontonComment {
   private comments: Comment[] = [];
   private currentReplyTo: string | null = null;
   private previewText: string = '';
+  private previewName: string = '';
   private editingComment: Comment | null = null;
   private activeTab: 'write' | 'preview' = 'write';
   private showMarkdownHelp: boolean = false;
@@ -130,20 +131,36 @@ class WontonComment {
   private getDisplayName(comment: Comment | undefined): string {
     return comment?.name || this.i18n.t('anonymous');
   }
-
   private renderForm() {
     const formTemplate = this.createFormTemplate();
     const formElement = document.getElementById('comment-form-container');
     if (formElement) {
       render(formTemplate, formElement);
+
+      // Restore saved name value after rendering
+      if (this.previewName) {
+        const nameInput = document.querySelector(
+          '#comment-form input[name="name"]',
+        ) as HTMLInputElement;
+        if (nameInput) {
+          nameInput.value = this.previewName;
+        }
+      }
+
+      // Restore saved message content after rendering
+      if (this.previewText) {
+        const messageInput = document.querySelector(
+          '#comment-form textarea[name="message"]',
+        ) as HTMLTextAreaElement;
+        if (messageInput) {
+          messageInput.value = this.previewText;
+        }
+      }
     }
   }
   private renderPreview() {
     const now = Date.now();
-    const nameInput = document.querySelector(
-      '#comment-form input[name="name"]',
-    ) as HTMLInputElement;
-    const userName = nameInput ? nameInput.value : '';
+    const userName = this.previewName;
 
     if (this.activeTab === 'preview') {
       const previewTemplate = html`
@@ -158,7 +175,9 @@ class WontonComment {
                       ${this.currentReplyTo && this.commentMap[this.currentReplyTo]
                         ? html`<span class="reply-to">
                             ${this.i18n.t('replyTo')}
-                            <span>${this.getDisplayName(this.commentMap[this.currentReplyTo])}</span>
+                            <span
+                              >${this.getDisplayName(this.commentMap[this.currentReplyTo])}</span
+                            >
                           </span>`
                         : ''}
                     </div>
@@ -166,6 +185,28 @@ class WontonComment {
                   </div>
                 `
               : html`<div class="empty-preview">${this.i18n.t('emptyPreview')}</div>`}
+          </div>
+          <!-- Preview mode footer with controls -->
+          <div class="comment-footer">
+            <span style="flex: 1;"></span>
+            <button
+              type="button"
+              class="help-btn"
+              title="${this.i18n.t('markdownHelp')}"
+              @click=${() => this.toggleMarkdownHelp()}
+            >
+              ?
+            </button>
+            <button
+              type="button"
+              class="preview-btn active"
+              @click=${() => this.switchTab('write')}
+            >
+              ${this.i18n.t('write')}
+            </button>
+            <button type="button" class="submit-btn" @click=${() => this.handlePreviewSubmit()}>
+              ${this.editingComment ? this.i18n.t('updateComment') : this.i18n.t('submitComment')}
+            </button>
           </div>
         </div>
       `;
@@ -181,6 +222,13 @@ class WontonComment {
     this.activeTab = tab;
 
     if (tab === 'preview') {
+      // Save current name value before switching to preview
+      const nameInput = document.querySelector(
+        '#comment-form input[name="name"]',
+      ) as HTMLInputElement;
+      if (nameInput) {
+        this.previewName = nameInput.value;
+      }
       this.renderPreview();
     } else {
       this.renderForm();
@@ -357,10 +405,10 @@ class WontonComment {
         name,
         message,
       );
-
       if (success) {
         (e.target as HTMLFormElement).reset();
         this.previewText = '';
+        this.previewName = '';
         this.editingComment = null;
         this.renderForm();
         this.renderPreview();
@@ -373,9 +421,58 @@ class WontonComment {
       if (success) {
         (e.target as HTMLFormElement).reset();
         this.previewText = '';
+        this.previewName = '';
         this.currentReplyTo = null;
         this.renderForm();
         this.renderPreview();
+      } else {
+        alert(this.i18n.t('submitFailed'));
+      }
+    }
+
+    if (success) {
+      this.comments.length = 0;
+      await this.renderCommentsList();
+    }
+  }
+  private async handlePreviewSubmit(): Promise<void> {
+    // Get data from the stored state
+    const name = this.previewName;
+    const message = this.previewText;
+
+    let success = false;
+
+    if (this.editingComment) {
+      success = await this.apiService.updateComment(
+        this.post,
+        this.editingComment.id,
+        name,
+        message,
+      );
+      if (success) {
+        this.previewText = '';
+        this.previewName = '';
+        this.editingComment = null;
+        this.switchTab('write');
+        const form = document.querySelector('#comment-form') as HTMLFormElement;
+        if (form) {
+          form.reset();
+        }
+      } else {
+        alert(this.i18n.t('editFailed'));
+      }
+    } else {
+      success = await this.apiService.addComment(this.post, name, message, this.currentReplyTo);
+
+      if (success) {
+        this.previewText = '';
+        this.previewName = '';
+        this.currentReplyTo = null;
+        this.switchTab('write');
+        const form = document.querySelector('#comment-form') as HTMLFormElement;
+        if (form) {
+          form.reset();
+        }
       } else {
         alert(this.i18n.t('submitFailed'));
       }
@@ -534,9 +631,7 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
                 ${this.activeTab === 'preview' ? this.i18n.t('write') : this.i18n.t('preview')}
               </button>
               <button type="submit" class="submit-btn">
-                ${this.editingComment
-                  ? this.i18n.t('updateComment')
-                  : this.i18n.t('submitComment')}
+                ${this.editingComment ? this.i18n.t('updateComment') : this.i18n.t('submitComment')}
               </button>
             </div>
           </form>
@@ -546,7 +641,8 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
       <!-- Reply/Edit info outside the form box -->
       ${this.currentReplyTo && this.commentMap[this.currentReplyTo]
         ? html`<div class="info">
-            ${this.i18n.t('replyingTo')} ${this.getDisplayName(this.commentMap[this.currentReplyTo])}
+            ${this.i18n.t('replyingTo')}
+            ${this.getDisplayName(this.commentMap[this.currentReplyTo])}
             <button type="button" class="cancel-link" @click=${() => this.cancelReply()}>
               ${this.i18n.t('cancelReply')}
             </button>
