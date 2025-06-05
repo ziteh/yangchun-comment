@@ -311,21 +311,24 @@
   font-family: var(--wtc-font-family);
 }
 
-.reply-button,
+.reply-button {
+  color: var(--wtc-text-color);
+  background-color: transparent;
+  font-size: 12px;
+  padding: 0;
+  text-decoration: underline;
+}
+
 .cancel-link {
   color: var(--wtc-primary-color);
   background-color: transparent;
-  font-size: 12px;
+  font-size: 13px;
   padding: 0;
 }
 
 .reply-button:hover,
 .cancel-link:hover {
   opacity: var(--wtc-hover-opacity);
-}
-
-.cancel-link {
-  font-size: 13px;
 }
 
 .edit-button,

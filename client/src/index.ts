@@ -7,6 +7,12 @@ import { createApiService } from './apiService';
 import { createI18n } from './i18n';
 import './index.css';
 
+type CommentMap = {
+  [id: string]: Comment;
+};
+
+type TabType = 'write' | 'preview';
+
 export function initWontonComment(elementId: string = 'wtc-app', options = {}) {
   const wontonApp = new WontonComment(elementId, options);
   wontonApp.renderApp();
@@ -25,7 +31,7 @@ class WontonComment {
   private previewText: string = '';
   private previewName: string = '';
   private editingComment: Comment | null = null;
-  private activeTab: 'write' | 'preview' = 'write';
+  private activeTab: TabType = 'write';
   private showMarkdownHelp: boolean = false;
 
   constructor(
@@ -102,10 +108,6 @@ class WontonComment {
     // FORBID_ATTR: ['style', 'onclick', 'onmouseover', 'onload', 'onunload', 'onerror'],
   };
 
-  private canEditComment(commentId: string): boolean {
-    return this.apiService.canEditComment(commentId);
-  }
-
   private renderMarkdown(md: string): ReturnType<typeof unsafeHTML> {
     return unsafeHTML(DOMPurify.sanitize(snarkdown(md || ''), this.DompurifyConfig));
   }
@@ -122,7 +124,7 @@ class WontonComment {
     const period = hour >= 12 ? 'PM' : 'AM';
 
     hour = hour % 12;
-    if (hour === 0) hour = 12; // 0 => 12 AM or 12 PM
+    if (hour === 0) hour = 12; // Convert 0 to 12 for 12-hour format
     const h = String(hour).padStart(2, '0');
 
     return `${y}/${m}/${d} ${h}:${minute} ${period}`;
@@ -131,93 +133,107 @@ class WontonComment {
   private getDisplayName(comment: Comment | undefined): string {
     return comment?.name || this.i18n.t('anonymous');
   }
-  private renderForm() {
+
+  private canEditComment(commentId: string): boolean {
+    return this.apiService.canEditComment(commentId);
+  }
+
+  private async loadComments(): Promise<Comment[]> {
+    return await this.apiService.getComments(this.post);
+  }
+
+  private renderForm(): void {
     const formTemplate = this.createFormTemplate();
     const formElement = document.getElementById('comment-form-container');
     if (formElement) {
       render(formTemplate, formElement);
+      this.restoreFormInputs();
+    }
+  }
 
-      // Restore saved name value after rendering
-      if (this.previewName) {
-        const nameInput = document.querySelector(
-          '#comment-form input[name="name"]',
-        ) as HTMLInputElement;
-        if (nameInput) {
-          nameInput.value = this.previewName;
-        }
+  private restoreFormInputs(): void {
+    if (this.previewName) {
+      const nameInput = document.querySelector(
+        '#comment-form input[name="name"]',
+      ) as HTMLInputElement;
+      if (nameInput) {
+        nameInput.value = this.previewName;
       }
+    }
 
-      // Restore saved message content after rendering
-      if (this.previewText) {
-        const messageInput = document.querySelector(
-          '#comment-form textarea[name="message"]',
-        ) as HTMLTextAreaElement;
-        if (messageInput) {
-          messageInput.value = this.previewText;
-        }
+    if (this.previewText) {
+      const messageInput = document.querySelector(
+        '#comment-form textarea[name="message"]',
+      ) as HTMLTextAreaElement;
+      if (messageInput) {
+        messageInput.value = this.previewText;
       }
     }
   }
-  private renderPreview() {
+
+  private createPreviewTemplate(): TemplateResult<1> {
     const now = Date.now();
     const userName = this.previewName;
 
-    if (this.activeTab === 'preview') {
-      const previewTemplate = html`
-        <div class="comment-box preview-mode">
-          <div id="preview">
-            ${this.previewText
-              ? html`
-                  <div class="preview-comment">
-                    <div class="comment-header">
-                      <span class="comment-name">${userName || this.i18n.t('anonymous')}</span>
-                      <span class="comment-time">${this.formatDate(now)}</span>
-                      ${this.currentReplyTo && this.commentMap[this.currentReplyTo]
-                        ? html`<span class="reply-to">
-                            ${this.i18n.t('replyTo')}
-                            <span
-                              >${this.getDisplayName(this.commentMap[this.currentReplyTo])}</span
-                            >
-                          </span>`
-                        : ''}
-                    </div>
-                    <div class="comment-content">${this.renderMarkdown(this.previewText)}</div>
+    return html`
+      <div class="comment-box preview-mode">
+        <div id="preview">
+          ${this.previewText
+            ? html`
+                <div class="preview-comment">
+                  <div class="comment-header">
+                    <span class="comment-name">${userName || this.i18n.t('anonymous')}</span>
+                    <span class="comment-time">${this.formatDate(now)}</span>
+                    ${this.currentReplyTo && this.commentMap[this.currentReplyTo]
+                      ? html`<span class="reply-to">
+                          ${this.i18n.t('replyTo')}
+                          <span>${this.getDisplayName(this.commentMap[this.currentReplyTo])}</span>
+                        </span>`
+                      : ''}
                   </div>
-                `
-              : html`<div class="empty-preview">${this.i18n.t('emptyPreview')}</div>`}
-          </div>
-          <!-- Preview mode footer with controls -->
-          <div class="comment-footer wtc-flex wtc-gap-xs">
-            <span style="flex: 1;"></span>
-            <div class="wtc-flex wtc-gap-xs">
-              <button
-                type="button"
-                class="help-btn wtc-clickable wtc-reset-button"
-                title="${this.i18n.t('markdownHelp')}"
-                @click=${() => this.toggleMarkdownHelp()}
-              >
-                ?
-              </button>
-              <button
-                type="button"
-                class="preview-btn wtc-clickable wtc-transition wtc-transparent-bg active wtc-reset-button"
-                @click=${() => this.switchTab('write')}
-              >
-                ${this.i18n.t('write')}
-              </button>
-              <button
-                type="button"
-                class="submit-btn wtc-clickable wtc-transition wtc-reset-button"
-                @click=${() => this.handlePreviewSubmit()}
-              >
-                ${this.editingComment ? this.i18n.t('updateComment') : this.i18n.t('submitComment')}
-              </button>
-            </div>
+                  <div class="comment-content">${this.renderMarkdown(this.previewText)}</div>
+                </div>
+              `
+            : html`<div class="empty-preview">${this.i18n.t('emptyPreview')}</div>`}
+        </div>
+        <!-- Preview mode footer with controls -->
+        <div class="comment-footer wtc-flex wtc-gap-xs">
+          <span style="flex: 1;"></span>
+          <div class="wtc-flex wtc-gap-xs">
+            <button
+              type="button"
+              class="help-btn wtc-clickable wtc-reset-button"
+              title="${this.i18n.t('markdownHelp')}"
+              @click=${() => this.toggleMarkdownHelp()}
+            >
+              ?
+            </button>
+            <button
+              type="button"
+              class="preview-btn wtc-clickable wtc-transition wtc-transparent-bg active wtc-reset-button"
+              @click=${() => this.switchTab('write')}
+            >
+              ${this.i18n.t('write')}
+            </button>
+            <button
+              type="button"
+              class="submit-btn wtc-clickable wtc-transition wtc-reset-button"
+              @click=${() => this.handlePreviewSubmit()}
+            >
+              ${this.editingComment ? this.i18n.t('updateComment') : this.i18n.t('submitComment')}
+            </button>
           </div>
         </div>
+      </div>
 
-        <div id="markdown-help-modal"></div>
-      `;
+      <div id="markdown-help-modal"></div>
+    `;
+  }
+
+  // Render preview template to DOM or fallback to form
+  private renderPreview(): void {
+    if (this.activeTab === 'preview') {
+      const previewTemplate = this.createPreviewTemplate();
       const formElement = document.getElementById('comment-form-container');
       if (formElement) {
         render(previewTemplate, formElement);
@@ -226,41 +242,55 @@ class WontonComment {
       this.renderForm();
     }
   }
-  private switchTab(tab: 'write' | 'preview') {
+
+  private switchTab(tab: 'write' | 'preview'): void {
     this.activeTab = tab;
 
     if (tab === 'preview') {
-      // Save current name value before switching to preview
-      const nameInput = document.querySelector(
-        '#comment-form input[name="name"]',
-      ) as HTMLInputElement;
-      if (nameInput) {
-        this.previewName = nameInput.value;
-      }
+      this.saveCurrentFormInputs();
       this.renderPreview();
     } else {
       this.renderForm();
     }
   }
 
-  private async renderCommentsList() {
+  // Save current form input values to state
+  private saveCurrentFormInputs(): void {
+    const nameInput = document.querySelector(
+      '#comment-form input[name="name"]',
+    ) as HTMLInputElement;
+    if (nameInput) {
+      this.previewName = nameInput.value;
+    }
+  }
+
+  // Render comments list with error handling
+  private async renderCommentsList(): Promise<void> {
     if (this.comments.length === 0) {
       this.comments = await this.loadComments();
-      this.commentMap = {};
-      this.comments.forEach((comment) => {
-        this.commentMap[comment.id] = comment;
-      });
+      this.buildCommentMap();
     }
 
-    const commentsTemplate = html`
-      <div id="comments">${this.processComments(this.comments)}</div>
-    `;
-
+    const commentsTemplate = this.createCommentsTemplate();
     const commentsElement = document.getElementById('comments-container');
     if (commentsElement) {
       render(commentsTemplate, commentsElement);
     }
   }
+
+  // Build comment map for quick lookup
+  private buildCommentMap(): void {
+    this.commentMap = {};
+    this.comments.forEach((comment) => {
+      this.commentMap[comment.id] = comment;
+    });
+  }
+
+  // Create template for comments container
+  private createCommentsTemplate(): TemplateResult<1> {
+    return html` <div id="comments">${this.processComments(this.comments)}</div> `;
+  }
+
   private setReplyTo(commentId: string): void {
     // Clear editing state if currently editing
     if (this.editingComment) {
@@ -292,9 +322,7 @@ class WontonComment {
     }
   }
 
-  private async loadComments(): Promise<Comment[]> {
-    return await this.apiService.getComments(this.post);
-  }
+  // Create comment item template with proper type annotation
   private createCommentItemTemplate(
     comment: Comment,
     isRoot: boolean = false,
@@ -302,70 +330,125 @@ class WontonComment {
     allReplies: Comment[] | null = null,
     commentMap: CommentMap | null = null,
   ): TemplateResult<1> {
-    const prefix = isRoot ? 'comment' : 'reply';
-    const className = prefix;
-    const headerClass = `${prefix}-header wtc-flex wtc-flex-wrap`;
-    const nameClass = `${prefix}-name`;
-    const timeClass = `${prefix}-time`;
-    const contentClass = `${prefix}-content`;
+    const cssClasses = this.getCommentCssClasses(isRoot);
     const canEdit = this.canEditComment(comment.id);
 
     return html`
-      <div class="${className}" ${isRoot ? `data-id="${comment.id}"` : ''}>
-        <div class="${headerClass}">
-          <span class="${nameClass}" title="${comment.id}">${this.getDisplayName(comment)}</span>
-          <span
-            class="${timeClass}"
-            title="${comment.modDate ? this.formatDate(comment.pubDate) : undefined}"
-          >
-            ${comment.modDate
-              ? this.i18n.t('modified') + ' ' + this.formatDate(comment.modDate)
-              : this.formatDate(comment.pubDate)}
-          </span>
-          ${replyToName
-            ? html`<span class="reply-to"
-                >${this.i18n.t('replyTo')}
-                <span title="${comment.replyTo ?? ''}">${replyToName}</span></span
-              >`
-            : ''}
-          ${canEdit
-            ? html`<span class="comment-controls wtc-flex wtc-gap-xs">
-                <button
-                  class="edit-button wtc-clickable wtc-transition wtc-transparent-bg wtc-reset-button"
-                  @click=${() => this.handleEdit(comment)}
-                >
-                  ${this.i18n.t('edit')}
-                </button>
-                <button
-                  class="delete-button wtc-clickable wtc-transition wtc-transparent-bg wtc-reset-button"
-                  @click=${() => this.handleDelete(comment.id)}
-                >
-                  ${this.i18n.t('delete')}
-                </button>
-              </span>`
-            : ''}
-        </div>
-        <div class="${contentClass}">${this.renderMarkdown(comment.msg)}</div>
-        <button
-          class="reply-button wtc-clickable wtc-transition wtc-transparent-bg wtc-reset-button"
-          @click=${() => this.setReplyTo(comment.id)}
-        >
-          ${this.i18n.t('reply')}
-        </button>
-        ${isRoot && allReplies
-          ? html`<div class="replies">
-              ${allReplies.map((reply) => {
-                const replyToComment =
-                  reply.replyTo && commentMap ? commentMap[reply.replyTo] : undefined;
-                const replyToName = replyToComment ? this.getDisplayName(replyToComment) : '';
-                return this.createCommentItemTemplate(reply, false, replyToName);
-              })}
-            </div>`
-          : isRoot
-          ? html`<div class="replies"></div>`
-          : ''}
+      <div class="${cssClasses.item}" ${isRoot ? `data-id="${comment.id}"` : ''}>
+        ${this.createCommentHeader(comment, cssClasses, replyToName, canEdit)}
+        ${this.createCommentContent(comment, cssClasses.content)}
+        ${this.createCommentActions(comment)}
+        ${this.createRepliesSection(isRoot, allReplies, commentMap)}
       </div>
     `;
+  }
+
+  // Get CSS classes for comment components
+  private getCommentCssClasses(isRoot: boolean) {
+    const prefix = isRoot ? 'comment' : 'reply';
+    return {
+      item: prefix,
+      header: `${prefix}-header wtc-flex wtc-flex-wrap`,
+      name: `${prefix}-name`,
+      time: `${prefix}-time`,
+      content: `${prefix}-content`,
+    };
+  }
+
+  // Create comment header template
+  private createCommentHeader(
+    comment: Comment,
+    cssClasses: ReturnType<typeof this.getCommentCssClasses>,
+    replyToName: string | null,
+    canEdit: boolean,
+  ): TemplateResult<1> {
+    return html`
+      <div class="${cssClasses.header}">
+        <span class="${cssClasses.name}" title="${comment.id}"
+          >${this.getDisplayName(comment)}</span
+        >
+        <span
+          class="${cssClasses.time}"
+          title="${comment.modDate ? this.formatDate(comment.pubDate) : undefined}"
+        >
+          ${comment.modDate
+            ? this.i18n.t('modified') + ' ' + this.formatDate(comment.modDate)
+            : this.formatDate(comment.pubDate)}
+        </span>
+        ${this.createReplyToIndicator(replyToName, comment.replyTo)}
+        ${this.createCommentControls(canEdit, comment)}
+      </div>
+    `;
+  }
+
+  // Create reply-to indicator template
+  private createReplyToIndicator(
+    replyToName: string | null,
+    replyToId?: string,
+  ): TemplateResult<1> | string {
+    return replyToName
+      ? html`<span class="reply-to">
+          ${this.i18n.t('replyTo')}
+          <span title="${replyToId ?? ''}">${replyToName}</span>
+        </span>`
+      : '';
+  }
+
+  // Create comment control buttons template
+  private createCommentControls(canEdit: boolean, comment: Comment): TemplateResult<1> | string {
+    return canEdit
+      ? html`<span class="comment-controls wtc-flex wtc-gap-xs">
+          <button
+            class="edit-button wtc-clickable wtc-transition wtc-transparent-bg wtc-reset-button"
+            @click=${() => this.handleEdit(comment)}
+          >
+            ${this.i18n.t('edit')}
+          </button>
+          <button
+            class="delete-button wtc-clickable wtc-transition wtc-transparent-bg wtc-reset-button"
+            @click=${() => this.handleDelete(comment.id)}
+          >
+            ${this.i18n.t('delete')}
+          </button>
+        </span>`
+      : '';
+  }
+
+  // Create comment content template
+  private createCommentContent(comment: Comment, contentClass: string): TemplateResult<1> {
+    return html`<div class="${contentClass}">${this.renderMarkdown(comment.msg)}</div>`;
+  }
+
+  // Create comment actions template
+  private createCommentActions(comment: Comment): TemplateResult<1> {
+    return html`
+      <button
+        class="reply-button wtc-clickable wtc-transition wtc-transparent-bg wtc-reset-button"
+        @click=${() => this.setReplyTo(comment.id)}
+      >
+        ${this.i18n.t('reply')}
+      </button>
+    `;
+  }
+
+  // Create replies section template
+  private createRepliesSection(
+    isRoot: boolean,
+    allReplies: Comment[] | null,
+    commentMap: CommentMap | null,
+  ): TemplateResult<1> | string {
+    if (!isRoot) return '';
+
+    return html`<div class="replies">
+      ${allReplies
+        ? allReplies.map((reply) => {
+            const replyToComment =
+              reply.replyTo && commentMap ? commentMap[reply.replyTo] : undefined;
+            const replyToName = replyToComment ? this.getDisplayName(replyToComment) : '';
+            return this.createCommentItemTemplate(reply, false, replyToName);
+          })
+        : ''}
+    </div>`;
   }
 
   private createCommentTemplate(
@@ -413,97 +496,82 @@ class WontonComment {
     });
   }
 
+  // Handle form submission and state cleanup
   private async handleSubmit(e: SubmitEvent): Promise<void> {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
     const name = formData.get('name') as string;
     const message = formData.get('message') as string;
 
-    let success = false;
-
-    if (this.editingComment) {
-      success = await this.apiService.updateComment(
-        this.post,
-        this.editingComment.id,
-        name,
-        message,
-      );
-      if (success) {
-        (e.target as HTMLFormElement).reset();
-        this.previewText = '';
-        this.previewName = '';
-        this.editingComment = null;
-        this.renderForm();
-        this.renderPreview();
-      } else {
-        alert(this.i18n.t('editFailed'));
-      }
-    } else {
-      success = await this.apiService.addComment(this.post, name, message, this.currentReplyTo);
-
-      if (success) {
-        (e.target as HTMLFormElement).reset();
-        this.previewText = '';
-        this.previewName = '';
-        this.currentReplyTo = null;
-        this.renderForm();
-        this.renderPreview();
-      } else {
-        alert(this.i18n.t('submitFailed'));
-      }
-    }
+    const success = await this.processSubmission(name, message);
 
     if (success) {
+      this.resetFormState();
       this.comments.length = 0;
       await this.renderCommentsList();
     }
   }
-  private async handlePreviewSubmit(): Promise<void> {
-    // Get data from the stored state
-    const name = this.previewName;
-    const message = this.previewText;
 
-    let success = false;
-
+  // Process comment submission (create or update)
+  private async processSubmission(name: string, message: string): Promise<boolean> {
     if (this.editingComment) {
-      success = await this.apiService.updateComment(
+      const success = await this.apiService.updateComment(
         this.post,
         this.editingComment.id,
         name,
         message,
       );
-      if (success) {
-        this.previewText = '';
-        this.previewName = '';
-        this.editingComment = null;
-        this.switchTab('write');
-        const form = document.querySelector('#comment-form') as HTMLFormElement;
-        if (form) {
-          form.reset();
-        }
-      } else {
+      if (!success) {
         alert(this.i18n.t('editFailed'));
       }
+      return success;
     } else {
-      success = await this.apiService.addComment(this.post, name, message, this.currentReplyTo);
-
-      if (success) {
-        this.previewText = '';
-        this.previewName = '';
-        this.currentReplyTo = null;
-        this.switchTab('write');
-        const form = document.querySelector('#comment-form') as HTMLFormElement;
-        if (form) {
-          form.reset();
-        }
-      } else {
+      const success = await this.apiService.addComment(
+        this.post,
+        name,
+        message,
+        this.currentReplyTo,
+      );
+      if (!success) {
         alert(this.i18n.t('submitFailed'));
       }
+      return success;
     }
+  }
+
+  // Reset form state after successful submission
+  private resetFormState(): void {
+    const form = document.querySelector('#comment-form') as HTMLFormElement;
+    if (form) {
+      form.reset();
+    }
+    this.previewText = '';
+    this.previewName = '';
+    this.editingComment = null;
+    this.currentReplyTo = null;
+    this.renderForm();
+    this.renderPreview();
+  } // Handle preview mode submission
+  private async handlePreviewSubmit(): Promise<void> {
+    const success = await this.processSubmission(this.previewName, this.previewText);
 
     if (success) {
+      this.resetPreviewState();
       this.comments.length = 0;
       await this.renderCommentsList();
+    }
+  }
+
+  // Reset preview state after successful submission
+  private resetPreviewState(): void {
+    this.previewText = '';
+    this.previewName = '';
+    this.editingComment = null;
+    this.currentReplyTo = null;
+    this.switchTab('write');
+    const form = document.querySelector('#comment-form') as HTMLFormElement;
+    if (form) {
+      form.reset();
     }
   }
 
@@ -519,13 +587,30 @@ class WontonComment {
       alert(this.i18n.t('deleteFailed'));
     }
   }
+
+  // Handle edit comment action
   private handleEdit(comment: Comment): void {
-    // Clear reply state if currently replying
+    this.clearReplyState();
+    this.setEditingState(comment);
+    this.populateFormWithComment(comment);
+    this.scrollToForm();
+  }
+
+  // Clear reply state when editing
+  private clearReplyState(): void {
     if (this.currentReplyTo) {
       this.currentReplyTo = null;
     }
+  }
 
+  // Set editing state for a comment
+  private setEditingState(comment: Comment): void {
     this.editingComment = comment;
+    this.previewText = comment.msg || '';
+  }
+
+  // Populate form inputs with comment data
+  private populateFormWithComment(comment: Comment): void {
     const nameInput = document.querySelector(
       '#comment-form input[name="name"]',
     ) as HTMLInputElement;
@@ -541,45 +626,66 @@ class WontonComment {
       messageInput.value = comment.msg || '';
     }
 
-    this.previewText = comment.msg || '';
-
     this.renderForm();
     this.renderPreview();
+  }
 
+  // Scroll to form container
+  private scrollToForm(): void {
     const form = document.querySelector('#comment-form-container');
     if (form) {
       form.scrollIntoView({ behavior: 'smooth' });
     }
   }
+
+  // Cancel editing mode and reset state
   private cancelEdit(): void {
     this.editingComment = null;
+    this.clearFormAndPreview();
+    this.renderForm();
+    this.renderPreview();
+  }
+
+  // Clear form data and preview state
+  private clearFormAndPreview(): void {
     const form = document.querySelector('#comment-form') as HTMLFormElement;
     if (form) {
       form.reset();
     }
     this.previewText = '';
     this.previewName = '';
-    this.renderForm();
-    this.renderPreview();
   }
 
+  // Toggle markdown help modal visibility
   private toggleMarkdownHelp(): void {
     this.showMarkdownHelp = !this.showMarkdownHelp;
     this.renderMarkdownHelp();
   }
 
+  // Render or hide markdown help modal
   private renderMarkdownHelp(): void {
     const helpElement = document.getElementById('markdown-help-modal');
     if (!helpElement) return;
 
     if (this.showMarkdownHelp) {
-      render(this.createMarkdownHelpTemplate(), helpElement);
-      helpElement.classList.add('active');
+      this.showHelpModal(helpElement);
     } else {
-      render(html``, helpElement);
-      helpElement.classList.remove('active');
+      this.hideHelpModal(helpElement);
     }
   }
+
+  // Show help modal with content
+  private showHelpModal(helpElement: HTMLElement): void {
+    render(this.createMarkdownHelpTemplate(), helpElement);
+    helpElement.classList.add('active');
+  }
+
+  // Hide help modal
+  private hideHelpModal(helpElement: HTMLElement): void {
+    render(html``, helpElement);
+    helpElement.classList.remove('active');
+  }
+
   private createMarkdownHelpTemplate() {
     return html`
       <div class="markdown-help-container wtc-flex">
@@ -632,87 +738,119 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
       </div>
     `;
   }
-  private createFormTemplate() {
+
+  // Create form template with improved structure
+  private createFormTemplate(): TemplateResult<1> {
     return html`
-      <div class="comment-box">
-        <div id="form-content" class="${this.activeTab === 'write' ? 'active' : ''}">
-          <form
-            id="comment-form"
-            class="wtc-reset-form"
-            @submit=${(e: SubmitEvent) => this.handleSubmit(e)}
-          >
-            <!-- Textarea input area -->
-            <div class="comment-input">
-              <textarea
-                name="message"
-                placeholder="${this.i18n.t('messagePlaceholder')}"
-                required
-                @input=${(e: Event) => this.handleInputChange(e)}
-              ></textarea>
-            </div>
-            <!-- Footer with controls -->
-            <div class="comment-footer wtc-flex wtc-flex-wrap wtc-gap-xs">
-              <input type="text" name="name" placeholder="${this.i18n.t('namePlaceholder')}" />
-              <div class="wtc-flex wtc-gap-xs">
-                <button
-                  type="button"
-                  class="help-btn wtc-clickable wtc-reset-button"
-                  title="${this.i18n.t('markdownHelp')}"
-                  @click=${() => this.toggleMarkdownHelp()}
-                >
-                  ?
-                </button>
-                <button
-                  type="button"
-                  class="preview-btn wtc-clickable wtc-transition wtc-transparent-bg wtc-reset-button ${this
-                    .activeTab === 'preview'
-                    ? 'active'
-                    : ''}"
-                  @click=${() => this.switchTab(this.activeTab === 'preview' ? 'write' : 'preview')}
-                >
-                  ${this.activeTab === 'preview' ? this.i18n.t('write') : this.i18n.t('preview')}
-                </button>
-                <button
-                  type="submit"
-                  class="submit-btn wtc-clickable wtc-transition wtc-reset-button"
-                >
-                  ${this.editingComment
-                    ? this.i18n.t('updateComment')
-                    : this.i18n.t('submitComment')}
-                </button>
-              </div>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- Reply/Edit info outside the form box -->
-      ${this.currentReplyTo && this.commentMap[this.currentReplyTo]
-        ? html`<div class="info wtc-flex wtc-gap-md">
-            ${this.i18n.t('replyingTo')}
-            ${this.getDisplayName(this.commentMap[this.currentReplyTo])}<button
-              type="button"
-              class="cancel-link wtc-clickable wtc-transition wtc-reset-button"
-              @click=${() => this.cancelReply()}
-            >
-              ${this.i18n.t('cancelReply')}
-            </button>
-          </div>`
-        : ''}
-      ${this.editingComment
-        ? html`<div class="info wtc-flex wtc-gap-md">
-            ${this.i18n.t('editing')} ${this.editingComment.id}<button
-              type="button"
-              class="cancel-link wtc-clickable wtc-transition wtc-reset-button"
-              @click=${() => this.cancelEdit()}
-            >
-              ${this.i18n.t('cancelEdit')}
-            </button>
-          </div>`
-        : ''}
-
+      <div class="comment-box">${this.createFormContent()}</div>
+      ${this.createStatusIndicators()}
       <div id="markdown-help-modal"></div>
     `;
+  }
+
+  // Create main form content
+  private createFormContent(): TemplateResult<1> {
+    return html`
+      <div id="form-content" class="${this.activeTab === 'write' ? 'active' : ''}">
+        <form
+          id="comment-form"
+          class="wtc-reset-form"
+          @submit=${(e: SubmitEvent) => this.handleSubmit(e)}
+        >
+          ${this.createTextareaSection()} ${this.createFormFooter()}
+        </form>
+      </div>
+    `;
+  }
+
+  // Create textarea input section
+  private createTextareaSection(): TemplateResult<1> {
+    return html`
+      <div class="comment-input">
+        <textarea
+          name="message"
+          placeholder="${this.i18n.t('messagePlaceholder')}"
+          required
+          @input=${(e: Event) => this.handleInputChange(e)}
+        ></textarea>
+      </div>
+    `;
+  }
+
+  // Create form footer with controls
+  private createFormFooter(): TemplateResult<1> {
+    return html`
+      <div class="comment-footer wtc-flex wtc-flex-wrap wtc-gap-xs">
+        <input type="text" name="name" placeholder="${this.i18n.t('namePlaceholder')}" />
+        <div class="wtc-flex wtc-gap-xs">${this.createFormButtons()}</div>
+      </div>
+    `;
+  }
+
+  // Create form action buttons
+  private createFormButtons(): TemplateResult<1> {
+    return html`
+      <button
+        type="button"
+        class="help-btn wtc-clickable wtc-reset-button"
+        title="${this.i18n.t('markdownHelp')}"
+        @click=${() => this.toggleMarkdownHelp()}
+      >
+        ?
+      </button>
+      <button
+        type="button"
+        class="preview-btn wtc-clickable wtc-transition wtc-transparent-bg wtc-reset-button ${this
+          .activeTab === 'preview'
+          ? 'active'
+          : ''}"
+        @click=${() => this.switchTab(this.activeTab === 'preview' ? 'write' : 'preview')}
+      >
+        ${this.activeTab === 'preview' ? this.i18n.t('write') : this.i18n.t('preview')}
+      </button>
+      <button type="submit" class="submit-btn wtc-clickable wtc-transition wtc-reset-button">
+        ${this.editingComment ? this.i18n.t('updateComment') : this.i18n.t('submitComment')}
+      </button>
+    `;
+  }
+
+  // Create status indicators (reply/edit info)
+  private createStatusIndicators(): TemplateResult<1> | string {
+    const replyIndicator = this.createReplyIndicator();
+    const editIndicator = this.createEditIndicator();
+
+    return replyIndicator || editIndicator ? html`${replyIndicator}${editIndicator}` : '';
+  }
+
+  // Create reply status indicator
+  private createReplyIndicator(): TemplateResult<1> | string {
+    return this.currentReplyTo && this.commentMap[this.currentReplyTo]
+      ? html`<div class="info wtc-flex wtc-gap-md">
+          ${this.i18n.t('replyingTo')}
+          ${this.getDisplayName(this.commentMap[this.currentReplyTo])}<button
+            type="button"
+            class="cancel-link wtc-clickable wtc-transition wtc-reset-button"
+            @click=${() => this.cancelReply()}
+          >
+            ${this.i18n.t('cancelReply')}
+          </button>
+        </div>`
+      : '';
+  }
+
+  // Create edit status indicator
+  private createEditIndicator(): TemplateResult<1> | string {
+    return this.editingComment
+      ? html`<div class="info wtc-flex wtc-gap-md">
+          ${this.i18n.t('editing')} ${this.editingComment.id}<button
+            type="button"
+            class="cancel-link wtc-clickable wtc-transition wtc-reset-button"
+            @click=${() => this.cancelEdit()}
+          >
+            ${this.i18n.t('cancelEdit')}
+          </button>
+        </div>`
+      : '';
   }
   public async renderApp(): Promise<void> {
     const appTemplate = html`
@@ -736,9 +874,5 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
     await this.renderCommentsList();
   }
 }
-
-type CommentMap = {
-  [id: string]: Comment;
-};
 
 export default initWontonComment;
