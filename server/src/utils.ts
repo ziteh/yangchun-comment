@@ -62,7 +62,7 @@ export default class Utils {
     const key = await crypto.subtle.importKey(
       'raw',
       keyData,
-      { name: 'HMAC', hash: 'SHA-384' },
+      { name: 'HMAC', hash: 'SHA-256' },
       false,
       ['sign'],
     );
@@ -86,7 +86,7 @@ export default class Utils {
     const key = await crypto.subtle.importKey(
       'raw',
       keyData,
-      { name: 'HMAC', hash: 'SHA-384' },
+      { name: 'HMAC', hash: 'SHA-256' },
       false,
       ['verify'],
     );
