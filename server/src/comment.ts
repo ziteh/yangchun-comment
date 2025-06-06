@@ -46,29 +46,41 @@ app.post(
       return c.text(`Message is too long (maximum ${c.env.MAX_MSG_LENGTH} characters)`, 400);
     }
 
+    const cleanMsg = Utils.sanitize(msg);
+    if (cleanMsg.length === 0) {
+      return c.text('Message is invalid', 400);
+    }
+
     if (name && typeof name === 'string' && name.length > c.env.MAX_NAME_LENGTH) {
       return c.text(`Name is too long (maximum ${c.env.MAX_NAME_LENGTH} characters)`, 400);
+    }
+
+    const cleanName = name ? Utils.sanitize(name) : undefined;
+    if (name && cleanName !== undefined && cleanName.length === 0) {
+      return c.text('Name is invalid', 400);
     }
 
     if (replyTo && (typeof replyTo !== 'string' || !/^[0-9A-Z]{12}$/.test(replyTo))) {
       return c.text('Invalid reply ID', 400);
     }
 
-    return { name, email, msg, replyTo };
+    const cleanEmail = email ? Utils.sanitize(email) : undefined;
+
+    return { name: cleanName, email: cleanEmail, msg: cleanMsg, replyTo };
   }),
   async (c) => {
     const { post } = c.req.valid('query');
-    const { name, email, msg, replyTo } = c.req.valid('json');
+    const { name, msg, replyTo } = c.req.valid('json');
 
     const id = Utils.genId();
     const timestamp = Date.now();
     const comment: Comment = {
       id,
-      name: Utils.sanitize(name),
-      email: Utils.sanitize(email),
-      msg: Utils.sanitize(msg),
+      name,
+      email: undefined, // Currently not storing email
+      msg,
+      replyTo,
       pubDate: timestamp,
-      replyTo: replyTo,
     };
 
     // Save to KV
@@ -87,7 +99,7 @@ app.post(
 
 app.put('/', Utils.validateQueryPost, async (c) => {
   const { post } = c.req.valid('query');
-  const { id, timestamp, token, name, email, msg } = await c.req.json();
+  const { id, timestamp, token, name, msg } = await c.req.json();
 
   if (!msg || typeof msg !== 'string') {
     console.warn('Invalid message for update:', msg);
@@ -99,9 +111,19 @@ app.put('/', Utils.validateQueryPost, async (c) => {
     return c.text(`Message is too long (maximum ${c.env.MAX_MSG_LENGTH} characters)`, 400);
   }
 
+  const cleanMsg = Utils.sanitize(msg);
+  if (cleanMsg.length === 0) {
+    return c.text('Message is invalid', 400);
+  }
+
   if (name && typeof name === 'string' && name.length > c.env.MAX_NAME_LENGTH) {
     console.warn('Name too long for update:', name.length);
     return c.text(`Name is too long (maximum ${c.env.MAX_NAME_LENGTH} characters)`, 400);
+  }
+
+  const cleanName = name ? Utils.sanitize(name) : undefined;
+  if (name && cleanName !== undefined && cleanName.length === 0) {
+    return c.text('Name is invalid', 400);
   }
 
   const hmacOk = await Utils.verifyHmac(c.env.SECRET_KEY, id, timestamp, token);
@@ -121,10 +143,10 @@ app.put('/', Utils.validateQueryPost, async (c) => {
 
   comments[index] = {
     ...comments[index],
-    name: Utils.sanitize(name),
-    email: Utils.sanitize(email),
-    msg: Utils.sanitize(msg),
-    modDate: Date.now(),
+    name: cleanName,
+    email: undefined, // Currently not storing email
+    msg: cleanMsg,
+    modDate: Date.now(), // Update modification date
   };
   await c.env.COMMENTS.put(key, JSON.stringify(comments));
 
@@ -152,13 +174,13 @@ app.delete('/', Utils.validateQueryPost, async (c) => {
     return c.text('Comment not found', 404); // 404 Not Found
   }
 
-  // Instead of removing the comment, mark it as deleted
+  // Mark it as deleted
   comments[index] = {
     ...comments[index],
     name: 'deleted',
-    email: 'deleted',
+    email: undefined, // Currently not storing email
     msg: 'deleted',
-    modDate: Date.now(),
+    modDate: Date.now(), // Update modification date
   };
 
   await c.env.COMMENTS.put(key, JSON.stringify(comments));
