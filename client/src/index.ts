@@ -1002,6 +1002,7 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
           <input
             type="text"
             name="name"
+            autocomplete="nickname"
             placeholder="${this.i18n.t('namePlaceholder')}"
             maxlength="${WontonComment.MAX_NAME_LENGTH}"
             @input=${(e: Event) => this.handleNameInputChange(e)}
