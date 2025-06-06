@@ -57,8 +57,7 @@ class WontonComment {
     this.apiUrl = options.apiUrl || 'http://localhost:8787/';
     this.apiService = createApiService(this.apiUrl);
 
-    // 處理語言選項
-    let languageStrings: I18nStrings = en; // 預設為英文
+    let languageStrings: I18nStrings = en;
     if (options.language) {
       if (typeof options.language === 'string') {
         languageStrings = options.language === 'zh-Hant' ? zhHant : en;
