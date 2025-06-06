@@ -32,4 +32,4 @@ MAX_NAME_LENGTH = 25
 MAX_MSG_LENGTH = 1000
 # CORS_ORIGIN = "${CORS_ORIGIN}"
 # POST_REGEX = "${POST_REGEX}"
-SECRET_KEY = "${SECRET_KEY}"   # Should be set in Secrets
+HMAC_SECRET_KEY = "${HMAC_SECRET_KEY}"   # Should be set in Secrets

@@ -6,7 +6,7 @@ import type { Comment } from '@wonton-comment/shared';
 const app = new Hono<{
   Bindings: {
     COMMENTS: KVNamespace;
-    SECRET_KEY: string;
+    HMAC_SECRET_KEY: string;
     MAX_NAME_LENGTH: number;
     MAX_MSG_LENGTH: number;
     POST_REGEX?: string;
@@ -105,7 +105,7 @@ app.post(
     comments.push(comment);
     await c.env.COMMENTS.put(key, JSON.stringify(comments));
 
-    const token = await Utils.genHmac(c.env.SECRET_KEY, id, timestamp);
+    const token = await Utils.genHmac(c.env.HMAC_SECRET_KEY, id, timestamp);
 
     console.log(`Comment created with ID: ${id} for post: ${post}`);
     return c.json({ id, timestamp, token }, 201); // 201 Created
@@ -141,7 +141,7 @@ app.put('/', Utils.validateQueryPost, async (c) => {
     return c.text('Name is invalid', 400);
   }
 
-  const hmacOk = await Utils.verifyHmac(c.env.SECRET_KEY, id, timestamp, token);
+  const hmacOk = await Utils.verifyHmac(c.env.HMAC_SECRET_KEY, id, timestamp, token);
   if (!hmacOk) {
     console.warn('Invalid HMAC for update request:', id);
     return c.text('Invalid HMAC', 403); // 403 Forbidden
@@ -173,7 +173,7 @@ app.delete('/', Utils.validateQueryPost, async (c) => {
   const { post } = c.req.valid('query');
   const { id, timestamp, token } = await c.req.json();
 
-  const hmacOk = await Utils.verifyHmac(c.env.SECRET_KEY, id, timestamp, token);
+  const hmacOk = await Utils.verifyHmac(c.env.HMAC_SECRET_KEY, id, timestamp, token);
   if (!hmacOk) {
     console.warn('Invalid HMAC for delete request:', id);
     return c.text('Invalid HMAC', 403); // 403 Forbidden

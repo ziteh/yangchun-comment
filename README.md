@@ -18,7 +18,7 @@ This monorepo contains three packages:
 
 ### Server ENV
 
-- `SECRET_KEY` - A random string used for HMAC token generation. Select a long and strong random string.
+- `HMAC_SECRET_KEY` - A random string used for HMAC token generation. Select a long and strong random string.
 - `CORS_ORIGIN` - The allowed origin for CORS requests.
 
 For **development**, create a `.dev.vars` file in the `server/` directory:
@@ -26,7 +26,7 @@ For **development**, create a `.dev.vars` file in the `server/` directory:
 ```env
 # .dev.vars
 
-SECRET_KEY=your-very-long-and-secure-random-string-here
+HMAC_SECRET_KEY=your-very-long-and-secure-random-string-here
 CORS_ORIGIN=*
 ```
 

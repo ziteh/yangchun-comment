@@ -6,7 +6,7 @@ declare module 'cloudflare:test' {
     RATE_LIMITER_GET: RateLimit;
 
     // Env
-    SECRET_KEY: string;
+    HMAC_SECRET_KEY: string;
     CORS_ORIGIN: string;
     POST_REGEX?: string;
   }
