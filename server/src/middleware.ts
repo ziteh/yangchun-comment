@@ -13,6 +13,26 @@ const app = new Hono<{
   };
 }>();
 
+// Origin / Referer header
+app.use('*', async (c, next) => {
+  const method = c.req.method;
+
+  // Skip verification for GET and OPTIONS
+  if (method === 'GET' || method === 'OPTIONS') {
+    return next();
+  }
+
+  const origin = c.req.header('Origin');
+  const referer = c.req.header('Referer');
+  if (!origin && !referer) {
+    console.warn(`Blocked request without Origin/Referer: ${c.req.method} ${c.req.path}`);
+    return c.text('Forbidden', 403); // 403 Forbidden
+  }
+
+  // Allow the request to continue to next middleware
+  return next();
+});
+
 // CORS middleware
 app.use('*', async (c, next) => {
   const corsMiddleware = cors({
