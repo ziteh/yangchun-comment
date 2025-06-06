@@ -956,7 +956,6 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
       <div id="markdown-help-modal"></div>
     `;
   }
-
   // Create main form content
   private createFormContent(): TemplateResult<1> {
     return html`
@@ -966,6 +965,9 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
           class="wtc-reset-form"
           @submit=${(e: SubmitEvent) => this.handleSubmit(e)}
         >
+          <div class="honeypot-field">
+            <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
+          </div>
           ${this.createTextareaSection()} ${this.createFormFooter()}
         </form>
       </div>

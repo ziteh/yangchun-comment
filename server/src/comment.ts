@@ -26,7 +26,14 @@ app.post(
   '/',
   Utils.validateQueryPost,
   validator('json', (value, c) => {
-    const { name, email, msg, replyTo } = value;
+    const { name, email, msg, replyTo, website } = value;
+
+    // Honeypot check: if 'website' field is filled, it's likely a bot
+    if (website) {
+      // console.warn('Honeypot triggered from:', c.req.header('CF-Connecting-IP'));
+      // Return 200 OK to fool bots, but don't actually process the comment
+      return c.text('Comment received', 200);
+    }
 
     if (!msg || typeof msg !== 'string') {
       return c.text('Missing or invalid msg field', 400);

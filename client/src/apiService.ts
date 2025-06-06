@@ -23,7 +23,9 @@ export const createApiService = (apiUrl: string) => {
   ): Promise<string | null> => {
     try {
       const url = new URL('/api/comments', apiUrl);
-      url.searchParams.append('post', post);
+      url.searchParams.append('post', post);      // Get honeypot field if present
+      const websiteField = document.querySelector('input[name="website"]') as HTMLInputElement;
+      const website = websiteField ? websiteField.value : '';
 
       const res = await fetch(url, {
         method: 'POST',
@@ -32,6 +34,7 @@ export const createApiService = (apiUrl: string) => {
           name,
           msg: message,
           replyTo,
+          website, // Include honeypot field
         }),
       });
 
