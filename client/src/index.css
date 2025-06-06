@@ -529,9 +529,8 @@
     max-width: 100%;
   }
 
-  /* Keep form borders but remove border radius and add padding */
   .comment-box {
-    border-radius: 0;
+    border-radius: var(--wtc-border-radius);
     margin: 0 0.5rem;
     border: 1px solid var(--wtc-subtle);
   }
