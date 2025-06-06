@@ -10,6 +10,9 @@ on:
 permissions:
   contents: read
 
+env:
+  SECRET_KEY: test_secret_key
+
 jobs:
   build:
     runs-on: ubuntu-latest

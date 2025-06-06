@@ -30,3 +30,4 @@ simple = { limit = 20, period = 10 } # 20 requests every 10 seconds
 [vars]
 MAX_NAME_LENGTH = 25
 MAX_MSG_LENGTH = 1000
+SECRET_KEY = "${SECRET_KEY}"
