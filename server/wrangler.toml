@@ -2,7 +2,7 @@
 
 name = "wonton-comment-be"
 main = "src/index.ts"
-compatibility_date = "2025-05-22"
+compatibility_date = "2025-05-08"
 compatibility_flags = ["nodejs_compat"]
 
 # Workers Logs
@@ -30,4 +30,6 @@ simple = { limit = 20, period = 10 } # 20 requests every 10 seconds
 [vars]
 MAX_NAME_LENGTH = 25
 MAX_MSG_LENGTH = 1000
-SECRET_KEY = "${SECRET_KEY}"
+# CORS_ORIGIN = "${CORS_ORIGIN}"
+# POST_REGEX = "${POST_REGEX}"
+SECRET_KEY = "${SECRET_KEY}"   # Should be set in Secrets

@@ -38,12 +38,14 @@ export default class Utils {
   static validateQueryPost = validator('query', (value, c) => {
     const post = value['post'];
     if (!post || typeof post !== 'string') {
+      console.warn('Invalid post query parameter:', post);
       return c.text('Invalid post', 400); // 400 Bad Request
     }
 
     // Regex validation
     const postRegex = new RegExp(c.env.POST_REGEX || '^.{1,200}$');
     if (!postRegex.test(post)) {
+      console.warn('Post query parameter does not match regex:', post);
       return c.text('Invalid post', 400); // 400 Bad Request
     }
 
