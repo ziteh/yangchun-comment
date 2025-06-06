@@ -343,6 +343,7 @@
   font-size: 12px;
   padding: 0;
   text-decoration: underline;
+  text-underline-offset: 4px;
 }
 
 .cancel-link {

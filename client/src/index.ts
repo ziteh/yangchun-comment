@@ -4,7 +4,7 @@ import { html, render, type TemplateResult } from 'lit-html';
 import { unsafeHTML } from 'lit-html/directives/unsafe-html.js';
 import type { Comment } from '@wonton-comment/shared';
 import { createApiService } from './apiService';
-import { createI18n } from './i18n';
+import { createI18n, en, zhHant, type I18nStrings } from './i18n';
 import './index.css';
 
 type CommentMap = {
@@ -13,7 +13,14 @@ type CommentMap = {
 
 type TabType = 'write' | 'preview';
 
-export function initWontonComment(elementId: string = 'wtc-app', options = {}) {
+export function initWontonComment(
+  elementId: string = 'wtc-app',
+  options: {
+    post?: string;
+    apiUrl?: string;
+    language?: 'en' | 'zh-Hant' | I18nStrings;
+  } = {},
+) {
   const wontonApp = new WontonComment(elementId, options);
   wontonApp.renderApp();
   return wontonApp;
@@ -36,19 +43,29 @@ class WontonComment {
   private editingComment: Comment | null = null;
   private activeTab: TabType = 'write';
   private showMarkdownHelp: boolean = false;
-
   constructor(
     elementId: string,
     options: {
       post?: string;
       apiUrl?: string;
+      language?: 'en' | 'zh-Hant' | I18nStrings;
     } = {},
   ) {
     this.elementId = elementId;
     this.post = options.post || '/blog/my-post';
     this.apiUrl = options.apiUrl || 'http://localhost:8787/';
     this.apiService = createApiService(this.apiUrl);
-    this.i18n = createI18n();
+
+    // 處理語言選項
+    let languageStrings: I18nStrings = en; // 預設為英文
+    if (options.language) {
+      if (typeof options.language === 'string') {
+        languageStrings = options.language === 'zh-Hant' ? zhHant : en;
+      } else {
+        languageStrings = options.language;
+      }
+    }
+    this.i18n = createI18n(languageStrings);
 
     this.setupDOMPurify();
   }
@@ -572,7 +589,9 @@ class WontonComment {
     }
 
     if (message.length > WontonComment.MAX_MESSAGE_LENGTH) {
-      alert(`${this.i18n.t('messageTooLong')} (${message.length}/${WontonComment.MAX_MESSAGE_LENGTH})`);
+      alert(
+        `${this.i18n.t('messageTooLong')} (${message.length}/${WontonComment.MAX_MESSAGE_LENGTH})`,
+      );
       return;
     }
 
@@ -638,16 +657,24 @@ class WontonComment {
 
     this.renderForm();
     this.renderPreview();
-  }// Handle preview mode submission
+  } // Handle preview mode submission
   private async handlePreviewSubmit(): Promise<void> {
     // Validate lengths
     if (this.previewName && this.previewName.length > WontonComment.MAX_NAME_LENGTH) {
-      alert(`${this.i18n.t('nameTooLong')} (${this.previewName.length}/${WontonComment.MAX_NAME_LENGTH})`);
+      alert(
+        `${this.i18n.t('nameTooLong')} (${this.previewName.length}/${
+          WontonComment.MAX_NAME_LENGTH
+        })`,
+      );
       return;
     }
 
     if (this.previewText.length > WontonComment.MAX_MESSAGE_LENGTH) {
-      alert(`${this.i18n.t('messageTooLong')} (${this.previewText.length}/${WontonComment.MAX_MESSAGE_LENGTH})`);
+      alert(
+        `${this.i18n.t('messageTooLong')} (${this.previewText.length}/${
+          WontonComment.MAX_MESSAGE_LENGTH
+        })`,
+      );
       return;
     }
 
