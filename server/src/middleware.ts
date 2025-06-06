@@ -29,7 +29,6 @@ app.use('*', async (c, next) => {
     return c.text('Forbidden', 403); // 403 Forbidden
   }
 
-  // Allow the request to continue to next middleware
   return next();
 });
 
@@ -61,6 +60,7 @@ app.use('*', async (c, next) => {
   const { success } = await limiter.limit({ key: ip });
 
   if (!success) {
+    console.warn(`Rate limit exceeded for IP: ${ip}, method: ${c.req.method}, path: ${c.req.path}`);
     return c.text('Rate limit exceeded', 429); // 429 Too Many Requests
   }
 

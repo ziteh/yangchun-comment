@@ -19,6 +19,7 @@ app.get('/', Utils.validateQueryPost, async (c) => {
   const raw = await c.env.COMMENTS.get(key);
   const comments = raw ? JSON.parse(raw) : [];
 
+  console.debug(`Fetched ${comments.length} comments for post: ${post}`);
   return c.json(comments, 200); // 200 OK
 });
 
@@ -30,7 +31,9 @@ app.post(
 
     // Honeypot check: if 'website' field is filled, it's likely a bot
     if (website) {
-      // console.warn('Honeypot triggered from:', c.req.header('CF-Connecting-IP'));
+      const ip = c.req.header('CF-Connecting-IP') || 'unknown';
+      console.warn(`Honeypot triggered from IP: ${ip}`);
+
       // Return 200 OK to fool bots, but don't actually process the comment
       return c.text('Comment received', 200);
     }
@@ -59,7 +62,6 @@ app.post(
 
     const id = Utils.genId();
     const timestamp = Date.now();
-
     const comment: Comment = {
       id,
       name: Utils.sanitize(name),
@@ -78,6 +80,7 @@ app.post(
 
     const token = await Utils.genHmac(c.env.SECRET_KEY, id, timestamp);
 
+    console.log(`Comment created with ID: ${id} for post: ${post}`);
     return c.json({ id, timestamp, token }, 201); // 201 Created
   },
 );
@@ -124,6 +127,8 @@ app.put('/', Utils.validateQueryPost, async (c) => {
     modDate: Date.now(),
   };
   await c.env.COMMENTS.put(key, JSON.stringify(comments));
+
+  console.log(`Comment updated: ${id} for post: ${post}`);
   return c.text('Comment updated', 200); // 200 OK
 });
 
@@ -157,6 +162,7 @@ app.delete('/', Utils.validateQueryPost, async (c) => {
   };
 
   await c.env.COMMENTS.put(key, JSON.stringify(comments));
+  console.log(`Comment deleted (marked): ${id} for post: ${post}`);
   return c.text('Comment deleted', 200); // 200 OK
 });
 
