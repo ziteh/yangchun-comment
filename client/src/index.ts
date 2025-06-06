@@ -29,6 +29,7 @@ export function initWontonComment(
 class WontonComment {
   private static readonly MAX_NAME_LENGTH = 25;
   private static readonly MAX_MESSAGE_LENGTH = 1000;
+  private static readonly MY_COMMENTS_KEY = 'wtc_my_comments';
 
   private elementId: string;
   private post: string;
@@ -153,9 +154,34 @@ class WontonComment {
   private getDisplayName(comment: Comment | undefined): string {
     return comment?.name || this.i18n.t('anonymous');
   }
-
   private canEditComment(commentId: string): boolean {
     return this.apiService.canEditComment(commentId);
+  }
+
+  private saveMyCommentId(commentId: string): void {
+    try {
+      const existingIds = this.getMyCommentIds();
+      if (!existingIds.includes(commentId)) {
+        existingIds.push(commentId);
+        localStorage.setItem(WontonComment.MY_COMMENTS_KEY, JSON.stringify(existingIds));
+      }
+    } catch (error) {
+      console.warn('Failed to save comment ID to localStorage:', error);
+    }
+  }
+
+  private getMyCommentIds(): string[] {
+    try {
+      const stored = localStorage.getItem(WontonComment.MY_COMMENTS_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch (error) {
+      console.warn('Failed to get comment IDs from localStorage:', error);
+      return [];
+    }
+  }
+
+  private isMyComment(commentId: string): boolean {
+    return this.getMyCommentIds().includes(commentId);
   }
 
   private async loadComments(): Promise<Comment[]> {
@@ -434,7 +460,6 @@ class WontonComment {
       content: `${prefix}-content`,
     };
   }
-
   // Create comment header template
   private createCommentHeader(
     comment: Comment,
@@ -442,11 +467,14 @@ class WontonComment {
     replyToName: string | null,
     canEdit: boolean,
   ): TemplateResult<1> {
+    const isMyComment = this.isMyComment(comment.id);
+
     return html`
       <div class="${cssClasses.header}">
-        <span class="${cssClasses.name}" title="${comment.id}"
-          >${this.getDisplayName(comment)}</span
-        >
+        <span class="${cssClasses.name}" title="${comment.id}">
+          ${this.getDisplayName(comment)}
+          ${isMyComment ? html`<span class="my-comment-badge">Me</span>` : ''}
+        </span>
         <span
           class="${cssClasses.time}"
           title="${comment.modDate ? this.formatDate(comment.pubDate) : undefined}"
@@ -603,7 +631,6 @@ class WontonComment {
       await this.renderCommentsList();
     }
   }
-
   // Process comment submission (create or update)
   private async processSubmission(name: string, message: string): Promise<boolean> {
     if (this.editingComment) {
@@ -613,21 +640,27 @@ class WontonComment {
         name,
         message,
       );
+
       if (!success) {
         alert(this.i18n.t('editFailed'));
       }
+
       return success;
     } else {
-      const success = await this.apiService.addComment(
+      const commentId = await this.apiService.addComment(
         this.post,
         name,
         message,
         this.currentReplyTo,
       );
-      if (!success) {
+
+      if (!commentId) {
         alert(this.i18n.t('submitFailed'));
+        return false;
       }
-      return success;
+
+      this.saveMyCommentId(commentId);
+      return true;
     }
   }
   // Reset form state after successful submission

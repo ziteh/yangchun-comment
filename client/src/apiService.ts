@@ -15,13 +15,12 @@ export const createApiService = (apiUrl: string) => {
     const res = await fetch(url);
     return await res.json();
   };
-
   const addComment = async (
     post: string,
     name: string,
     message: string,
     replyTo: string | null,
-  ): Promise<boolean> => {
+  ): Promise<string | null> => {
     try {
       const url = new URL('/api/comments', apiUrl);
       url.searchParams.append('post', post);
@@ -39,11 +38,11 @@ export const createApiService = (apiUrl: string) => {
       if (res.ok) {
         const data = await res.json();
         saveAuthInfo(data.id, data.timestamp, data.token);
-        return true;
+        return data.id;
       }
-      return false;
+      return null;
     } catch (_err) {
-      return false;
+      return null;
     }
   };
 
