@@ -201,10 +201,10 @@
 /* Info section for reply/edit */
 .info {
   max-width: 600px;
-  margin: 0.5rem auto;
+  margin: 0.5rem 0;
   font-size: 13px;
   color: var(--wtc-lighter);
-  align-items: center;
+  align-items: flex-start;
 }
 
 /* Preview Mode */
@@ -609,11 +609,14 @@
     margin-left: 0;
     margin-top: 8px;
   }
+
   .info {
     flex-direction: column;
     align-items: flex-start;
+    margin: 0.5rem 0;
     padding: 0 1rem;
   }
+
   /* Preview mode specific mobile styles */
   .preview-mode .comment-footer {
     flex-direction: row;
