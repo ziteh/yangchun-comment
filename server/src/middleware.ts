@@ -9,6 +9,7 @@ const app = new Hono<{
 
     // Environment variables
     CORS_ORIGIN: string;
+    POST_REGEX?: string;
   };
 }>();
 

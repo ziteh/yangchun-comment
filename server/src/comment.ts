@@ -9,6 +9,7 @@ const app = new Hono<{
     SECRET_KEY: string;
     MAX_NAME_LENGTH: number;
     MAX_MSG_LENGTH: number;
+    POST_REGEX?: string;
   };
 }>();
 

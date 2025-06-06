@@ -41,7 +41,11 @@ export default class Utils {
       return c.text('Invalid post', 400); // 400 Bad Request
     }
 
-    // TODO Regex validation for post
+    // Regex validation
+    const postRegex = new RegExp(c.env.POST_REGEX || '^.{1,200}$');
+    if (!postRegex.test(post)) {
+      return c.text('Invalid post', 400); // 400 Bad Request
+    }
 
     return {
       post,
