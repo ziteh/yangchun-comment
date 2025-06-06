@@ -15,6 +15,7 @@ export const createApiService = (apiUrl: string) => {
     const res = await fetch(url);
     return await res.json();
   };
+
   const addComment = async (
     post: string,
     name: string,
@@ -23,7 +24,7 @@ export const createApiService = (apiUrl: string) => {
   ): Promise<string | null> => {
     try {
       const url = new URL('/api/comments', apiUrl);
-      url.searchParams.append('post', post);      // Get honeypot field if present
+      url.searchParams.append('post', post); // Get honeypot field if present
       const websiteField = document.querySelector('input[name="website"]') as HTMLInputElement;
       const website = websiteField ? websiteField.value : '';
 

@@ -152,8 +152,13 @@ class WontonComment {
   }
 
   private getDisplayName(comment: Comment | undefined): string {
-    return comment?.name || this.i18n.t('anonymous');
+    const cleanedName = comment?.name
+      ? DOMPurify.sanitize(comment.name, { ALLOWED_TAGS: [] }) // Remove all HTML tags
+      : undefined;
+
+    return cleanedName ? cleanedName : this.i18n.t('anonymous');
   }
+
   private canEditComment(commentId: string): boolean {
     return this.apiService.canEditComment(commentId);
   }
@@ -196,6 +201,7 @@ class WontonComment {
       this.restoreFormInputs();
     }
   }
+
   private restoreFormInputs(): void {
     if (this.previewName) {
       const nameInput = document.querySelector(
@@ -265,7 +271,6 @@ class WontonComment {
               `
             : html`<div class="empty-preview">${this.i18n.t('emptyPreview')}</div>`}
         </div>
-        <!-- Preview mode footer with controls -->
         <div class="comment-footer wtc-flex wtc-gap-xs">
           <span style="flex: 1;"></span>
           <div class="wtc-flex wtc-gap-xs">
