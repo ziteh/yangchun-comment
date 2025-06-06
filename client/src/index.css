@@ -82,8 +82,8 @@
 .wtc-container {
   font-family: var(--wtc-font-family);
   color: var(--wtc-text-color);
-  max-width: 600px;
-  margin: 0 auto;
+  /* max-width: 600px; */
+  /* margin: 0 auto; */
   font-size: var(--wtc-base-font-size);
 }
 
