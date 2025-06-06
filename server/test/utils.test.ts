@@ -1,109 +1,202 @@
 import { describe, it, expect } from 'vitest';
 import Utils from '../src/utils';
 
-describe('Utils', () => {
-  describe('HTML sanitize', () => {
-    it('should remove all HTML tags', () => {
-      const input = '<p>Hello <b>World</b>!</p>';
+describe('Utils.sanitize', () => {
+  describe('HTML Tag Removal', () => {
+    it('removes all HTML tags', () => {
+      const input = '<p>foo <b>bar</b>!</p>';
       const output = Utils.sanitize(input);
-      expect(output).toBe('Hello World!');
+      expect(output).toBe('foo bar!');
     });
 
-    it('should handle empty string', () => {
-      const input = '';
-      const output = Utils.sanitize(input);
-      expect(output).toBe('');
-    });
-
-    it('should handle null input', () => {
-      // @ts-ignore - Testing incorrect input
-      const output = Utils.sanitize(null);
-      expect(output).toBe('');
-    });
-
-    it('should remove script tags', () => {
-      const input = 'Hello <script>alert("XSS")</script> World';
-      const output = Utils.sanitize(input);
-      expect(output).toBe('Hello  World');
-    });
-
-    it('should remove complex HTML', () => {
+    it('removes nested and complex HTML tags', () => {
       const input =
         '<div class="container"><h1 style="color: red;">Title</h1><p>Content with <a href="http://example.com">link</a></p></div>';
       const output = Utils.sanitize(input);
       expect(output).toBe('TitleContent with link');
     });
 
-    it('should escape HTML entities', () => {
-      const input = 'Test & < > " \' / characters';
-      const output = Utils.sanitize(input);
-      expect(output).toBe(`Test &amp; &lt; &gt; " ' / characters`);
-    });
-
-    it('should remove javascript: URLs', () => {
-      const input = '[Click me](javascript:alert("XSS"))';
-      const output = Utils.sanitize(input);
-      expect(output).toBe('[Click me]()');
-    });
-
-    it('should remove javascript: URLs with spaces', () => {
-      const input = '[Click me]( javascript:alert("XSS") )';
-      const output = Utils.sanitize(input);
-      expect(output).toBe('[Click me]( )');
-    });
-
-    it('should remove HTML from markdown', () => {
-      const input = '# Title\n\n<script>alert("XSS")</script>\n\n**Bold** and *italic*';
-      const output = Utils.sanitize(input);
-      expect(output).toBe('# Title\n\n\n\n**Bold** and *italic*');
-    });
-
-    it('should handle malformed HTML', () => {
+    it('handles malformed or unclosed HTML tags', () => {
       const input = '<p>Unclosed paragraph <b>Bold text</p>';
       const output = Utils.sanitize(input);
       expect(output).toBe('Unclosed paragraph Bold text');
     });
 
-    it('should remove iframe tags', () => {
-      const input = 'Before <iframe src="https://example.com"></iframe> After';
+    it('removes <script> tags and their content', () => {
+      const input = 'foo <script>alert("XSS")</script> bar';
       const output = Utils.sanitize(input);
-      expect(output).toBe('Before  After');
+      expect(output).toBe('foo  bar');
     });
 
-    it('should remove event handlers', () => {
-      const input = '<a href="https://example.com" onclick="alert(\'XSS\')">Click me</a>';
-      const output = Utils.sanitize(input);
-      expect(output).toBe('Click me');
-    });
-
-    it('should remove style tags', () => {
+    it('removes <style> tags and their content', () => {
       const input = 'Text <style>body { background: red; }</style> more text';
       const output = Utils.sanitize(input);
       expect(output).toBe('Text  more text');
     });
 
-    it('should decode HTML entities', () => {
-      const input = 'Copyright &copy; 2025 &amp; beyond';
+    it('removes <iframe> tags', () => {
+      const input = 'Before <iframe src="https://example.com"></iframe> After';
       const output = Utils.sanitize(input);
-      expect(output).toBe('Copyright © 2025 &amp; beyond');
+      expect(output).toBe('Before  After');
     });
 
-    it('should keep encoded entities as text', () => {
+    it('removes deeply nested and interleaved tags', () => {
+      const input =
+        '<div><section><p>Text <span><b>bold <i>italic</i></b></span></p></section></div>';
+      const output = Utils.sanitize(input);
+      expect(output).toBe('Text bold italic');
+    });
+
+    it('removes custom and unknown tags', () => {
+      const input = '<custom-tag>foo</custom-tag><unknown>bar</unknown><p> baz</p>';
+      const output = Utils.sanitize(input);
+      expect(output).toBe('foobar baz');
+    });
+
+    it('removes SVG and MathML tags', () => {
+      const input = '<svg><circle cx="50" cy="50" r="40" /></svg><math><mi>foo</mi></math>bar';
+      const output = Utils.sanitize(input);
+      expect(output).toBe('foobar');
+    });
+
+    it('removes HTML comments', () => {
+      const input = 'foo<!-- this is a comment -->bar<!--another-->';
+      const output = Utils.sanitize(input);
+      expect(output).toBe('foobar');
+    });
+
+    it('removes content inside comments', () => {
+      const input = '<!--><script>alert("XSS")</script>-->';
+      const output = Utils.sanitize(input);
+      expect(output).toBe('--&gt;');
+    });
+
+    it('removes content inside comments', () => {
+      const input = '<!-- foo="bar--><script>alert("XSS")</script>" -->';
+      const output = Utils.sanitize(input);
+      expect(output).toBe('" --&gt;');
+    });
+
+    it('removes tags with special characters and newlines', () => {
+      const input = '<div\nclass="a">line1<br/>line2</div>';
+      const output = Utils.sanitize(input);
+      expect(output).toBe('line1line2');
+    });
+
+    it('removes mixed tags and attributes in complex HTML', () => {
+      const input =
+        '<div class="x"><p id="y">A <span style="color:red">B <a href="#">C</a></span></p><!--c--></div>';
+      const output = Utils.sanitize(input);
+      expect(output).toBe('A B C');
+    });
+  });
+
+  describe('HTML Attribute Removal', () => {
+    it('removes event handler attributes from tags', () => {
+      const input = '<a href="https://example.com" onclick="alert(\'XSS\')">link</a>';
+      const output = Utils.sanitize(input);
+      expect(output).toBe('link');
+    });
+  });
+
+  describe('HTML Entities', () => {
+    it('escapes HTML entities', () => {
+      const input = 'Test & < > " \' / characters';
+      const output = Utils.sanitize(input);
+      expect(output).toBe('Test &amp; &lt; &gt; " \' / characters');
+    });
+
+    it('preserves already encoded HTML entities as text', () => {
       const input = '&lt;script&gt;alert("XSS")&lt;/script&gt;';
       const output = Utils.sanitize(input);
-      expect(output).toBe('&lt;script&gt;alert("XSS")&lt;/script&gt;');
+      expect(output).toBe(input);
     });
+  });
 
-    it('should preserve emojis', () => {
-      const input = 'Hello 👋 World! 🌎';
+  describe('Pseudo protocol, javascript: URLs in Markdown', () => {
+    it('removes javascript: in Markdown links', () => {
+      const input = '[a](javascript:alert("XSS"))';
       const output = Utils.sanitize(input);
-      expect(output).toBe('Hello 👋 World! 🌎');
+      expect(output).toBe('[a]()');
     });
 
-    it('should preserve line breaks', () => {
+    it('removes javascript: with whitespace', () => {
+      const input = '[a]( \r\n\t javascript:alert("XSS") )';
+      const output = Utils.sanitize(input);
+      expect(output).toBe('[a]( )');
+    });
+
+    it('removes javascript: case-insensitively', () => {
+      const input = '[a](JaVaScRiPt:alert("XSS"))';
+      const output = Utils.sanitize(input);
+      expect(output).toBe('[a]()');
+    });
+  });
+
+  describe('Markdown', () => {
+    it('preserves Markdown syntax', () => {
+      const input = `
+# H1
+## H2
+### H3
+#### H4
+##### H5
+###### H6
+
+[link](https://example.com)
+![alt](https://example.com/image.png)
+
+*italic* or _italic_
+**Bold** or __Bold__
+
+\`inline code\`
+\`\`\`c
+code block
+\`\`\`
+
+- list item 1
+- list item 2
+
+1. list item 1
+2. list item 2
+`;
+      const output = Utils.sanitize(input);
+      expect(output).toBe(input);
+    });
+
+    it('removes HTML tags from markdown content', () => {
+      const input = '# Title\n\n<script>alert("XSS")</script>\n\n**Bold** and *italic*';
+      const output = Utils.sanitize(input);
+      expect(output).toBe('# Title\n\n\n\n**Bold** and *italic*');
+    });
+  });
+
+  describe('Special Cases', () => {
+    it('empty string input', () => {
+      const output = Utils.sanitize('');
+      expect(output).toBe('');
+    });
+
+    it('null input', () => {
+      const output = Utils.sanitize(null);
+      expect(output).toBe('');
+    });
+
+    it('undefined input', () => {
+      const output = Utils.sanitize(undefined);
+      expect(output).toBe('');
+    });
+
+    it('preserves emojis in the text', () => {
+      const input = 'foo 👋 bar 🌎';
+      const output = Utils.sanitize(input);
+      expect(output).toBe(input);
+    });
+
+    it('preserves line breaks in the text', () => {
       const input = 'Line 1\nLine 2\nLine 3';
       const output = Utils.sanitize(input);
-      expect(output).toBe('Line 1\nLine 2\nLine 3');
+      expect(output).toBe(input);
     });
   });
 });
