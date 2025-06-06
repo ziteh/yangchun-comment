@@ -2,6 +2,10 @@
 
 A simple and private comment system, runs on Cloudflare Workers.
 
+- No login
+- No cookie
+- No browser fingerprinting (if you don't think the hashed IP is a fingerprint)
+
 ## Architecture
 
 This monorepo contains three packages:
