@@ -94,4 +94,18 @@ export default class Utils {
     const signature = Buffer.from(hmac, 'base64');
     return crypto.subtle.verify('HMAC', key, signature, dataData);
   }
+
+  static hashFnv1a(ip: string): string {
+    const FNV_OFFSET_BASIS = 0x811c9dc5;
+    const FNV_PRIME = 0x01000193;
+
+    let hash = FNV_OFFSET_BASIS;
+    for (let i = 0; i < ip.length; i++) {
+      hash ^= ip.charCodeAt(i);
+      hash = Math.imul(hash, FNV_PRIME);
+    }
+
+    // Convert to unsigned 32-bit and then to base36
+    return (hash >>> 0).toString(36);
+  }
 }
