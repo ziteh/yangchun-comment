@@ -43,11 +43,11 @@ export default class Utils {
     }
 
     // Regex validation
-    const postRegex = new RegExp(c.env.POST_REGEX || '^.{1,200}$');
-    if (!postRegex.test(post)) {
-      console.warn('Post query parameter does not match regex:', post);
-      return c.text('Invalid post', 400); // 400 Bad Request
-    }
+    // const postRegex = new RegExp(c.env.POST_REGEX || '^.{1,200}$');
+    // if (!postRegex.test(post)) {
+    //   console.warn('Post query parameter does not match regex:', post);
+    //   return c.text('Invalid post', 400); // 400 Bad Request
+    // }
 
     return {
       post,
@@ -107,5 +107,25 @@ export default class Utils {
 
     // Convert to unsigned 32-bit and then to base36
     return (hash >>> 0).toString(36);
+  }
+
+  /**
+   * Verify the post exists.
+   * @param url the URL of the post to validate.
+   * @param timeout in milliseconds.
+   * @returns true if the post exists, false otherwise.
+   */
+  static async validatePostUrl(url: string, timeout: number): Promise<boolean> {
+    try {
+      const res = await fetch(url, {
+        method: 'HEAD', // Use HEAD to avoid downloading the full page
+        signal: AbortSignal.timeout(timeout),
+      });
+
+      return res.ok;
+    } catch (err) {
+      console.warn(`Blog post validation failed for ${url}:`, err);
+      return false;
+    }
   }
 }

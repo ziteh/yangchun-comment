@@ -10,6 +10,7 @@ const app = new Hono<{
     MAX_NAME_LENGTH: number;
     MAX_MSG_LENGTH: number;
     POST_REGEX?: string;
+    POST_BASE_URL: string;
   };
 }>();
 
@@ -72,6 +73,22 @@ app.post(
     const { post } = c.req.valid('query');
     const { name, msg, replyTo } = c.req.valid('json');
 
+    const key = Utils.getCommentKey(post);
+    const rawComments = await c.env.COMMENTS.get(key);
+    if (!rawComments) {
+      // No comments yet for this post
+      const baseUrl = c.env.POST_BASE_URL || null;
+      if (baseUrl) {
+        // Validate the post URL if POST_BASE_URL is set
+        const fullUrl = `${baseUrl}${post}`;
+        const isValidPost = await Utils.validatePostUrl(fullUrl, 5000);
+        if (!isValidPost) {
+          console.warn(`No comments found for post: ${post}, invalid post`);
+          return c.text('Invalid post', 400); // 400 Bad Request
+        }
+      }
+    }
+
     const id = Utils.genId();
     const timestamp = Date.now();
     const comment: Comment = {
@@ -84,9 +101,7 @@ app.post(
     };
 
     // Save to KV
-    const key = Utils.getCommentKey(post);
-    const raw = await c.env.COMMENTS.get(key);
-    const comments = raw ? JSON.parse(raw) : [];
+    const comments = rawComments ? JSON.parse(rawComments) : [];
     comments.push(comment);
     await c.env.COMMENTS.put(key, JSON.stringify(comments));
 
