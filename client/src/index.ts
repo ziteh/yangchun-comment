@@ -44,6 +44,7 @@ class WontonComment {
   private editingComment: Comment | null = null;
   private activeTab: TabType = 'write';
   private showMarkdownHelp: boolean = false;
+  private showAdminLogin: boolean = false;
   constructor(
     elementId: string,
     options: {
@@ -952,28 +953,35 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
     `;
   }
 
-  // Create form template with improved structure
   private createFormTemplate(): TemplateResult<1> {
     return html`
-      <div class="comment-box">${this.createFormContent()}</div>
-      ${this.createStatusIndicators()}
+      ${this.createFormContent()} ${this.createStatusIndicators()}
       <div id="markdown-help-modal"></div>
+      <div id="admin-login-modal"></div>
     `;
   }
-  // Create main form content
+
   private createFormContent(): TemplateResult<1> {
     return html`
-      <div id="form-content" class="${this.activeTab === 'write' ? 'active' : ''}">
-        <form
-          id="comment-form"
-          class="wtc-reset-form"
-          @submit=${(e: SubmitEvent) => this.handleSubmit(e)}
-        >
-          <div class="honeypot-field">
-            <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
-          </div>
-          ${this.createTextareaSection()} ${this.createFormFooter()}
-        </form>
+      <div class="comment-box">
+        <div id="form-content" class="${this.activeTab === 'write' ? 'active' : ''}">
+          <form
+            id="comment-form"
+            class="wtc-reset-form"
+            @submit=${(e: SubmitEvent) => this.handleSubmit(e)}
+          >
+            <div class="honeypot-field">
+              <input
+                type="text"
+                name="website"
+                tabindex="-1"
+                autocomplete="off"
+                aria-hidden="true"
+              />
+            </div>
+            ${this.createTextareaSection()} ${this.createFormFooter()}
+          </form>
+        </div>
       </div>
     `;
   }
@@ -994,7 +1002,7 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
       </div>
     `;
   }
-  // Create form footer with controls
+
   private createFormFooter(): TemplateResult<1> {
     return html`
       <div class="comment-footer wtc-flex wtc-flex-wrap wtc-gap-xs">
@@ -1040,6 +1048,106 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
     `;
   }
 
+  // Create admin button
+  private createAdminButton(): TemplateResult<1> {
+    return html`
+      <button
+        type="button"
+        class="admin-btn wtc-clickable wtc-reset-button"
+        title="Admin"
+        @click=${() => this.showAdminModal()}
+      >
+        ⚙
+      </button>
+    `;
+  }
+
+  // Show admin login modal
+  private showAdminModal(): void {
+    this.showAdminLogin = true;
+    this.renderAdminLogin();
+  }
+
+  // Hide admin login modal
+  private hideAdminModal(): void {
+    this.showAdminLogin = false;
+    this.renderAdminLogin();
+  }
+
+  // Render admin login modal
+  private renderAdminLogin(): void {
+    const adminTemplate = this.showAdminLogin ? this.createAdminLoginTemplate() : html``;
+    const modalElement = document.getElementById('admin-login-modal');
+    if (modalElement) {
+      render(adminTemplate, modalElement);
+    }
+  }
+
+  // Create admin login modal template
+  private createAdminLoginTemplate(): TemplateResult<1> {
+    return html`
+      <div class="admin-modal-backdrop wtc-clickable" @click=${() => this.hideAdminModal()}>
+        <div class="admin-modal-content" @click=${(e: Event) => e.stopPropagation()}>
+          <button
+            class="admin-modal-close wtc-clickable wtc-reset-button"
+            @click=${() => this.hideAdminModal()}
+          >
+            ×
+          </button>
+          <h3>Admin Login</h3>
+          <form @submit=${(e: SubmitEvent) => this.handleAdminLogin(e)}>
+            <div class="admin-form-group">
+              <label for="admin-username">Username:</label>
+              <input type="text" id="admin-username" name="username" required autocomplete="off" />
+            </div>
+            <div class="admin-form-group">
+              <label for="admin-password">Password:</label>
+              <input
+                type="password"
+                id="admin-password"
+                name="password"
+                required
+                autocomplete="off"
+              />
+            </div>
+            <button type="submit" class="admin-login-btn wtc-clickable wtc-reset-button">
+              Login
+            </button>
+          </form>
+        </div>
+      </div>
+    `;
+  }
+
+  // Handle admin login form submission
+  private async handleAdminLogin(e: SubmitEvent): Promise<void> {
+    e.preventDefault();
+    const formData = new FormData(e.target as HTMLFormElement);
+    const username = formData.get('username') as string;
+    const password = formData.get('password') as string;
+
+    try {
+      const response = await fetch(`${this.apiUrl}admin/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
+      if (response.ok) {
+        const result = await response.text();
+        // Store admin token or handle successful login
+        console.log('Admin login result:', result);
+        alert('Admin login successful!');
+        this.hideAdminModal();
+      } else {
+        alert('Admin login failed!');
+      }
+    } catch (error) {
+      console.error('Admin login error:', error);
+      alert('Admin login error!');
+    }
+  }
   // Create status indicators (reply/edit info)
   private createStatusIndicators(): TemplateResult<1> | string {
     const replyIndicator = this.createReplyIndicator();
@@ -1081,7 +1189,10 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
   public async renderApp(): Promise<void> {
     const appTemplate = html`
       <div class="wtc-container">
-        <div id="comment-form-container"></div>
+        <div class="comment-box-container">
+          <div id="comment-form-container" class="form-content"></div>
+          <div class="admin-btn-wrapper">${this.createAdminButton()}</div>
+        </div>
         <div id="comments-container"></div>
       </div>
     `;
