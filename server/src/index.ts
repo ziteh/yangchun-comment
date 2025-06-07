@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import middleware from './middleware';
 import comments from './comment';
 import rss from './rss';
+import admin from './admin';
 
 const app = new Hono();
 
@@ -14,5 +15,6 @@ app.onError((err, c) => {
 app.route('/', middleware);
 app.route('/api/comments', comments);
 app.route('/rss', rss);
+app.route('/admin', admin);
 
 export default app;

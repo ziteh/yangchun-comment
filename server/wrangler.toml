@@ -33,3 +33,6 @@ MAX_MSG_LENGTH = 1000
 # CORS_ORIGIN = "${CORS_ORIGIN}"
 # POST_REGEX = "${POST_REGEX}"
 HMAC_SECRET_KEY = "${HMAC_SECRET_KEY}"   # Should be set in Secrets
+ADMIN_SECRET_KEY = "${ADMIN_SECRET_KEY}" # JWT secret key for admin auth
+# ADMIN_USERNAME = "${ADMIN_USERNAME}"     # Admin username
+# ADMIN_PASSWORD = "${ADMIN_PASSWORD}"     # Admin password
