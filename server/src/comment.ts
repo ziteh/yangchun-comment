@@ -198,8 +198,9 @@ app.put('/', Utils.validateQueryPost, async (c) => {
 
   comments[index] = {
     ...comments[index],
-    pseudonym: cleanPseudonym,
-    nameHash,
+    // Keep original pseudonym and nameHash when editing (don't allow changes)
+    // pseudonym: cleanPseudonym,
+    // nameHash,
     email: undefined, // Currently not storing email
     msg: cleanMsg,
     modDate: Date.now(), // Update modification date

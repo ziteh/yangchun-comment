@@ -21,11 +21,11 @@ function selectWordsFromHash(hash: string): { adjective: string; noun: string } 
   };
 }
 
-export async function generatePseudonymAndHash(originalName: string): Promise<{
+export async function generatePseudonymAndHash(originalName: string | null | undefined): Promise<{
   pseudonym: string;
   hash: string;
 }> {
-  const name = originalName.trim();
+  const name = (originalName || '').trim();
   if (name.length === 0) {
     return {
       pseudonym: '',

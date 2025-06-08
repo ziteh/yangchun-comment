@@ -38,6 +38,7 @@ export type I18nStrings = {
   markdownInlineCodeExample: string;
   markdownCodeBlockExample: string;
   pseudonymNotice: string;
+  editingPseudonymNotice: string;
 };
 
 export const en: I18nStrings = {
@@ -82,6 +83,7 @@ export const en: I18nStrings = {
   markdownInlineCodeExample: '`Inline code`',
   markdownCodeBlockExample: '```\nCode block\n```',
   pseudonymNotice: 'Will be converted to a unique pseudonym, longer names help avoid impersonation',
+  editingPseudonymNotice: 'Cannot be changed when editing',
 };
 
 export const zhHant: I18nStrings = {
@@ -125,6 +127,7 @@ export const zhHant: I18nStrings = {
   markdownInlineCodeExample: '`行內程式碼`',
   markdownCodeBlockExample: '```\n程式碼區塊\n```',
   pseudonymNotice: '名稱將被轉換為化名，使用較長的名稱有助於避免被冒充',
+  editingPseudonymNotice: '編輯時無法更改',
 };
 
 export const createI18n = (initLang: I18nStrings = en) => {

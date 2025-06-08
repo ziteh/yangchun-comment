@@ -651,8 +651,22 @@ class WontonComment {
       return;
     }
 
-    // Generate pseudonym and hash from original name
-    const { pseudonym, hash } = await generatePseudonymAndHash(originalName);
+    // Generate pseudonym and hash (only for new comments)
+    let pseudonym: string;
+    let hash: string;
+
+    if (this.editingComment) {
+      // When editing, use the original pseudonym and nameHash to prevent changes
+      pseudonym = this.editingComment.pseudonym || '';
+      hash = this.editingComment.nameHash || '';
+    } else {
+      // For new comments, generate from input name
+      const { pseudonym: newPseudonym, hash: newHash } = await generatePseudonymAndHash(
+        originalName || '',
+      );
+      pseudonym = newPseudonym;
+      hash = newHash;
+    }
 
     const success = await this.processSubmission(pseudonym, hash, message);
 
@@ -662,7 +676,6 @@ class WontonComment {
       await this.renderCommentsList();
     }
   }
-
   // Process comment submission
   private async processSubmission(
     pseudonym: string,
@@ -670,11 +683,12 @@ class WontonComment {
     message: string,
   ): Promise<boolean> {
     if (this.editingComment) {
+      // When editing, use the original pseudonym and nameHash to prevent changes
       const success = await this.apiService.updateComment(
         this.post,
         this.editingComment.id,
-        pseudonym,
-        nameHash,
+        this.editingComment.pseudonym || '',
+        this.editingComment.nameHash || '',
         message,
       );
 
@@ -725,10 +739,11 @@ class WontonComment {
     if (messageCountEl) {
       messageCountEl.classList.remove('over-limit');
     }
-
     this.renderForm();
     this.renderPreview();
-  } // Handle preview mode submission
+  }
+
+  // Handle preview mode submission
   private async handlePreviewSubmit(): Promise<void> {
     // Validate lengths
     if (this.previewName && this.previewName.length > WontonComment.MAX_NAME_LENGTH) {
@@ -749,8 +764,20 @@ class WontonComment {
       return;
     }
 
-    // Generate pseudonym and hash from original name
-    const { pseudonym, hash } = await generatePseudonymAndHash(this.previewName);
+    // Generate pseudonym and hash from original name (only for new comments)
+    let pseudonym: string;
+    let hash: string;
+
+    if (this.editingComment) {
+      // When editing, use the original pseudonym and nameHash
+      pseudonym = this.editingComment.pseudonym || '';
+      hash = this.editingComment.nameHash || '';
+    } else {
+      // For new comments, generate from input name
+      const generated = await generatePseudonymAndHash(this.previewName);
+      pseudonym = generated.pseudonym;
+      hash = generated.hash;
+    }
 
     const success = await this.processSubmission(pseudonym, hash, this.previewText);
 
@@ -1043,7 +1070,6 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
       </div>
     `;
   }
-
   private createFormFooter(): TemplateResult<1> {
     return html`
       <div class="comment-footer wtc-flex wtc-flex-wrap wtc-gap-xs">
@@ -1054,10 +1080,13 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
             autocomplete="name"
             placeholder="${this.i18n.t('namePlaceholder')}"
             maxlength="${WontonComment.MAX_NAME_LENGTH}"
+            ?disabled=${this.editingComment !== null}
             @input=${(e: Event) => this.handleNameInputChange(e)}
           />
           <div class="pseudonym-notice" style="font-size: 0.8em; color: #666; margin-top: 4px;">
-            ${this.i18n.t('pseudonymNotice')}
+            ${this.editingComment
+              ? this.i18n.t('editingPseudonymNotice')
+              : this.i18n.t('pseudonymNotice')}
           </div>
         </div>
         <div class="wtc-flex wtc-gap-xs">${this.createFormButtons()}</div>
