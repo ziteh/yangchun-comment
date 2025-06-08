@@ -81,7 +81,7 @@ export const en: I18nStrings = {
   markdownOrderedListExample: '1. Ordered list item',
   markdownInlineCodeExample: '`Inline code`',
   markdownCodeBlockExample: '```\nCode block\n```',
-  pseudonymNotice: 'Will be converted to a unique pseudonym',
+  pseudonymNotice: 'Will be converted to a unique pseudonym, longer names help avoid impersonation',
 };
 
 export const zhHant: I18nStrings = {
@@ -124,7 +124,7 @@ export const zhHant: I18nStrings = {
   markdownOrderedListExample: '1. 編號清單',
   markdownInlineCodeExample: '`行內程式碼`',
   markdownCodeBlockExample: '```\n程式碼區塊\n```',
-  pseudonymNotice: '名稱將被轉換為化名',
+  pseudonymNotice: '名稱將被轉換為化名，使用較長的名稱有助於避免被冒充',
 };
 
 export const createI18n = (initLang: I18nStrings = en) => {
