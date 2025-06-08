@@ -72,20 +72,18 @@ app.post(
       return c.text('Invalid name hash format', 400);
     }
 
-    // TODO
     // Validate pseudonym and nameHash combination
     // Only 3 valid combinations:
     // 1. Both are undefined
     // 2. Both are empty strings
     // 3. Both are non-empty strings
-    // const trimmedPseudonym = cleanPseudonym?.trim();
-    // const trimmedNameHash = nameHash?.trim();
-    // const isPseudonymEmpty = !trimmedPseudonym || trimmedPseudonym === '';
-    // const isNameHashEmpty = !trimmedNameHash || trimmedNameHash === '';
-
-    // if (isPseudonymEmpty !== isNameHashEmpty) {
-    //   return c.text('Pseudonym and nameHash must both be empty or both be non-empty', 400);
-    // }
+    const trimmedPseudonym = cleanPseudonym?.trim();
+    const trimmedNameHash = nameHash?.trim();
+    const isPseudonymEmpty = !trimmedPseudonym || trimmedPseudonym === '';
+    const isNameHashEmpty = !trimmedNameHash || trimmedNameHash === '';
+    if (isPseudonymEmpty !== isNameHashEmpty) {
+      return c.text('Pseudonym and nameHash must both be empty or both be non-empty', 400);
+    }
 
     if (replyTo && (typeof replyTo !== 'string' || !/^[0-9A-Z]{12}$/.test(replyTo))) {
       return c.text('Invalid reply ID', 400);
@@ -170,20 +168,18 @@ app.put('/', Utils.validateQueryPost, async (c) => {
     return c.text('Invalid name hash format', 400);
   }
 
-  // TODO
   // Validate pseudonym and nameHash combination
   // Only 3 valid combinations:
   // 1. Both are undefined
   // 2. Both are empty strings (after trimming)
   // 3. Both are non-empty strings (after trimming)
-  // const trimmedPseudonym = cleanPseudonym?.trim();
-  // const trimmedNameHash = nameHash?.trim();
-  // const isPseudonymEmpty = !trimmedPseudonym || trimmedPseudonym === '';
-  // const isNameHashEmpty = !trimmedNameHash || trimmedNameHash === '';
-
-  // if (isPseudonymEmpty !== isNameHashEmpty) {
-  //   return c.text('Pseudonym and nameHash must both be empty or both be non-empty', 400);
-  // }
+  const trimmedPseudonym = cleanPseudonym?.trim();
+  const trimmedNameHash = nameHash?.trim();
+  const isPseudonymEmpty = !trimmedPseudonym || trimmedPseudonym === '';
+  const isNameHashEmpty = !trimmedNameHash || trimmedNameHash === '';
+  if (isPseudonymEmpty !== isNameHashEmpty) {
+    return c.text('Pseudonym and nameHash must both be empty or both be non-empty', 400);
+  }
 
   const hmacOk = await Utils.verifyHmac(c.env.HMAC_SECRET_KEY, id, timestamp, token);
   if (!hmacOk) {
