@@ -263,6 +263,16 @@
   font-size: 0.8em;
 }
 
+.author-badge {
+  background-color: var(--wtc-primary-color);
+  color: var(--wtc-background-color);
+  border-radius: var(--wtc-small-border-radius);
+  padding: 2px 3px;
+  margin-left: 2px;
+  font-size: 0.8em;
+  font-weight: bold;
+}
+
 .comment-time,
 .reply-time,
 .reply-to {

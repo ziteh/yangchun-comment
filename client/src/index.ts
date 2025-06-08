@@ -20,6 +20,7 @@ export function initWontonComment(
     post?: string;
     apiUrl?: string;
     language?: 'en' | 'zh-Hant' | I18nStrings;
+    authorName?: string;
   } = {},
 ) {
   const wontonApp = new WontonComment(elementId, options);
@@ -35,6 +36,7 @@ class WontonComment {
   private elementId: string;
   private post: string;
   private apiUrl: string;
+  private authorName: string | undefined;
   private apiService: ReturnType<typeof createApiService>;
   private i18n: ReturnType<typeof createI18n>;
   private commentMap: CommentMap = {};
@@ -54,11 +56,13 @@ class WontonComment {
       post?: string;
       apiUrl?: string;
       language?: 'en' | 'zh-Hant' | I18nStrings;
+      authorName?: string;
     } = {},
   ) {
     this.elementId = elementId;
     this.post = options.post || '/blog/my-post';
     this.apiUrl = options.apiUrl || 'http://localhost:8787/';
+    this.authorName = options.authorName;
     this.apiService = createApiService(this.apiUrl);
 
     let languageStrings: I18nStrings = en;
@@ -153,8 +157,12 @@ class WontonComment {
 
     return `${y}/${m}/${d} ${h}:${minute} ${period}`;
   }
-
   private getDisplayName(comment: Comment | undefined): string {
+    // 如果是管理員留言且有設定作者名稱，顯示作者名稱
+    if (comment?.isAdmin && this.authorName) {
+      return DOMPurify.sanitize(this.authorName, { ALLOWED_TAGS: [] });
+    }
+
     const cleanedName = comment?.pseudonym
       ? DOMPurify.sanitize(comment.pseudonym, { ALLOWED_TAGS: [] }) // Remove all HTML tags
       : undefined;
@@ -484,8 +492,7 @@ class WontonComment {
       time: `${prefix}-time`,
       content: `${prefix}-content`,
     };
-  }
-  // Create comment header template
+  } // Create comment header template
   private createCommentHeader(
     comment: Comment,
     cssClasses: ReturnType<typeof this.getCommentCssClasses>,
@@ -493,12 +500,17 @@ class WontonComment {
     canEdit: boolean,
   ): TemplateResult<1> {
     const isMyComment = this.isMyComment(comment);
+    const isAdmin = comment.isAdmin;
 
     return html`
       <div class="${cssClasses.header}">
         <span class="${cssClasses.name}" title="${comment.id}">
           ${this.getDisplayName(comment)}
-          ${isMyComment ? html`<span class="my-comment-badge">Me</span>` : ''}
+          ${isAdmin
+            ? html`<span class="author-badge">${this.i18n.t('author')}</span>`
+            : isMyComment
+            ? html`<span class="my-comment-badge">Me</span>`
+            : ''}
         </span>
         <span
           class="${cssClasses.time}"
