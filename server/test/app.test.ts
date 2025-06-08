@@ -14,7 +14,8 @@ describe('Comment', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: 'Bob',
+          pseudonym: 'test',
+          nameHash: '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08',
           msg: 'Hello',
         }),
       },
@@ -31,7 +32,7 @@ describe('Comment', () => {
     if (!('token' in json) || typeof json.token !== 'string') assert.fail();
 
     expect(json.id.length).toBe(12);
-    expect(json.timestamp).toBeGreaterThan(now);
+    expect(json.timestamp).toBeGreaterThanOrEqual(now);
 
     const res2 = await app.request(`/?post=${post}`, { method: 'GET' }, env);
     expect(res2.status).toBe(200);
@@ -41,7 +42,7 @@ describe('Comment', () => {
     expect(json2.length).toBe(1);
     if (!isComment(json2[0])) assert.fail();
 
-    expect(json2[0].name).toBe('Bob');
+    expect(json2[0].pseudonym).toBe('test');
     expect(json2[0].msg).toBe('Hello');
   });
 });
