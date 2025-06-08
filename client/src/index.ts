@@ -30,7 +30,7 @@ export function initWontonComment(
 class WontonComment {
   private static readonly MAX_NAME_LENGTH = 25;
   private static readonly MAX_MESSAGE_LENGTH = 1000;
-  private static readonly MY_COMMENTS_KEY = 'wtc_my_comments';
+  private static readonly MY_NAME_HASHES_KEY = 'wtc_my_name_hashes';
 
   private elementId: string;
   private post: string;
@@ -166,30 +166,31 @@ class WontonComment {
     return this.apiService.canEditComment(commentId);
   }
 
-  private saveMyCommentId(commentId: string): void {
+  private saveMyNameHash(nameHash: string): void {
     try {
-      const existingIds = this.getMyCommentIds();
-      if (!existingIds.includes(commentId)) {
-        existingIds.push(commentId);
-        localStorage.setItem(WontonComment.MY_COMMENTS_KEY, JSON.stringify(existingIds));
+      const existingHashes = this.getMyNameHashes();
+      if (nameHash && !existingHashes.includes(nameHash)) {
+        existingHashes.push(nameHash);
+        localStorage.setItem(WontonComment.MY_NAME_HASHES_KEY, JSON.stringify(existingHashes));
       }
     } catch (error) {
-      console.warn('Failed to save comment ID to localStorage:', error);
+      console.warn('Failed to save name hash to localStorage:', error);
     }
   }
 
-  private getMyCommentIds(): string[] {
+  private getMyNameHashes(): string[] {
     try {
-      const stored = localStorage.getItem(WontonComment.MY_COMMENTS_KEY);
+      const stored = localStorage.getItem(WontonComment.MY_NAME_HASHES_KEY);
       return stored ? JSON.parse(stored) : [];
     } catch (error) {
-      console.warn('Failed to get comment IDs from localStorage:', error);
+      console.warn('Failed to get name hashes from localStorage:', error);
       return [];
     }
   }
 
-  private isMyComment(commentId: string): boolean {
-    return this.getMyCommentIds().includes(commentId);
+  private isMyComment(comment: Comment): boolean {
+    if (!comment.nameHash) return false;
+    return this.getMyNameHashes().includes(comment.nameHash);
   }
 
   private async loadComments(): Promise<Comment[]> {
@@ -491,7 +492,7 @@ class WontonComment {
     replyToName: string | null,
     canEdit: boolean,
   ): TemplateResult<1> {
-    const isMyComment = this.isMyComment(comment.id);
+    const isMyComment = this.isMyComment(comment);
 
     return html`
       <div class="${cssClasses.header}">
@@ -690,13 +691,12 @@ class WontonComment {
         message,
         this.currentReplyTo,
       );
-
       if (!commentId) {
         alert(this.i18n.t('submitFailed'));
         return false;
       }
 
-      this.saveMyCommentId(commentId);
+      this.saveMyNameHash(nameHash);
       return true;
     }
   }
