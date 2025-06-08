@@ -1049,6 +1049,7 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
   }
 
   // Create admin button
+  // TODO adjust position
   private createAdminButton(): TemplateResult<1> {
     return html`
       <button
@@ -1191,7 +1192,7 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
       <div class="wtc-container">
         <div class="comment-box-container">
           <div id="comment-form-container" class="form-content"></div>
-          <div class="admin-btn-wrapper">${this.createAdminButton()}</div>
+          <!-- <div class="admin-btn-wrapper">${this.createAdminButton()}</div> -->
         </div>
         <div id="comments-container"></div>
       </div>
