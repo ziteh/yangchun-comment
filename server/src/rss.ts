@@ -33,7 +33,7 @@ app.get('/thread', Utils.validateQueryPost, async (c) => {
     .forEach((comment) => {
       rss += `
   <item>
-    <title>${comment.name || 'Anonymous'}'s Comment</title>
+    <title>${comment.pseudonym || 'Anonymous'}'s Comment</title>
     <description><![CDATA[${comment.msg}]]></description>
     <pubDate>${new Date(comment.pubDate).toUTCString()}</pubDate>
     <guid>${siteUrl}${post}#comment-${comment.id}</guid>

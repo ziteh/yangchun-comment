@@ -28,7 +28,7 @@ app.post(
   '/',
   Utils.validateQueryPost,
   validator('json', (value, c) => {
-    const { name, email, msg, replyTo, website } = value;
+    const { pseudonym, nameHash, email, msg, replyTo, website } = value;
 
     // Honeypot check: if 'website' field is filled, it's likely a bot
     if (website) {
@@ -52,13 +52,31 @@ app.post(
       return c.text('Message is invalid', 400);
     }
 
-    if (name && typeof name === 'string' && name.length > c.env.MAX_NAME_LENGTH) {
-      return c.text(`Name is too long (maximum ${c.env.MAX_NAME_LENGTH} characters)`, 400);
+    if (pseudonym && typeof pseudonym === 'string' && pseudonym.length > c.env.MAX_NAME_LENGTH) {
+      return c.text(`Pseudonym is too long (maximum ${c.env.MAX_NAME_LENGTH} characters)`, 400);
+    }
+    const cleanPseudonym = pseudonym ? Utils.sanitize(pseudonym) : undefined;
+    if (pseudonym && cleanPseudonym !== undefined && cleanPseudonym.length === 0) {
+      return c.text('Pseudonym is invalid', 400);
     }
 
-    const cleanName = name ? Utils.sanitize(name) : undefined;
-    if (name && cleanName !== undefined && cleanName.length === 0) {
-      return c.text('Name is invalid', 400);
+    // Validate nameHash format (should be SHA-256 hash)
+    if (nameHash && (typeof nameHash !== 'string' || !/^[a-f0-9]{64}$/.test(nameHash))) {
+      return c.text('Invalid name hash format', 400);
+    }
+
+    // Validate pseudonym and nameHash combination
+    // Only 3 valid combinations:
+    // 1. Both are undefined
+    // 2. Both are empty strings
+    // 3. Both are non-empty strings
+    const trimmedPseudonym = cleanPseudonym?.trim();
+    const trimmedNameHash = nameHash?.trim();
+    const isPseudonymEmpty = !trimmedPseudonym || trimmedPseudonym === '';
+    const isNameHashEmpty = !trimmedNameHash || trimmedNameHash === '';
+
+    if (isPseudonymEmpty !== isNameHashEmpty) {
+      return c.text('Pseudonym and nameHash must both be empty or both be non-empty', 400);
     }
 
     if (replyTo && (typeof replyTo !== 'string' || !/^[0-9A-Z]{12}$/.test(replyTo))) {
@@ -67,11 +85,11 @@ app.post(
 
     const cleanEmail = email ? Utils.sanitize(email) : undefined;
 
-    return { name: cleanName, email: cleanEmail, msg: cleanMsg, replyTo };
+    return { pseudonym: cleanPseudonym, nameHash, email: cleanEmail, msg: cleanMsg, replyTo };
   }),
   async (c) => {
     const { post } = c.req.valid('query');
-    const { name, msg, replyTo } = c.req.valid('json');
+    const { pseudonym, nameHash, msg, replyTo } = c.req.valid('json');
 
     const key = Utils.getCommentKey(post);
     const rawComments = await c.env.COMMENTS.get(key);
@@ -88,12 +106,12 @@ app.post(
         }
       }
     }
-
     const id = Utils.genId();
     const timestamp = Date.now();
     const comment: Comment = {
       id,
-      name,
+      pseudonym,
+      nameHash,
       email: undefined, // Currently not storing email
       msg,
       replyTo,
@@ -114,7 +132,7 @@ app.post(
 
 app.put('/', Utils.validateQueryPost, async (c) => {
   const { post } = c.req.valid('query');
-  const { id, timestamp, token, name, msg } = await c.req.json();
+  const { id, timestamp, token, pseudonym, nameHash, msg } = await c.req.json();
 
   if (!msg || typeof msg !== 'string') {
     console.warn('Invalid message for update:', msg);
@@ -131,14 +149,31 @@ app.put('/', Utils.validateQueryPost, async (c) => {
     return c.text('Message is invalid', 400);
   }
 
-  if (name && typeof name === 'string' && name.length > c.env.MAX_NAME_LENGTH) {
-    console.warn('Name too long for update:', name.length);
-    return c.text(`Name is too long (maximum ${c.env.MAX_NAME_LENGTH} characters)`, 400);
+  if (pseudonym && typeof pseudonym === 'string' && pseudonym.length > c.env.MAX_NAME_LENGTH) {
+    console.warn('Pseudonym too long for update:', pseudonym.length);
+    return c.text(`Pseudonym is too long (maximum ${c.env.MAX_NAME_LENGTH} characters)`, 400);
+  }
+  const cleanPseudonym = pseudonym ? Utils.sanitize(pseudonym) : undefined;
+  if (pseudonym && cleanPseudonym !== undefined && cleanPseudonym.length === 0) {
+    return c.text('Pseudonym is invalid', 400);
+  }
+  // Validate nameHash format (should be SHA-256 hash)
+  if (nameHash && (typeof nameHash !== 'string' || !/^[a-f0-9]{64}$/.test(nameHash))) {
+    return c.text('Invalid name hash format', 400);
   }
 
-  const cleanName = name ? Utils.sanitize(name) : undefined;
-  if (name && cleanName !== undefined && cleanName.length === 0) {
-    return c.text('Name is invalid', 400);
+  // Validate pseudonym and nameHash combination
+  // Only 3 valid combinations:
+  // 1. Both are undefined
+  // 2. Both are empty strings (after trimming)
+  // 3. Both are non-empty strings (after trimming)
+  const trimmedPseudonym = cleanPseudonym?.trim();
+  const trimmedNameHash = nameHash?.trim();
+  const isPseudonymEmpty = !trimmedPseudonym || trimmedPseudonym === '';
+  const isNameHashEmpty = !trimmedNameHash || trimmedNameHash === '';
+
+  if (isPseudonymEmpty !== isNameHashEmpty) {
+    return c.text('Pseudonym and nameHash must both be empty or both be non-empty', 400);
   }
 
   const hmacOk = await Utils.verifyHmac(c.env.HMAC_SECRET_KEY, id, timestamp, token);
@@ -158,7 +193,8 @@ app.put('/', Utils.validateQueryPost, async (c) => {
 
   comments[index] = {
     ...comments[index],
-    name: cleanName,
+    pseudonym: cleanPseudonym,
+    nameHash,
     email: undefined, // Currently not storing email
     msg: cleanMsg,
     modDate: Date.now(), // Update modification date
@@ -188,11 +224,11 @@ app.delete('/', Utils.validateQueryPost, async (c) => {
     console.warn('Comment not found for deletion:', id);
     return c.text('Comment not found', 404); // 404 Not Found
   }
-
   // Mark it as deleted
   comments[index] = {
     ...comments[index],
-    name: 'deleted',
+    pseudonym: 'deleted',
+    nameHash: undefined,
     email: undefined, // Currently not storing email
     msg: 'deleted',
     modDate: Date.now(), // Update modification date

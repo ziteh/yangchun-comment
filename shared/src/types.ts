@@ -2,8 +2,11 @@ export type Comment = {
   /** Unique identifier for the comment */
   id: string;
 
-  /** Name of the author */
-  name?: string;
+  /** Pseudonym of the author */
+  pseudonym?: string;
+
+  /** Hash of the original name */
+  nameHash?: string;
 
   /** Email address of the author */
   email?: string;
@@ -33,9 +36,11 @@ export function isComment(obj: unknown): obj is Comment {
     typeof c.id === 'string' &&
     typeof c.msg === 'string' &&
     typeof c.pubDate === 'number' &&
-    (c.name === undefined || typeof c.name === 'string') &&
+    (c.pseudonym === undefined || typeof c.pseudonym === 'string') &&
+    (c.nameHash === undefined || typeof c.nameHash === 'string') &&
     (c.email === undefined || typeof c.email === 'string') &&
     (c.replyTo === undefined || typeof c.replyTo === 'string') &&
-    (c.isAdmin === undefined || typeof c.isAdmin === 'boolean')
+    (c.isAdmin === undefined || typeof c.isAdmin === 'boolean') &&
+    (c.modDate === undefined || typeof c.modDate === 'number')
   );
 }

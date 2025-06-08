@@ -155,8 +155,8 @@ class WontonComment {
   }
 
   private getDisplayName(comment: Comment | undefined): string {
-    const cleanedName = comment?.name
-      ? DOMPurify.sanitize(comment.name, { ALLOWED_TAGS: [] }) // Remove all HTML tags
+    const cleanedName = comment?.pseudonym
+      ? DOMPurify.sanitize(comment.pseudonym, { ALLOWED_TAGS: [] }) // Remove all HTML tags
       : undefined;
 
     return cleanedName ? cleanedName : this.i18n.t('anonymous');
@@ -820,8 +820,8 @@ class WontonComment {
   private setEditingState(comment: Comment): void {
     this.editingComment = comment;
     this.previewText = comment.msg || '';
-    this.previewName = comment.name || '';
-    this.previewPseudonym = comment.name || '';
+    this.previewName = comment.pseudonym || '';
+    this.previewPseudonym = comment.pseudonym || '';
   }
 
   // Populate form inputs with comment data
@@ -833,16 +833,16 @@ class WontonComment {
       '#comment-form textarea[name="message"]',
     ) as HTMLTextAreaElement;
     if (nameInput) {
-      nameInput.value = comment.name || '';
-      this.previewName = comment.name || '';
-      this.previewPseudonym = comment.name || '';
+      nameInput.value = comment.pseudonym || '';
+      this.previewName = comment.pseudonym || '';
+      this.previewPseudonym = comment.pseudonym || '';
       // Update character count for name
-      this.updateCharCount('name', (comment.name || '').length);
+      this.updateCharCount('name', (comment.pseudonym || '').length);
 
       // Update over-limit styling
       const nameCountEl = document.getElementById('name-char-count');
       if (nameCountEl) {
-        if ((comment.name || '').length > WontonComment.MAX_NAME_LENGTH) {
+        if ((comment.pseudonym || '').length > WontonComment.MAX_NAME_LENGTH) {
           nameCountEl.classList.add('over-limit');
         } else {
           nameCountEl.classList.remove('over-limit');
