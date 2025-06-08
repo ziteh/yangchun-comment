@@ -28,7 +28,7 @@ namespace_id = "1001"
 simple = { limit = 20, period = 10 } # 20 requests every 10 seconds
 
 [vars]
-MAX_NAME_LENGTH = 25
+MAX_PSEUDONYM_LENGTH = 80
 MAX_MSG_LENGTH = 1000
 # CORS_ORIGIN = "${CORS_ORIGIN}"
 # POST_REGEX = "${POST_REGEX}"
