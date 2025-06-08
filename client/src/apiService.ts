@@ -15,10 +15,10 @@ export const createApiService = (apiUrl: string) => {
     const res = await fetch(url);
     return await res.json();
   };
-
   const addComment = async (
     post: string,
-    name: string,
+    pseudonym: string,
+    hash: string,
     message: string,
     replyTo: string | null,
   ): Promise<string | null> => {
@@ -32,7 +32,8 @@ export const createApiService = (apiUrl: string) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name,
+          pseudonym,
+          hash,
           msg: message,
           replyTo,
           website, // Include honeypot field
@@ -49,11 +50,11 @@ export const createApiService = (apiUrl: string) => {
       return null;
     }
   };
-
   const updateComment = async (
     post: string,
     commentId: string,
-    name: string,
+    pseudonym: string,
+    hash: string,
     message: string,
   ): Promise<boolean> => {
     const authInfo = getAuthInfo(commentId);
@@ -70,7 +71,8 @@ export const createApiService = (apiUrl: string) => {
           id: authInfo.id,
           timestamp: authInfo.timestamp,
           token: authInfo.token,
-          name,
+          pseudonym,
+          hash,
           msg: message,
         }),
       });

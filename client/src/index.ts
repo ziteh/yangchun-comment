@@ -5,6 +5,7 @@ import { unsafeHTML } from 'lit-html/directives/unsafe-html.js';
 import type { Comment } from '@wonton-comment/shared';
 import { createApiService } from './apiService';
 import { createI18n, en, zhHant, type I18nStrings } from './i18n';
+import { generatePseudonymAndHash } from './utils/pseudonym';
 import './index.css';
 
 type CommentMap = {
@@ -41,10 +42,12 @@ class WontonComment {
   private currentReplyTo: string | null = null;
   private previewText: string = '';
   private previewName: string = '';
+  private previewPseudonym: string = '';
   private editingComment: Comment | null = null;
   private activeTab: TabType = 'write';
   private showMarkdownHelp: boolean = false;
   private showAdminLogin: boolean = false;
+
   constructor(
     elementId: string,
     options: {
@@ -248,7 +251,7 @@ class WontonComment {
 
   private createPreviewTemplate(): TemplateResult<1> {
     const now = Date.now();
-    const userName = this.previewName;
+    const userName = this.previewPseudonym;
 
     return html`
       <div class="comment-box preview-mode">
@@ -371,6 +374,7 @@ class WontonComment {
       this.editingComment = null;
       this.previewText = '';
       this.previewName = '';
+      this.previewPseudonym = '';
     }
 
     this.currentReplyTo = commentId;
@@ -407,15 +411,25 @@ class WontonComment {
       this.renderPreview();
     }
   }
-
-  private handleNameInputChange(e: Event): void {
+  private async handleNameInputChange(e: Event): Promise<void> {
     const target = e.target as HTMLInputElement;
     this.previewName = target.value;
 
-    // Update character count
-    this.updateCharCount('name', target.value.length);
+    // Generate pseudonym for preview
+    if (target.value.trim()) {
+      try {
+        const { pseudonym } = await generatePseudonymAndHash(target.value);
+        this.previewPseudonym = pseudonym;
+      } catch (error) {
+        console.warn('Failed to generate pseudonym:', error);
+        this.previewPseudonym = '';
+      }
+    } else {
+      this.previewPseudonym = '';
+    }
 
-    // Validate length
+    // Update character count
+    this.updateCharCount('name', target.value.length); // Validate length
     const nameCountEl = document.getElementById('name-char-count');
     if (nameCountEl) {
       if (target.value.length > WontonComment.MAX_NAME_LENGTH) {
@@ -423,6 +437,11 @@ class WontonComment {
       } else {
         nameCountEl.classList.remove('over-limit');
       }
+    }
+
+    // Update preview if in preview mode
+    if (this.activeTab === 'preview') {
+      this.renderPreview();
     }
   }
 
@@ -608,16 +627,19 @@ class WontonComment {
       return this.createCommentTemplate(rootComment, allReplies, this.commentMap);
     });
   }
+
   // Handle form submission and state cleanup
   private async handleSubmit(e: SubmitEvent): Promise<void> {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
-    const name = formData.get('name') as string;
+    const originalName = formData.get('name') as string;
     const message = formData.get('message') as string;
 
-    // Validate lengths
-    if (name && name.length > WontonComment.MAX_NAME_LENGTH) {
-      alert(`${this.i18n.t('nameTooLong')} (${name.length}/${WontonComment.MAX_NAME_LENGTH})`);
+    // Validate lengths for original name
+    if (originalName && originalName.length > WontonComment.MAX_NAME_LENGTH) {
+      alert(
+        `${this.i18n.t('nameTooLong')} (${originalName.length}/${WontonComment.MAX_NAME_LENGTH})`,
+      );
       return;
     }
 
@@ -628,7 +650,10 @@ class WontonComment {
       return;
     }
 
-    const success = await this.processSubmission(name, message);
+    // Generate pseudonym and hash from original name
+    const { pseudonym, hash } = await generatePseudonymAndHash(originalName);
+
+    const success = await this.processSubmission(pseudonym, hash, message);
 
     if (success) {
       this.resetFormState();
@@ -636,13 +661,19 @@ class WontonComment {
       await this.renderCommentsList();
     }
   }
-  // Process comment submission (create or update)
-  private async processSubmission(name: string, message: string): Promise<boolean> {
+
+  // Process comment submission
+  private async processSubmission(
+    pseudonym: string,
+    nameHash: string,
+    message: string,
+  ): Promise<boolean> {
     if (this.editingComment) {
       const success = await this.apiService.updateComment(
         this.post,
         this.editingComment.id,
-        name,
+        pseudonym,
+        nameHash,
         message,
       );
 
@@ -654,7 +685,8 @@ class WontonComment {
     } else {
       const commentId = await this.apiService.addComment(
         this.post,
-        name,
+        pseudonym,
+        nameHash,
         message,
         this.currentReplyTo,
       );
@@ -676,6 +708,7 @@ class WontonComment {
     }
     this.previewText = '';
     this.previewName = '';
+    this.previewPseudonym = '';
     this.editingComment = null;
     this.currentReplyTo = null;
 
@@ -716,7 +749,10 @@ class WontonComment {
       return;
     }
 
-    const success = await this.processSubmission(this.previewName, this.previewText);
+    // Generate pseudonym and hash from original name
+    const { pseudonym, hash } = await generatePseudonymAndHash(this.previewName);
+
+    const success = await this.processSubmission(pseudonym, hash, this.previewText);
 
     if (success) {
       this.resetPreviewState();
@@ -728,6 +764,7 @@ class WontonComment {
   private resetPreviewState(): void {
     this.previewText = '';
     this.previewName = '';
+    this.previewPseudonym = '';
     this.editingComment = null;
     this.currentReplyTo = null;
     this.switchTab('write');
@@ -778,12 +815,15 @@ class WontonComment {
       this.currentReplyTo = null;
     }
   }
+
   // Set editing state for a comment
   private setEditingState(comment: Comment): void {
     this.editingComment = comment;
     this.previewText = comment.msg || '';
     this.previewName = comment.name || '';
+    this.previewPseudonym = comment.name || '';
   }
+
   // Populate form inputs with comment data
   private populateFormWithComment(comment: Comment): void {
     const nameInput = document.querySelector(
@@ -792,10 +832,10 @@ class WontonComment {
     const messageInput = document.querySelector(
       '#comment-form textarea[name="message"]',
     ) as HTMLTextAreaElement;
-
     if (nameInput) {
       nameInput.value = comment.name || '';
       this.previewName = comment.name || '';
+      this.previewPseudonym = comment.name || '';
       // Update character count for name
       this.updateCharCount('name', (comment.name || '').length);
 
@@ -854,6 +894,7 @@ class WontonComment {
     }
     this.previewText = '';
     this.previewName = '';
+    this.previewPseudonym = '';
 
     // Reset character counts
     this.updateCharCount('message', 0);
@@ -1015,6 +1056,9 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
             maxlength="${WontonComment.MAX_NAME_LENGTH}"
             @input=${(e: Event) => this.handleNameInputChange(e)}
           />
+          <div class="pseudonym-notice" style="font-size: 0.8em; color: #666; margin-top: 4px;">
+            ${this.i18n.t('pseudonymNotice')}
+          </div>
         </div>
         <div class="wtc-flex wtc-gap-xs">${this.createFormButtons()}</div>
       </div>

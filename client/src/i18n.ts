@@ -37,6 +37,7 @@ export type I18nStrings = {
   markdownOrderedListExample: string;
   markdownInlineCodeExample: string;
   markdownCodeBlockExample: string;
+  pseudonymNotice: string;
 };
 
 export const en: I18nStrings = {
@@ -80,6 +81,7 @@ export const en: I18nStrings = {
   markdownOrderedListExample: '1. Ordered list item',
   markdownInlineCodeExample: '`Inline code`',
   markdownCodeBlockExample: '```\nCode block\n```',
+  pseudonymNotice: 'Will be converted to a unique pseudonym',
 };
 
 export const zhHant: I18nStrings = {
@@ -95,7 +97,7 @@ export const zhHant: I18nStrings = {
   cancelEdit: '取消',
   updateComment: '更新',
   submitComment: '發送',
-  namePlaceholder: '暱稱 (選填)',
+  namePlaceholder: '名稱 (選填)',
   messagePlaceholder: '留言內容...\n支援 Markdown 語法',
   loading: '載入中...',
   confirmDelete: '確定要刪除此留言嗎?',
@@ -122,6 +124,7 @@ export const zhHant: I18nStrings = {
   markdownOrderedListExample: '1. 編號清單',
   markdownInlineCodeExample: '`行內程式碼`',
   markdownCodeBlockExample: '```\n程式碼區塊\n```',
+  pseudonymNotice: '名稱將被轉換為化名',
 };
 
 export const createI18n = (initLang: I18nStrings = en) => {
