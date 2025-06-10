@@ -9,12 +9,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@wonton-comment/shared": "workspace:*",
     "dompurify": "^3.2.6",
     "lit-html": "^3.3.0",
     "snarkdown": "^2.0.0"
   },
   "devDependencies": {
+    "@wonton-comment/shared": "workspace:*",
     "@rollup/plugin-terser": "^0.4.4",
     "terser": "^5.40.0",
     "typescript": "~5.8.3",
