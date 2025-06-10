@@ -371,9 +371,15 @@ class WontonComment {
       this.commentMap[comment.id] = comment;
     });
   }
-
   // Create template for comments container
   private createCommentsTemplate(): TemplateResult<1> {
+    if (this.comments.length === 0) {
+      return html`
+        <div id="comments">
+          <div class="no-comments-message">${this.i18n.t('noComments')}</div>
+        </div>
+      `;
+    }
     return html` <div id="comments">${this.processComments(this.comments)}</div> `;
   }
 

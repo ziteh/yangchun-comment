@@ -40,6 +40,7 @@ export type I18nStrings = {
   pseudonymNotice: string;
   editingPseudonymNotice: string;
   author: string;
+  noComments: string;
 };
 
 export const en: I18nStrings = {
@@ -86,6 +87,7 @@ export const en: I18nStrings = {
   pseudonymNotice: 'Will be converted to a unique pseudonym, longer names help avoid impersonation',
   editingPseudonymNotice: 'Cannot be changed when editing',
   author: 'Author',
+  noComments: 'No comments yet',
 };
 
 export const zhHant: I18nStrings = {
@@ -131,6 +133,7 @@ export const zhHant: I18nStrings = {
   pseudonymNotice: '名稱將被轉換為化名，使用較長的名稱有助於避免被冒充',
   editingPseudonymNotice: '編輯時無法更改',
   author: '作者',
+  noComments: '尚未有留言',
 };
 
 export const createI18n = (initLang: I18nStrings = en) => {
