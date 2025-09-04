@@ -5,7 +5,7 @@ pre-commit:
   parallel: true
   commands:
     lint-staged:
-      run: npx lint-staged
+      run: pnpm exec lint-staged
 
 commit-msg:
   commands:

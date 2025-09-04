@@ -21,6 +21,15 @@
     "hooks:install": "lefthook install",
     "hooks:uninstall": "lefthook uninstall"
   },
+  "lint-staged": {
+    "*.{js,ts,mjs,cjs,mts,cts}": [
+      "prettier --write",
+      "eslint"
+    ],
+    "*.{json,yml,yaml,css,toml,html,md}": [
+      "prettier --write"
+    ]
+  },
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",

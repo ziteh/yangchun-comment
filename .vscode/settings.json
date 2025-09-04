@@ -6,13 +6,14 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "cSpell.words": [
+    "chun",
+    "commitlint",
     "HMAC",
     "maxlength",
     "noopener",
     "noreferrer",
     "snarkdown",
     "yang",
-    "chun",
     "yangchun"
   ]
 }
