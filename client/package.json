@@ -6,15 +6,16 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@yangchun-comment/shared": "workspace:*",
     "dompurify": "^3.2.6",
     "lit-html": "^3.3.1",
     "snarkdown": "^2.0.0"
   },
   "devDependencies": {
-    "@yangchun-comment/shared": "workspace:*",
     "@rollup/plugin-terser": "^0.4.4",
     "terser": "^5.44.0",
     "typescript": "^5.9.2",

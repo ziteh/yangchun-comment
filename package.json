@@ -4,16 +4,20 @@
   "private": true,
   "scripts": {
     "dev": "pnpm --parallel --recursive dev",
-    "build": "pnpm build:shared && pnpm build:client",
+    "build": "pnpm build:shared && pnpm build:client && pnpm build:server",
     "build:shared": "pnpm --filter @yangchun-comment/shared build",
     "build:client": "pnpm --filter @yangchun-comment/client build",
+    "build:server": "pnpm --filter @yangchun-comment/server build",
     "test": "pnpm --recursive test",
     "clean": "pnpm --recursive exec -- rm -rf dist node_modules/.cache",
     "deploy": "pnpm build && pnpm --filter @yangchun-comment/server deploy",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "lint": "pnpm --recursive lint",
+    "type-check": "pnpm --recursive type-check"
   },
   "devDependencies": {
     "prettier": "3.6.2"
-  }
+  },
+  "packageManager": "pnpm@10.15.1"
 }

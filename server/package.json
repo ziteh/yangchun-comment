@@ -3,10 +3,12 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
+    "build": "tsc --noEmit && echo 'Type check passed'",
     "deploy": "wrangler deploy",
     "dev": "wrangler dev",
     "start": "wrangler dev",
     "test": "vitest",
+    "type-check": "tsc --noEmit",
     "cf-typegen": "wrangler types"
   },
   "dependencies": {
@@ -23,6 +25,5 @@
     "typescript": "^5.9.2",
     "vitest": "~3.2.4",
     "wrangler": "^4.33.2"
-  },
-  "packageManager": "pnpm@10.15.1"
+  }
 }
