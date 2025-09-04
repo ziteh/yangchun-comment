@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import Utils from './utils';
+import { hashFnv1a } from './utils';
 
 const app = new Hono<{
   Bindings: {
@@ -49,7 +49,7 @@ app.use('*', async (c, next) => {
 // Rate limiting middleware
 app.use('*', async (c, next) => {
   const ip = c.req.header('CF-Connecting-IP') || '0.0.0.0';
-  const hashedIP = Utils.hashFnv1a(ip); // Don't store raw IPs
+  const hashedIP = hashFnv1a(ip); // Don't store raw IPs
   const isPost = c.req.method === 'POST';
   const limiter = isPost ? c.env.RATE_LIMITER_POST : c.env.RATE_LIMITER_GET;
   const { success } = await limiter.limit({ key: hashedIP });

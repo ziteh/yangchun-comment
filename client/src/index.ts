@@ -8,14 +8,12 @@ import { createI18n, en, zhHant, type I18nStrings } from './i18n';
 import { generatePseudonymAndHash } from './utils/pseudonym';
 import './index.css';
 
-type CommentMap = {
-  [id: string]: Comment;
-};
+type CommentMap = Record<string, Comment>;
 
 type TabType = 'write' | 'preview';
 
 export function initYangchunComment(
-  elementId: string = 'ycc-app',
+  elementId = 'ycc-app',
   options: {
     post?: string;
     apiUrl?: string;
@@ -42,13 +40,13 @@ class YangchunComment {
   private commentMap: CommentMap = {};
   private comments: Comment[] = [];
   private currentReplyTo: string | null = null;
-  private previewText: string = '';
-  private previewName: string = '';
-  private previewPseudonym: string = '';
+  private previewText = '';
+  private previewName = '';
+  private previewPseudonym = '';
   private editingComment: Comment | null = null;
   private activeTab: TabType = 'write';
-  private showMarkdownHelp: boolean = false;
-  private showAdminLogin: boolean = false;
+  private showMarkdownHelp = false;
+  private showAdminLogin = false;
 
   constructor(
     elementId: string,
@@ -100,7 +98,7 @@ class YangchunComment {
           if (url.protocol !== 'http:' && url.protocol !== 'https:') {
             data.keepAttr = false; // Remove the attribute entirely
           }
-        } catch (_err) {
+        } catch {
           data.keepAttr = false; // Remove the attribute entirely
         }
       }
@@ -470,7 +468,7 @@ class YangchunComment {
   // Create comment item template with proper type annotation
   private createCommentItemTemplate(
     comment: Comment,
-    isRoot: boolean = false,
+    isRoot = false,
     replyToName: string | null = null,
     allReplies: Comment[] | null = null,
     commentMap: CommentMap | null = null,

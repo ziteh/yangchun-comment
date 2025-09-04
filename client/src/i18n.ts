@@ -1,4 +1,4 @@
-export type I18nStrings = {
+export interface I18nStrings {
   anonymous: string;
   replyTo: string;
   edit: string;
@@ -41,7 +41,7 @@ export type I18nStrings = {
   editingPseudonymNotice: string;
   author: string;
   noComments: string;
-};
+}
 
 export const en: I18nStrings = {
   anonymous: 'Anonymous',

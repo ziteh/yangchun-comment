@@ -1,4 +1,4 @@
-export type Comment = {
+export interface Comment {
   /** Unique identifier for the comment */
   id: string;
 
@@ -25,7 +25,7 @@ export type Comment = {
 
   /** Indicates whether the comment was made by an admin */
   isAdmin?: boolean;
-};
+}
 
 export function isComment(obj: unknown): obj is Comment {
   if (typeof obj !== 'object' || obj === null) return false;

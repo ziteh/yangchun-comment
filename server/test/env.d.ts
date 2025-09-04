@@ -1,5 +1,5 @@
 declare module 'cloudflare:test' {
-  interface ProvidedEnv {
+  interface ProvidedEnv extends Env {
     // Bindings
     COMMENTS: KVNamespace;
     RATE_LIMITER_POST: RateLimit;
@@ -10,6 +10,4 @@ declare module 'cloudflare:test' {
     CORS_ORIGIN: string;
     POST_REGEX?: string;
   }
-
-  interface ProvidedEnv extends Env {}
 }

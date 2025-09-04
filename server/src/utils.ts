@@ -2,130 +2,133 @@ import { validator } from 'hono/validator';
 import { customAlphabet } from 'nanoid';
 import sanitizeHtml from 'sanitize-html';
 
-export default class Utils {
-  static sanitize(raw: unknown): string {
-    if (typeof raw !== 'string') return '';
+export function sanitize(raw: unknown): string {
+  if (typeof raw !== 'string') return '';
 
-    const htmlRemoved = sanitizeHtml(raw, {
-      allowedTags: [], // no tags allowed
-      allowedAttributes: {}, // no attributes allowed
-      disallowedTagsMode: 'discard', // or 'completelyDiscard'
-      parser: {
-        // If set to true, entities within the document will be decoded. Defaults to true.
-        // It is recommended to never disable the 'decodeEntities' option
-        decodeEntities: true,
-        lowerCaseTags: true,
-      },
-    });
-
-    // src: https://github.com/facebook/react/blob/v18.2.0/packages/react-dom/src/shared/sanitizeURL.js#L22
-    // const isJavaScriptProtocol =
-    //  /^[\u0000-\u001F ]*j[\r\n\t]*a[\r\n\t]*v[\r\n\t]*a[\r\n\t]*s[\r\n\t]*c[\r\n\t]*r[\r\n\t]*i[\r\n\t]*p[\r\n\t]*t[\r\n\t]*\:/i;
-
-    return htmlRemoved.replace(/\]\(\s*javascript:[^)]+\)/gi, '](');
-  }
-
-  static genId() {
-    // 100 IDs per Hour: ~352 years or 308M IDs needed, in order to have a 1% probability of at least one collision.
-    // https://zelark.github.io/nano-id-cc/
-    return customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', 12)();
-  }
-
-  static getCommentKey(post: string) {
-    return `comments:${post}`;
-  }
-
-  static validateQueryPost = validator('query', (value, c) => {
-    const post = value['post'];
-    if (!post || typeof post !== 'string') {
-      console.warn('Invalid post query parameter:', post);
-      return c.text('Invalid post', 400); // 400 Bad Request
-    }
-
-    // Regex validation
-    // const postRegex = new RegExp(c.env.POST_REGEX || '^.{1,200}$');
-    // if (!postRegex.test(post)) {
-    //   console.warn('Post query parameter does not match regex:', post);
-    //   return c.text('Invalid post', 400); // 400 Bad Request
-    // }
-
-    return {
-      post,
-    };
+  const htmlRemoved = sanitizeHtml(raw, {
+    allowedTags: [], // no tags allowed
+    allowedAttributes: {}, // no attributes allowed
+    disallowedTagsMode: 'discard', // or 'completelyDiscard'
+    parser: {
+      // If set to true, entities within the document will be decoded. Defaults to true.
+      // It is recommended to never disable the 'decodeEntities' option
+      decodeEntities: true,
+      lowerCaseTags: true,
+    },
   });
 
-  static async genHmac(secretKey: string, commentId: string, timestamp: number) {
-    const encoder = new TextEncoder();
-    const keyData = encoder.encode(secretKey);
-    const dataData = encoder.encode(`${commentId}-${timestamp}`);
+  // src: https://github.com/facebook/react/blob/v18.2.0/packages/react-dom/src/shared/sanitizeURL.js#L22
+  // const isJavaScriptProtocol =
+  //  /^[\u0000-\u001F ]*j[\r\n\t]*a[\r\n\t]*v[\r\n\t]*a[\r\n\t]*s[\r\n\t]*c[\r\n\t]*r[\r\n\t]*i[\r\n\t]*p[\r\n\t]*t[\r\n\t]*\:/i;
 
-    const key = await crypto.subtle.importKey(
-      'raw',
-      keyData,
-      { name: 'HMAC', hash: 'SHA-256' },
-      false,
-      ['sign'],
-    );
+  return htmlRemoved.replace(/\]\(\s*javascript:[^)]+\)/gi, '](');
+}
 
-    const signature = await crypto.subtle.sign('HMAC', key, dataData);
-    const base64Signature = Buffer.from(signature).toString('base64');
-    return base64Signature;
+export function genId() {
+  // 100 IDs per Hour: ~352 years or 308M IDs needed, in order to have a 1% probability of at least one collision.
+  // https://zelark.github.io/nano-id-cc/
+  return customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', 12)();
+}
+
+export function getCommentKey(post: string) {
+  return `comments:${post}`;
+}
+
+export const validateQueryPost = validator('query', (value, c) => {
+  const post = value['post'];
+  if (!post || typeof post !== 'string') {
+    console.warn('Invalid post query parameter:', post);
+    return c.text('Invalid post', 400); // 400 Bad Request
   }
 
-  static async verifyHmac(secretKey: string, commentId: string, timestamp: number, hmac: string) {
-    const expiry = 2 * 60 * 1000; // 2 minutes in milliseconds
-    const now = Date.now();
-    if (now - timestamp > expiry || timestamp > now) {
-      return false; // timestamp is too old or in the future, reject it
-    }
+  // Regex validation
+  // const postRegex = new RegExp(c.env.POST_REGEX || '^.{1,200}$');
+  // if (!postRegex.test(post)) {
+  //   console.warn('Post query parameter does not match regex:', post);
+  //   return c.text('Invalid post', 400); // 400 Bad Request
+  // }
 
-    const encoder = new TextEncoder();
-    const keyData = encoder.encode(secretKey);
-    const dataData = encoder.encode(`${commentId}-${timestamp}`);
+  return {
+    post,
+  };
+});
 
-    const key = await crypto.subtle.importKey(
-      'raw',
-      keyData,
-      { name: 'HMAC', hash: 'SHA-256' },
-      false,
-      ['verify'],
-    );
+export async function genHmac(secretKey: string, commentId: string, timestamp: number) {
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(secretKey);
+  const dataData = encoder.encode(`${commentId}-${timestamp}`);
 
-    const signature = Buffer.from(hmac, 'base64');
-    return crypto.subtle.verify('HMAC', key, signature, dataData);
+  const key = await crypto.subtle.importKey(
+    'raw',
+    keyData,
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+
+  const signature = await crypto.subtle.sign('HMAC', key, dataData);
+  const base64Signature = Buffer.from(signature).toString('base64');
+  return base64Signature;
+}
+
+export async function verifyHmac(
+  secretKey: string,
+  commentId: string,
+  timestamp: number,
+  hmac: string,
+) {
+  const expiry = 2 * 60 * 1000; // 2 minutes in milliseconds
+  const now = Date.now();
+  if (now - timestamp > expiry || timestamp > now) {
+    return false; // timestamp is too old or in the future, reject it
   }
 
-  static hashFnv1a(ip: string): string {
-    const FNV_OFFSET_BASIS = 0x811c9dc5;
-    const FNV_PRIME = 0x01000193;
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(secretKey);
+  const dataData = encoder.encode(`${commentId}-${timestamp}`);
 
-    let hash = FNV_OFFSET_BASIS;
-    for (let i = 0; i < ip.length; i++) {
-      hash ^= ip.charCodeAt(i);
-      hash = Math.imul(hash, FNV_PRIME);
-    }
+  const key = await crypto.subtle.importKey(
+    'raw',
+    keyData,
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['verify'],
+  );
 
-    // Convert to unsigned 32-bit and then to base36
-    return (hash >>> 0).toString(36);
+  const signature = Buffer.from(hmac, 'base64');
+  return crypto.subtle.verify('HMAC', key, signature, dataData);
+}
+
+export function hashFnv1a(ip: string): string {
+  const FNV_OFFSET_BASIS = 0x811c9dc5;
+  const FNV_PRIME = 0x01000193;
+
+  let hash = FNV_OFFSET_BASIS;
+  for (let i = 0; i < ip.length; i++) {
+    hash ^= ip.charCodeAt(i);
+    hash = Math.imul(hash, FNV_PRIME);
   }
 
-  /**
-   * Verify the post exists.
-   * @param url the URL of the post to validate.
-   * @param timeout in milliseconds.
-   * @returns true if the post exists, false otherwise.
-   */
-  static async validatePostUrl(url: string, timeout: number): Promise<boolean> {
-    try {
-      const res = await fetch(url, {
-        method: 'HEAD', // Use HEAD to avoid downloading the full page
-        signal: AbortSignal.timeout(timeout),
-      });
+  // Convert to unsigned 32-bit and then to base36
+  return (hash >>> 0).toString(36);
+}
 
-      return res.ok;
-    } catch (err) {
-      console.warn(`Blog post validation failed for ${url}:`, err);
-      return false;
-    }
+/**
+ * Verify the post exists.
+ * @param url the URL of the post to validate.
+ * @param timeout in milliseconds.
+ * @returns true if the post exists, false otherwise.
+ */
+export async function validatePostUrl(url: string, timeout: number): Promise<boolean> {
+  try {
+    const res = await fetch(url, {
+      method: 'HEAD', // Use HEAD to avoid downloading the full page
+      signal: AbortSignal.timeout(timeout),
+    });
+
+    return res.ok;
+  } catch (err) {
+    console.warn(`Blog post validation failed for ${url}:`, err);
+    return false;
   }
 }

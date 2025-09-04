@@ -1,13 +1,13 @@
 import type { Comment } from '@yangchun-comment/shared';
 
-type AuthInfo = {
+interface AuthInfo {
   timestamp: number;
   token: string;
-};
+}
 
 // TODO HttpOnly Cookie?
 export const createApiService = (apiUrl: string) => {
-  const commentAuthMap: Map<string, AuthInfo> = new Map();
+  const commentAuthMap = new Map<string, AuthInfo>();
 
   const getComments = async (post: string): Promise<Comment[]> => {
     const url = new URL('/api/comments', apiUrl);
@@ -47,7 +47,7 @@ export const createApiService = (apiUrl: string) => {
         return data.id;
       }
       return null;
-    } catch (_err) {
+    } catch {
       return null;
     }
   };
@@ -80,7 +80,7 @@ export const createApiService = (apiUrl: string) => {
       });
 
       return response.ok;
-    } catch (_err) {
+    } catch {
       return false;
     }
   };
@@ -108,7 +108,7 @@ export const createApiService = (apiUrl: string) => {
         return true;
       }
       return false;
-    } catch (_err) {
+    } catch {
       return false;
     }
   };

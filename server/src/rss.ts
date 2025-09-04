@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import Utils from './utils';
+import { validateQueryPost, getCommentKey } from './utils';
 import type { Comment } from '@yangchun-comment/shared';
 
 const app = new Hono<{
@@ -8,9 +8,9 @@ const app = new Hono<{
   };
 }>();
 
-app.get('/thread', Utils.validateQueryPost, async (c) => {
+app.get('/thread', validateQueryPost, async (c) => {
   const { post } = c.req.valid('query');
-  const key = Utils.getCommentKey(post);
+  const key = getCommentKey(post);
   const raw = await c.env.COMMENTS.get(key);
   const comments: Comment[] = raw ? JSON.parse(raw) : [];
 

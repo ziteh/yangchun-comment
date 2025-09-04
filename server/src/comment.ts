@@ -1,6 +1,14 @@
 import { Hono } from 'hono';
 import { validator } from 'hono/validator';
-import Utils from './utils';
+import {
+  sanitize,
+  genId,
+  getCommentKey,
+  validateQueryPost,
+  genHmac,
+  verifyHmac,
+  validatePostUrl,
+} from './utils';
 import type { Comment } from '@yangchun-comment/shared';
 
 const app = new Hono<{
@@ -14,9 +22,9 @@ const app = new Hono<{
   };
 }>();
 
-app.get('/', Utils.validateQueryPost, async (c) => {
+app.get('/', validateQueryPost, async (c) => {
   const { post } = c.req.valid('query');
-  const key = Utils.getCommentKey(post);
+  const key = getCommentKey(post);
   const raw = await c.env.COMMENTS.get(key);
   const comments = raw ? JSON.parse(raw) : [];
 
@@ -26,7 +34,7 @@ app.get('/', Utils.validateQueryPost, async (c) => {
 
 app.post(
   '/',
-  Utils.validateQueryPost,
+  validateQueryPost,
   validator('json', (value, c) => {
     const { pseudonym, nameHash, email, msg, replyTo, website } = value;
 
@@ -47,7 +55,7 @@ app.post(
       return c.text(`Message is too long (maximum ${c.env.MAX_MSG_LENGTH} characters)`, 400);
     }
 
-    const cleanMsg = Utils.sanitize(msg);
+    const cleanMsg = sanitize(msg);
     if (cleanMsg.length === 0) {
       return c.text('Message is invalid', 400);
     }
@@ -62,7 +70,7 @@ app.post(
         400,
       );
     }
-    const cleanPseudonym = pseudonym ? Utils.sanitize(pseudonym) : undefined;
+    const cleanPseudonym = pseudonym ? sanitize(pseudonym) : undefined;
     if (pseudonym && cleanPseudonym !== undefined && cleanPseudonym.length === 0) {
       return c.text('Pseudonym is invalid', 400);
     }
@@ -89,7 +97,7 @@ app.post(
       return c.text('Invalid reply ID', 400);
     }
 
-    const cleanEmail = email ? Utils.sanitize(email) : undefined;
+    const cleanEmail = email ? sanitize(email) : undefined;
 
     return { pseudonym: cleanPseudonym, nameHash, email: cleanEmail, msg: cleanMsg, replyTo };
   }),
@@ -97,7 +105,7 @@ app.post(
     const { post } = c.req.valid('query');
     const { pseudonym, nameHash, msg, replyTo } = c.req.valid('json');
 
-    const key = Utils.getCommentKey(post);
+    const key = getCommentKey(post);
     const rawComments = await c.env.COMMENTS.get(key);
     if (!rawComments) {
       // No comments yet for this post
@@ -105,14 +113,14 @@ app.post(
       if (baseUrl) {
         // Validate the post URL if POST_BASE_URL is set
         const fullUrl = `${baseUrl}${post}`;
-        const isValidPost = await Utils.validatePostUrl(fullUrl, 5000);
+        const isValidPost = await validatePostUrl(fullUrl, 5000);
         if (!isValidPost) {
           console.warn(`No comments found for post: ${post}, invalid post`);
           return c.text('Invalid post', 400); // 400 Bad Request
         }
       }
     }
-    const id = Utils.genId();
+    const id = genId();
     const timestamp = Date.now();
     const comment: Comment = {
       id,
@@ -129,14 +137,14 @@ app.post(
     comments.push(comment);
     await c.env.COMMENTS.put(key, JSON.stringify(comments));
 
-    const token = await Utils.genHmac(c.env.HMAC_SECRET_KEY, id, timestamp);
+    const token = await genHmac(c.env.HMAC_SECRET_KEY, id, timestamp);
 
     console.log(`Comment created with ID: ${id} for post: ${post}`);
     return c.json({ id, timestamp, token }, 201); // 201 Created
   },
 );
 
-app.put('/', Utils.validateQueryPost, async (c) => {
+app.put('/', validateQueryPost, async (c) => {
   const { post } = c.req.valid('query');
   const { id, timestamp, token, pseudonym, nameHash, msg } = await c.req.json();
 
@@ -150,7 +158,7 @@ app.put('/', Utils.validateQueryPost, async (c) => {
     return c.text(`Message is too long (maximum ${c.env.MAX_MSG_LENGTH} characters)`, 400);
   }
 
-  const cleanMsg = Utils.sanitize(msg);
+  const cleanMsg = sanitize(msg);
   if (cleanMsg.length === 0) {
     return c.text('Message is invalid', 400);
   }
@@ -159,7 +167,7 @@ app.put('/', Utils.validateQueryPost, async (c) => {
     console.warn('Pseudonym too long for update:', pseudonym.length);
     return c.text(`Pseudonym is too long (maximum ${c.env.MAX_PSEUDONYM_LENGTH} characters)`, 400);
   }
-  const cleanPseudonym = pseudonym ? Utils.sanitize(pseudonym) : undefined;
+  const cleanPseudonym = pseudonym ? sanitize(pseudonym) : undefined;
   if (pseudonym && cleanPseudonym !== undefined && cleanPseudonym.length === 0) {
     return c.text('Pseudonym is invalid', 400);
   }
@@ -181,13 +189,13 @@ app.put('/', Utils.validateQueryPost, async (c) => {
     return c.text('Pseudonym and nameHash must both be empty or both be non-empty', 400);
   }
 
-  const hmacOk = await Utils.verifyHmac(c.env.HMAC_SECRET_KEY, id, timestamp, token);
+  const hmacOk = await verifyHmac(c.env.HMAC_SECRET_KEY, id, timestamp, token);
   if (!hmacOk) {
     console.warn('Invalid HMAC for update request:', id);
     return c.text('Invalid HMAC', 403); // 403 Forbidden
   }
 
-  const key = Utils.getCommentKey(post);
+  const key = getCommentKey(post);
   const raw = await c.env.COMMENTS.get(key);
   const comments: Comment[] = raw ? JSON.parse(raw) : [];
   const index = comments.findIndex((c) => c.id === id);
@@ -211,17 +219,17 @@ app.put('/', Utils.validateQueryPost, async (c) => {
   return c.text('Comment updated', 200); // 200 OK
 });
 
-app.delete('/', Utils.validateQueryPost, async (c) => {
+app.delete('/', validateQueryPost, async (c) => {
   const { post } = c.req.valid('query');
   const { id, timestamp, token } = await c.req.json();
 
-  const hmacOk = await Utils.verifyHmac(c.env.HMAC_SECRET_KEY, id, timestamp, token);
+  const hmacOk = await verifyHmac(c.env.HMAC_SECRET_KEY, id, timestamp, token);
   if (!hmacOk) {
     console.warn('Invalid HMAC for delete request:', id);
     return c.text('Invalid HMAC', 403); // 403 Forbidden
   }
 
-  const key = Utils.getCommentKey(post);
+  const key = getCommentKey(post);
   const raw = await c.env.COMMENTS.get(key);
   const comments: Comment[] = raw ? JSON.parse(raw) : [];
 
