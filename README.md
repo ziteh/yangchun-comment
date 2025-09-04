@@ -49,10 +49,10 @@ pnpm dev
 
 ```bash
 # Client development
-cd client 
+cd client
 pnpm dev
 
-# Server development  
+# Server development
 cd server
 pnpm dev
 
@@ -97,6 +97,7 @@ initYangchunComment('ycc-app', {
 cd server
 pnpm deploy
 ```
+
 ## TODO
 
 - [ ] Using PoW (proof of work) to replace IP-based bot attack prevention to reduce the impact on different users with the same IP address, and further eliminate the need to store IP hash values on the backend server (storing hashed IPs may be considered a lightweight user tracking method)

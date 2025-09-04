@@ -16,12 +16,17 @@
     "format:check": "prettier --check .",
     "lint": "pnpm eslint .",
     "lint:fix": "pnpm eslint . --fix",
-    "type-check": "pnpm build:shared && pnpm --recursive type-check"
+    "type-check": "pnpm build:shared && pnpm --recursive type-check",
+    "prepare": "lefthook install",
+    "hooks:install": "lefthook install",
+    "hooks:uninstall": "lefthook uninstall"
   },
   "devDependencies": {
     "@eslint/js": "^9.34.0",
     "eslint": "^9.34.0",
     "eslint-config-prettier": "^10.1.8",
+    "lefthook": "^1.12.3",
+    "lint-staged": "^16.1.6",
     "prettier": "3.6.2",
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.42.0"

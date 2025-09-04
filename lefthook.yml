@@ -1,0 +1,8 @@
+colors: true
+no_tty: false
+
+pre-commit:
+  parallel: true
+  commands:
+    lint-staged:
+      run: npx lint-staged
