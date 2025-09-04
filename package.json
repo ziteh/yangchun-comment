@@ -13,11 +13,17 @@
     "deploy": "pnpm build && pnpm --filter @yangchun-comment/server deploy",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "lint": "pnpm --recursive lint",
+    "lint": "pnpm eslint .",
+    "lint:fix": "pnpm eslint . --fix",
     "type-check": "pnpm --recursive type-check"
   },
   "devDependencies": {
-    "prettier": "3.6.2"
+    "@eslint/js": "^9.34.0",
+    "eslint": "^9.34.0",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "3.6.2",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.42.0"
   },
   "packageManager": "pnpm@10.15.1"
 }
