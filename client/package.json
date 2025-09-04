@@ -1,5 +1,5 @@
 {
-  "name": "@wonton-comment/client",
+  "name": "@yangchun-comment/client",
   "version": "0.0.0",
   "type": "module",
   "private": true,
@@ -14,7 +14,7 @@
     "snarkdown": "^2.0.0"
   },
   "devDependencies": {
-    "@wonton-comment/shared": "workspace:*",
+    "@yangchun-comment/shared": "workspace:*",
     "@rollup/plugin-terser": "^0.4.4",
     "terser": "^5.40.0",
     "typescript": "~5.8.3",

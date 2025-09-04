@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { validator } from 'hono/validator';
 import Utils from './utils';
-import type { Comment } from '@wonton-comment/shared';
+import type { Comment } from '@yangchun-comment/shared';
 
 const app = new Hono<{
   Bindings: {

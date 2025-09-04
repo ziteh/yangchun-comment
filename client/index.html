@@ -3,16 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Wonton Comment</title>
+    <title>Yangchun Comment</title>
   </head>
   <body>
-    <div id="wtc-app"></div>
+    <div id="ycc-app"></div>
 
     <!-- Development -->
     <script type="module">
-      import { initWontonComment } from '/src/index.ts';
+      import { initYangchunComment } from '/src/index.ts';
 
-      const commentApp = initWontonComment('wtc-app', {
+      const commentApp = initYangchunComment('ycc-app', {
         post: '/blog/my-post',
         apiUrl: 'http://localhost:8787/',
         authorName: 'Test Author',
@@ -22,18 +22,18 @@
 
     <!-- Production ESM -->
     <!-- <script type="module">
-      import { initWontonComment } from '/wonton-comment.es.js';
+      import { initYangchunComment } from '/yangchun-comment.es.js';
 
-      initWontonComment('wtc-app', {
+      initYangchunComment('ycc-app', {
         post: window.location.pathname,
         apiUrl: 'https://your-api-url.com/',
       });
     </script> -->
 
     <!-- Production UMD -->
-    <!-- <script src="/wonton-comment.umd.js"></script>
+    <!-- <script src="/yangchun-comment.umd.js"></script>
     <script>
-      window.WontonComment.default('wtc-app', {
+      window.YangchunComment.default('ycc-app', {
         post: window.location.pathname,
         apiUrl: 'https://your-api-url.com/',
       });

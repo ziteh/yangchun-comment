@@ -1,6 +1,6 @@
 #:schema ./node_modules/wrangler/config-schema.json
 
-name = "wonton-comment-be"
+name = "yangchun-comment-be"
 main = "src/index.ts"
 compatibility_date = "2025-05-08"
 compatibility_flags = ["nodejs_compat"]

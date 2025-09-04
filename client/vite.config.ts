@@ -5,7 +5,7 @@ import terser from '@rollup/plugin-terser';
 const assetFileNames = (assetInfo) => {
   const names = assetInfo.names;
   if (names.some((n) => n.endsWith('.css'))) {
-    return 'wonton-comment.css';
+    return 'yangchun-comment.css';
   }
   return '[name][extname]';
 };
@@ -14,22 +14,22 @@ export default defineConfig({
   build: {
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
-      name: 'WontonComment',
+      name: 'YangchunComment',
     },
     rollupOptions: {
       external: [],
       output: [
         {
           format: 'es',
-          entryFileNames: 'wonton-comment.es.js',
+          entryFileNames: 'yangchun-comment.es.js',
           exports: 'named',
           plugins: [terser()],
           assetFileNames,
         },
         {
           format: 'umd',
-          entryFileNames: 'wonton-comment.umd.js',
-          name: 'WontonComment',
+          entryFileNames: 'yangchun-comment.umd.js',
+          name: 'YangchunComment',
           exports: 'named',
           globals: {},
           assetFileNames,

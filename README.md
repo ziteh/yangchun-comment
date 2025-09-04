@@ -1,4 +1,4 @@
-# Wonton Comment
+# Yang Chun Comment
 
 A simple and private comment system, runs on Cloudflare Workers.
 
@@ -76,15 +76,15 @@ pnpm build:client  # Build client library
 
 After building, the client package outputs two formats in `client/dist/`:
 
-- **ES Module**: `wonton-comment.es.js`
-- **UMD**: `wonton-comment.umd.js`
+- **ES Module**: `yangchun-comment.es.js`
+- **UMD**: `yangchun-comment.umd.js`
 
 Take ESM for example
 
 ```js
-import { initWontonComment } from './path/to/wonton-comment.es.js';
+import { initYangchunComment } from './path/to/yangchun-comment.es.js';
 
-initWontonComment('wtc-app', {
+initYangchunComment('ycc-app', {
   post: window.location.pathname,
   apiUrl: 'https://your-api-url.com/',
 });

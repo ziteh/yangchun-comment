@@ -1,4 +1,4 @@
-import type { Comment } from '@wonton-comment/shared';
+import type { Comment } from '@yangchun-comment/shared';
 
 type AuthInfo = {
   timestamp: number;

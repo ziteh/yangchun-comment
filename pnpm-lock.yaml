@@ -27,7 +27,7 @@ importers:
       '@rollup/plugin-terser':
         specifier: ^0.4.4
         version: 0.4.4(rollup@4.41.1)
-      '@wonton-comment/shared':
+      '@yangchun-comment/shared':
         specifier: workspace:*
         version: link:../shared
       terser:
@@ -42,7 +42,7 @@ importers:
 
   server:
     dependencies:
-      '@wonton-comment/shared':
+      '@yangchun-comment/shared':
         specifier: workspace:*
         version: link:../shared
       hono:

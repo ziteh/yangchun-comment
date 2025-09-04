@@ -2,7 +2,7 @@ import DOMPurify, { type Config as dompurifyConfig } from 'dompurify';
 import snarkdown from 'snarkdown';
 import { html, render, type TemplateResult } from 'lit-html';
 import { unsafeHTML } from 'lit-html/directives/unsafe-html.js';
-import type { Comment } from '@wonton-comment/shared';
+import type { Comment } from '@yangchun-comment/shared';
 import { createApiService } from './apiService';
 import { createI18n, en, zhHant, type I18nStrings } from './i18n';
 import { generatePseudonymAndHash } from './utils/pseudonym';
@@ -14,8 +14,8 @@ type CommentMap = {
 
 type TabType = 'write' | 'preview';
 
-export function initWontonComment(
-  elementId: string = 'wtc-app',
+export function initYangchunComment(
+  elementId: string = 'ycc-app',
   options: {
     post?: string;
     apiUrl?: string;
@@ -23,15 +23,15 @@ export function initWontonComment(
     authorName?: string;
   } = {},
 ) {
-  const wontonApp = new WontonComment(elementId, options);
-  wontonApp.renderApp();
-  return wontonApp;
+  const yangchunApp = new YangchunComment(elementId, options);
+  yangchunApp.renderApp();
+  return yangchunApp;
 }
 
-class WontonComment {
+class YangchunComment {
   private static readonly MAX_NAME_LENGTH = 25;
   private static readonly MAX_MESSAGE_LENGTH = 1000;
-  private static readonly MY_NAME_HASHES_KEY = 'wtc_my_name_hashes';
+  private static readonly MY_NAME_HASHES_KEY = 'ycc_my_name_hashes';
 
   private elementId: string;
   private post: string;
@@ -179,7 +179,7 @@ class WontonComment {
       const existingHashes = this.getMyNameHashes();
       if (nameHash && !existingHashes.includes(nameHash)) {
         existingHashes.push(nameHash);
-        localStorage.setItem(WontonComment.MY_NAME_HASHES_KEY, JSON.stringify(existingHashes));
+        localStorage.setItem(YangchunComment.MY_NAME_HASHES_KEY, JSON.stringify(existingHashes));
       }
     } catch (error) {
       console.warn('Failed to save name hash to localStorage:', error);
@@ -188,7 +188,7 @@ class WontonComment {
 
   private getMyNameHashes(): string[] {
     try {
-      const stored = localStorage.getItem(WontonComment.MY_NAME_HASHES_KEY);
+      const stored = localStorage.getItem(YangchunComment.MY_NAME_HASHES_KEY);
       return stored ? JSON.parse(stored) : [];
     } catch (error) {
       console.warn('Failed to get name hashes from localStorage:', error);
@@ -227,7 +227,7 @@ class WontonComment {
         // Update over-limit styling
         const nameCountEl = document.getElementById('name-char-count');
         if (nameCountEl) {
-          if (this.previewName.length > WontonComment.MAX_NAME_LENGTH) {
+          if (this.previewName.length > YangchunComment.MAX_NAME_LENGTH) {
             nameCountEl.classList.add('over-limit');
           } else {
             nameCountEl.classList.remove('over-limit');
@@ -248,7 +248,7 @@ class WontonComment {
         // Update over-limit styling
         const messageCountEl = document.getElementById('message-char-count');
         if (messageCountEl) {
-          if (this.previewText.length > WontonComment.MAX_MESSAGE_LENGTH) {
+          if (this.previewText.length > YangchunComment.MAX_MESSAGE_LENGTH) {
             messageCountEl.classList.add('over-limit');
           } else {
             messageCountEl.classList.remove('over-limit');
@@ -283,12 +283,12 @@ class WontonComment {
               `
             : html`<div class="empty-preview">${this.i18n.t('emptyPreview')}</div>`}
         </div>
-        <div class="comment-footer wtc-flex wtc-gap-xs">
+        <div class="comment-footer ycc-flex ycc-gap-xs">
           <span style="flex: 1;"></span>
-          <div class="wtc-flex wtc-gap-xs">
+          <div class="ycc-flex ycc-gap-xs">
             <button
               type="button"
-              class="help-btn wtc-clickable wtc-reset-button"
+              class="help-btn ycc-clickable ycc-reset-button"
               title="${this.i18n.t('markdownHelp')}"
               @click=${() => this.toggleMarkdownHelp()}
             >
@@ -296,14 +296,14 @@ class WontonComment {
             </button>
             <button
               type="button"
-              class="preview-btn wtc-clickable wtc-transition wtc-transparent-bg active wtc-reset-button"
+              class="preview-btn ycc-clickable ycc-transition ycc-transparent-bg active ycc-reset-button"
               @click=${() => this.switchTab('write')}
             >
               ${this.i18n.t('write')}
             </button>
             <button
               type="button"
-              class="submit-btn wtc-clickable wtc-transition wtc-reset-button"
+              class="submit-btn ycc-clickable ycc-transition ycc-reset-button"
               @click=${() => this.handlePreviewSubmit()}
             >
               ${this.editingComment ? this.i18n.t('updateComment') : this.i18n.t('submitComment')}
@@ -415,7 +415,7 @@ class WontonComment {
     // Validate length
     const messageCountEl = document.getElementById('message-char-count');
     if (messageCountEl) {
-      if (target.value.length > WontonComment.MAX_MESSAGE_LENGTH) {
+      if (target.value.length > YangchunComment.MAX_MESSAGE_LENGTH) {
         messageCountEl.classList.add('over-limit');
       } else {
         messageCountEl.classList.remove('over-limit');
@@ -447,7 +447,7 @@ class WontonComment {
     this.updateCharCount('name', target.value.length); // Validate length
     const nameCountEl = document.getElementById('name-char-count');
     if (nameCountEl) {
-      if (target.value.length > WontonComment.MAX_NAME_LENGTH) {
+      if (target.value.length > YangchunComment.MAX_NAME_LENGTH) {
         nameCountEl.classList.add('over-limit');
       } else {
         nameCountEl.classList.remove('over-limit');
@@ -493,7 +493,7 @@ class WontonComment {
     const prefix = isRoot ? 'comment' : 'reply';
     return {
       item: prefix,
-      header: `${prefix}-header wtc-flex wtc-flex-wrap`,
+      header: `${prefix}-header ycc-flex ycc-flex-wrap`,
       name: `${prefix}-name`,
       time: `${prefix}-time`,
       content: `${prefix}-content`,
@@ -548,15 +548,15 @@ class WontonComment {
   // Create comment control buttons template
   private createCommentControls(canEdit: boolean, comment: Comment): TemplateResult<1> | string {
     return canEdit
-      ? html`<span class="comment-controls wtc-flex wtc-gap-xs">
+      ? html`<span class="comment-controls ycc-flex ycc-gap-xs">
           <button
-            class="edit-button wtc-clickable wtc-transition wtc-transparent-bg wtc-reset-button"
+            class="edit-button ycc-clickable ycc-transition ycc-transparent-bg ycc-reset-button"
             @click=${() => this.handleEdit(comment)}
           >
             ${this.i18n.t('edit')}
           </button>
           <button
-            class="delete-button wtc-clickable wtc-transition wtc-transparent-bg wtc-reset-button"
+            class="delete-button ycc-clickable ycc-transition ycc-transparent-bg ycc-reset-button"
             @click=${() => this.handleDelete(comment.id)}
           >
             ${this.i18n.t('delete')}
@@ -574,7 +574,7 @@ class WontonComment {
   private createCommentActions(comment: Comment): TemplateResult<1> {
     return html`
       <button
-        class="reply-button wtc-clickable wtc-transition wtc-transparent-bg wtc-reset-button"
+        class="reply-button ycc-clickable ycc-transition ycc-transparent-bg ycc-reset-button"
         @click=${() => this.setReplyTo(comment.id)}
       >
         ${this.i18n.t('reply')}
@@ -655,16 +655,16 @@ class WontonComment {
     const message = formData.get('message') as string;
 
     // Validate lengths for original name
-    if (originalName && originalName.length > WontonComment.MAX_NAME_LENGTH) {
+    if (originalName && originalName.length > YangchunComment.MAX_NAME_LENGTH) {
       alert(
-        `${this.i18n.t('nameTooLong')} (${originalName.length}/${WontonComment.MAX_NAME_LENGTH})`,
+        `${this.i18n.t('nameTooLong')} (${originalName.length}/${YangchunComment.MAX_NAME_LENGTH})`,
       );
       return;
     }
 
-    if (message.length > WontonComment.MAX_MESSAGE_LENGTH) {
+    if (message.length > YangchunComment.MAX_MESSAGE_LENGTH) {
       alert(
-        `${this.i18n.t('messageTooLong')} (${message.length}/${WontonComment.MAX_MESSAGE_LENGTH})`,
+        `${this.i18n.t('messageTooLong')} (${message.length}/${YangchunComment.MAX_MESSAGE_LENGTH})`,
       );
       return;
     }
@@ -764,19 +764,19 @@ class WontonComment {
   // Handle preview mode submission
   private async handlePreviewSubmit(): Promise<void> {
     // Validate lengths
-    if (this.previewName && this.previewName.length > WontonComment.MAX_NAME_LENGTH) {
+    if (this.previewName && this.previewName.length > YangchunComment.MAX_NAME_LENGTH) {
       alert(
         `${this.i18n.t('nameTooLong')} (${this.previewName.length}/${
-          WontonComment.MAX_NAME_LENGTH
+          YangchunComment.MAX_NAME_LENGTH
         })`,
       );
       return;
     }
 
-    if (this.previewText.length > WontonComment.MAX_MESSAGE_LENGTH) {
+    if (this.previewText.length > YangchunComment.MAX_MESSAGE_LENGTH) {
       alert(
         `${this.i18n.t('messageTooLong')} (${this.previewText.length}/${
-          WontonComment.MAX_MESSAGE_LENGTH
+          YangchunComment.MAX_MESSAGE_LENGTH
         })`,
       );
       return;
@@ -887,7 +887,7 @@ class WontonComment {
       // Update over-limit styling
       const nameCountEl = document.getElementById('name-char-count');
       if (nameCountEl) {
-        if ((comment.pseudonym || '').length > WontonComment.MAX_NAME_LENGTH) {
+        if ((comment.pseudonym || '').length > YangchunComment.MAX_NAME_LENGTH) {
           nameCountEl.classList.add('over-limit');
         } else {
           nameCountEl.classList.remove('over-limit');
@@ -904,7 +904,7 @@ class WontonComment {
       // Update over-limit styling
       const messageCountEl = document.getElementById('message-char-count');
       if (messageCountEl) {
-        if ((comment.msg || '').length > WontonComment.MAX_MESSAGE_LENGTH) {
+        if ((comment.msg || '').length > YangchunComment.MAX_MESSAGE_LENGTH) {
           messageCountEl.classList.add('over-limit');
         } else {
           messageCountEl.classList.remove('over-limit');
@@ -988,14 +988,14 @@ class WontonComment {
 
   private createMarkdownHelpTemplate() {
     return html`
-      <div class="markdown-help-container wtc-flex">
+      <div class="markdown-help-container ycc-flex">
         <div
-          class="markdown-help-backdrop wtc-clickable"
+          class="markdown-help-backdrop ycc-clickable"
           @click=${() => this.toggleMarkdownHelp()}
         ></div>
         <div class="markdown-help-content">
           <button
-            class="markdown-help-close wtc-clickable wtc-reset-button"
+            class="markdown-help-close ycc-clickable ycc-reset-button"
             @click=${() => this.toggleMarkdownHelp()}
           >
             ×
@@ -1005,10 +1005,10 @@ class WontonComment {
           <p>${this.i18n.t('commentTimeLimit')}</p>
           <p>
             Powered by&nbsp;<a
-              href="https://github.com/ziteh/wonton-comment"
+              href="https://github.com/ziteh/yangchun-comment"
               target="_blank"
               rel="noopener noreferrer"
-              >Wonton</a
+              >Yangchun</a
             >
           </p>
           <h4>${this.i18n.t('markdownSyntax')}</h4>
@@ -1053,7 +1053,7 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
         <div id="form-content" class="${this.activeTab === 'write' ? 'active' : ''}">
           <form
             id="comment-form"
-            class="wtc-reset-form"
+            class="ycc-reset-form"
             @submit=${(e: SubmitEvent) => this.handleSubmit(e)}
           >
             <div class="honeypot-field">
@@ -1078,26 +1078,26 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
         <textarea
           name="message"
           placeholder="${this.i18n.t('messagePlaceholder')}"
-          maxlength="${WontonComment.MAX_MESSAGE_LENGTH}"
+          maxlength="${YangchunComment.MAX_MESSAGE_LENGTH}"
           required
           @input=${(e: Event) => this.handleInputChange(e)}
         ></textarea>
         <div class="char-count">
-          <span id="message-char-count">0</span>/${WontonComment.MAX_MESSAGE_LENGTH}
+          <span id="message-char-count">0</span>/${YangchunComment.MAX_MESSAGE_LENGTH}
         </div>
       </div>
     `;
   }
   private createFormFooter(): TemplateResult<1> {
     return html`
-      <div class="comment-footer wtc-flex wtc-flex-wrap wtc-gap-xs">
+      <div class="comment-footer ycc-flex ycc-flex-wrap ycc-gap-xs">
         <div class="name-input-container">
           <input
             type="text"
             name="name"
             autocomplete="name"
             placeholder="${this.i18n.t('namePlaceholder')}"
-            maxlength="${WontonComment.MAX_NAME_LENGTH}"
+            maxlength="${YangchunComment.MAX_NAME_LENGTH}"
             ?disabled=${this.editingComment !== null}
             @input=${(e: Event) => this.handleNameInputChange(e)}
           />
@@ -1107,7 +1107,7 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
               : this.i18n.t('pseudonymNotice')}
           </div>
         </div>
-        <div class="wtc-flex wtc-gap-xs">${this.createFormButtons()}</div>
+        <div class="ycc-flex ycc-gap-xs">${this.createFormButtons()}</div>
       </div>
     `;
   }
@@ -1117,7 +1117,7 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
     return html`
       <button
         type="button"
-        class="help-btn wtc-clickable wtc-reset-button"
+        class="help-btn ycc-clickable ycc-reset-button"
         title="${this.i18n.t('markdownHelp')}"
         @click=${() => this.toggleMarkdownHelp()}
       >
@@ -1125,7 +1125,7 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
       </button>
       <button
         type="button"
-        class="preview-btn wtc-clickable wtc-transition wtc-transparent-bg wtc-reset-button ${this
+        class="preview-btn ycc-clickable ycc-transition ycc-transparent-bg ycc-reset-button ${this
           .activeTab === 'preview'
           ? 'active'
           : ''}"
@@ -1133,7 +1133,7 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
       >
         ${this.activeTab === 'preview' ? this.i18n.t('write') : this.i18n.t('preview')}
       </button>
-      <button type="submit" class="submit-btn wtc-clickable wtc-transition wtc-reset-button">
+      <button type="submit" class="submit-btn ycc-clickable ycc-transition ycc-reset-button">
         ${this.editingComment ? this.i18n.t('updateComment') : this.i18n.t('submitComment')}
       </button>
     `;
@@ -1145,7 +1145,7 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
     return html`
       <button
         type="button"
-        class="admin-btn wtc-clickable wtc-reset-button"
+        class="admin-btn ycc-clickable ycc-reset-button"
         title="Admin"
         @click=${() => this.showAdminModal()}
       >
@@ -1178,10 +1178,10 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
   // Create admin login modal template
   private createAdminLoginTemplate(): TemplateResult<1> {
     return html`
-      <div class="admin-modal-backdrop wtc-clickable" @click=${() => this.hideAdminModal()}>
+      <div class="admin-modal-backdrop ycc-clickable" @click=${() => this.hideAdminModal()}>
         <div class="admin-modal-content" @click=${(e: Event) => e.stopPropagation()}>
           <button
-            class="admin-modal-close wtc-clickable wtc-reset-button"
+            class="admin-modal-close ycc-clickable ycc-reset-button"
             @click=${() => this.hideAdminModal()}
           >
             ×
@@ -1202,7 +1202,7 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
                 autocomplete="off"
               />
             </div>
-            <button type="submit" class="admin-login-btn wtc-clickable wtc-reset-button">
+            <button type="submit" class="admin-login-btn ycc-clickable ycc-reset-button">
               Login
             </button>
           </form>
@@ -1251,11 +1251,11 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
   // Create reply status indicator
   private createReplyIndicator(): TemplateResult<1> | string {
     return this.currentReplyTo && this.commentMap[this.currentReplyTo]
-      ? html`<div class="info wtc-flex wtc-gap-md">
+      ? html`<div class="info ycc-flex ycc-gap-md">
           ${this.i18n.t('replyingTo')}
           ${this.getDisplayName(this.commentMap[this.currentReplyTo])}<button
             type="button"
-            class="cancel-link wtc-clickable wtc-transition wtc-reset-button"
+            class="cancel-link ycc-clickable ycc-transition ycc-reset-button"
             @click=${() => this.cancelReply()}
           >
             ${this.i18n.t('cancelReply')}
@@ -1267,10 +1267,10 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
   // Create edit status indicator
   private createEditIndicator(): TemplateResult<1> | string {
     return this.editingComment
-      ? html`<div class="info wtc-flex wtc-gap-md">
+      ? html`<div class="info ycc-flex ycc-gap-md">
           ${this.i18n.t('editing')} ${this.editingComment.id}<button
             type="button"
-            class="cancel-link wtc-clickable wtc-transition wtc-reset-button"
+            class="cancel-link ycc-clickable ycc-transition ycc-reset-button"
             @click=${() => this.cancelEdit()}
           >
             ${this.i18n.t('cancelEdit')}
@@ -1280,7 +1280,7 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
   }
   public async renderApp(): Promise<void> {
     const appTemplate = html`
-      <div class="wtc-container">
+      <div class="ycc-container">
         <div class="comment-box-container">
           <div id="comment-form-container" class="form-content"></div>
           <!-- <div class="admin-btn-wrapper">${this.createAdminButton()}</div> -->
@@ -1304,4 +1304,4 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
   }
 }
 
-export default initWontonComment;
+export default initYangchunComment;
