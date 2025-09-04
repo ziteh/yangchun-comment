@@ -11,8 +11,5 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "type-check": "tsc --noEmit"
-  },
-  "devDependencies": {
-    "typescript": "^5.9.2"
   }
 }

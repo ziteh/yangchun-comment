@@ -48,9 +48,6 @@ importers:
       terser:
         specifier: ^5.44.0
         version: 5.44.0
-      typescript:
-        specifier: ^5.9.2
-        version: 5.9.2
       vite:
         specifier: ^7.1.4
         version: 7.1.4(@types/node@24.3.1)(terser@5.44.0)
@@ -82,9 +79,6 @@ importers:
       '@types/sanitize-html':
         specifier: ^2.16.0
         version: 2.16.0
-      typescript:
-        specifier: ^5.9.2
-        version: 5.9.2
       vitest:
         specifier: ~3.2.4
         version: 3.2.4(@types/node@24.3.1)(terser@5.44.0)
@@ -92,11 +86,7 @@ importers:
         specifier: ^4.33.2
         version: 4.33.2(@cloudflare/workers-types@4.20250904.0)
 
-  shared:
-    devDependencies:
-      typescript:
-        specifier: ^5.9.2
-        version: 5.9.2
+  shared: {}
 
 packages:
 
