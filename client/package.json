@@ -10,14 +10,14 @@
   },
   "dependencies": {
     "dompurify": "^3.2.6",
-    "lit-html": "^3.3.0",
+    "lit-html": "^3.3.1",
     "snarkdown": "^2.0.0"
   },
   "devDependencies": {
     "@yangchun-comment/shared": "workspace:*",
     "@rollup/plugin-terser": "^0.4.4",
-    "terser": "^5.40.0",
-    "typescript": "~5.8.3",
-    "vite": "^6.3.5"
+    "terser": "^5.44.0",
+    "typescript": "~5.9.2",
+    "vite": "^7.1.4"
   }
 }
