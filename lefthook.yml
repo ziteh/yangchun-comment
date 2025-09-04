@@ -6,3 +6,8 @@ pre-commit:
   commands:
     lint-staged:
       run: npx lint-staged
+
+commit-msg:
+  commands:
+    'lint commit message':
+      run: pnpm exec commitlint --edit {1}
