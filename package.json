@@ -3,19 +3,20 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "pnpm --parallel --recursive dev",
-    "build": "pnpm build:shared && pnpm build:client && pnpm build:server",
+    "dev": "pnpm build:shared && pnpm --parallel --recursive dev",
+    "build": "pnpm build:shared && pnpm --parallel build:client build:server",
     "build:shared": "pnpm --filter @yangchun-comment/shared build",
     "build:client": "pnpm --filter @yangchun-comment/client build",
     "build:server": "pnpm --filter @yangchun-comment/server build",
-    "test": "pnpm --recursive test",
+    "test": "pnpm build:shared && pnpm --recursive test",
     "clean": "pnpm --recursive exec -- rm -rf dist node_modules/.cache",
+    "reset": "pnpm clean && rm -rf node_modules && pnpm install",
     "deploy": "pnpm build && pnpm --filter @yangchun-comment/server deploy",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "pnpm eslint .",
     "lint:fix": "pnpm eslint . --fix",
-    "type-check": "pnpm --recursive type-check"
+    "type-check": "pnpm build:shared && pnpm --recursive type-check"
   },
   "devDependencies": {
     "@eslint/js": "^9.34.0",
