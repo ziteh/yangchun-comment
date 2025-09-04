@@ -1,16 +1,20 @@
 {
   "name": "yangchun-comment-monorepo",
   "version": "0.1.0",
-  "private": true,  "scripts": {
+  "private": true,
+  "scripts": {
     "dev": "pnpm --parallel --recursive dev",
     "build": "pnpm build:shared && pnpm build:client",
     "build:shared": "pnpm --filter @yangchun-comment/shared build",
     "build:client": "pnpm --filter @yangchun-comment/client build",
     "test": "pnpm --recursive test",
     "clean": "pnpm --recursive exec -- rm -rf dist node_modules/.cache",
-    "deploy": "pnpm build && pnpm --filter @yangchun-comment/server deploy"
+    "deploy": "pnpm build && pnpm --filter @yangchun-comment/server deploy",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "devDependencies": {
+    "prettier": "3.5.3",
     "typescript": "^5.8.3"
   }
 }

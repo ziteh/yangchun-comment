@@ -7,8 +7,7 @@
     "dev": "wrangler dev",
     "start": "wrangler dev",
     "test": "vitest",
-    "cf-typegen": "wrangler types",
-    "format": "prettier --write ."
+    "cf-typegen": "wrangler types"
   },
   "dependencies": {
     "@yangchun-comment/shared": "workspace:*",
@@ -21,7 +20,6 @@
     "@cloudflare/workers-types": "^4.20250523.0",
     "@types/node": "^22.15.21",
     "@types/sanitize-html": "^2.16.0",
-    "prettier": "3.5.3",
     "typescript": "^5.5.2",
     "vitest": "~3.0.7",
     "wrangler": "^4.16.1"

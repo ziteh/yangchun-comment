@@ -515,8 +515,8 @@ class YangchunComment {
           ${isAdmin
             ? html`<span class="author-badge">${this.i18n.t('author')}</span>`
             : isMyComment
-            ? html`<span class="my-comment-badge">Me</span>`
-            : ''}
+              ? html`<span class="my-comment-badge">Me</span>`
+              : ''}
         </span>
         <span
           class="${cssClasses.time}"
