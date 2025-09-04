@@ -1,15 +1,10 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    /* Client specific */
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "useDefineForClassFields": true,
-
-    /* Bundler mode */
     "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
-    "moduleDetection": "force",
     "noEmit": true
   },
-  "include": ["src"]
+  "include": ["src/**/*"]
 }
