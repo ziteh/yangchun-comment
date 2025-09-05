@@ -28,6 +28,7 @@ namespace_id = "1001"
 simple = { limit = 20, period = 10 } # 20 requests every 10 seconds
 
 [vars]
+FRONTEND_URL = "${FRONTEND_URL}" # Frontend URL
 MAX_PSEUDONYM_LENGTH = 80
 MAX_MSG_LENGTH = 1000
 MAX_ALL_SITE_RSS_COMMENTS = 25

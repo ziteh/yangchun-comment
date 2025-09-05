@@ -10,20 +10,22 @@ const app = new Hono<{
   Bindings: {
     COMMENTS: KVNamespace;
     RSS_SITE_PATH: string;
+    FRONTEND_URL: string;
     MAX_ALL_SITE_RSS_COMMENTS: number;
   };
 }>();
 
+// RSS feed for all site comments
 app.get('/:site', async (c) => {
   const site = c.req.param('site');
-  const expectedSite = c.env.RSS_SITE_PATH;
+  const expectedSite = c.env.RSS_SITE_PATH || 'site';
   if (site !== expectedSite) {
     return c.notFound();
   }
 
-  const siteUrl = 'https://example.com';
   const keyPrefix = 'comments:';
-  const maxComments = c.env.MAX_ALL_SITE_RSS_COMMENTS;
+  const siteUrl = c.env.FRONTEND_URL || 'https://example.com';
+  const maxComments = c.env.MAX_ALL_SITE_RSS_COMMENTS || 25;
 
   // Get all comment keys from KV
   const listResult = await c.env.COMMENTS.list({ prefix: keyPrefix });
@@ -53,12 +55,12 @@ app.get('/:site', async (c) => {
       }
 
       const title = `${comment.pseudonym || 'Anonymous'} commented on ${comment.post}`;
-      const link = `${siteUrl}${comment.post}#comment-${comment.id}`;
+      const link = new URL(`${comment.post}#comment-${comment.id}`, siteUrl);
 
       return `<item>
   <title><![CDATA[${title}]]></title>
   <description><![CDATA[${comment.msg}]]></description>
-  <link>${link}</link>
+  <link>${link.href}</link>
   <pubDate>${new Date(comment.pubDate).toUTCString()}</pubDate>
 </item>`;
     })
