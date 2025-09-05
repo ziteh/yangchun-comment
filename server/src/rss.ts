@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 // import { validateQueryPost, getCommentKey } from './utils';
-import { DELETED_MARKER } from './utils';
+import { DELETED_MARKER, COMMENTS_KEY_PREFIX } from './utils';
 import type { Comment } from '@yangchun-comment/shared';
 
 interface CommentWithPost extends Comment {
@@ -24,12 +24,11 @@ app.get('/:site', async (c) => {
     return c.notFound();
   }
 
-  const keyPrefix = 'comments:';
   const siteUrl = c.env.FRONTEND_URL || 'https://example.com';
   const maxComments = c.env.MAX_ALL_SITE_RSS_COMMENTS || 25;
 
   // Get all comment keys from KV
-  const listResult = await c.env.COMMENTS.list({ prefix: keyPrefix });
+  const listResult = await c.env.COMMENTS.list({ prefix: COMMENTS_KEY_PREFIX });
   let latestComments: CommentWithPost[] = [];
 
   // Fetch comments from each key and maintain top N latest comments
@@ -38,7 +37,7 @@ app.get('/:site', async (c) => {
     if (raw === null) continue;
 
     const comments: Comment[] = JSON.parse(raw);
-    const post = key.name.replace(keyPrefix, '');
+    const post = key.name.replace(COMMENTS_KEY_PREFIX, '');
     const commentsWithPost: CommentWithPost[] = comments.map((comment) => ({ ...comment, post }));
     latestComments.push(...commentsWithPost);
 

@@ -3,6 +3,7 @@ import { customAlphabet } from 'nanoid';
 import sanitizeHtml from 'sanitize-html';
 
 export const DELETED_MARKER = 'deleted';
+export const COMMENTS_KEY_PREFIX = 'comments:';
 
 export function sanitize(raw: unknown): string {
   if (typeof raw !== 'string') return '';
@@ -33,7 +34,7 @@ export function genId() {
 }
 
 export function getCommentKey(post: string) {
-  return `comments:${post}`;
+  return `${COMMENTS_KEY_PREFIX}${post}`;
 }
 
 export const validateQueryPost = validator('query', (value, c) => {
