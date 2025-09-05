@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 // import { validateQueryPost, getCommentKey } from './utils';
+import { DELETED_MARKER } from './utils';
 import type { Comment } from '@yangchun-comment/shared';
 
 interface CommentWithPost extends Comment {
@@ -50,7 +51,7 @@ app.get('/:site', async (c) => {
 
   const rssItems = latestComments
     .map((comment) => {
-      if (comment.msg === 'deleted' || comment.pseudonym === 'deleted') {
+      if (comment.msg === DELETED_MARKER && comment.pseudonym === DELETED_MARKER) {
         return ''; // Skip
       }
 

@@ -8,6 +8,7 @@ import {
   genHmac,
   verifyHmac,
   validatePostUrl,
+  DELETED_MARKER,
 } from './utils';
 import type { Comment } from '@yangchun-comment/shared';
 
@@ -22,6 +23,7 @@ const app = new Hono<{
   };
 }>();
 
+// Get comments for a post
 app.get('/', validateQueryPost, async (c) => {
   const { post } = c.req.valid('query');
   const key = getCommentKey(post);
@@ -32,6 +34,7 @@ app.get('/', validateQueryPost, async (c) => {
   return c.json(comments, 200); // 200 OK
 });
 
+// Create a new comment
 app.post(
   '/',
   validateQueryPost,
@@ -144,6 +147,7 @@ app.post(
   },
 );
 
+// Update a comment
 app.put('/', validateQueryPost, async (c) => {
   const { post } = c.req.valid('query');
   const { id, timestamp, token, pseudonym, nameHash, msg } = await c.req.json();
@@ -219,6 +223,7 @@ app.put('/', validateQueryPost, async (c) => {
   return c.text('Comment updated', 200); // 200 OK
 });
 
+// Delete a comment
 app.delete('/', validateQueryPost, async (c) => {
   const { post } = c.req.valid('query');
   const { id, timestamp, token } = await c.req.json();
@@ -238,13 +243,14 @@ app.delete('/', validateQueryPost, async (c) => {
     console.warn('Comment not found for deletion:', id);
     return c.text('Comment not found', 404); // 404 Not Found
   }
+
   // Mark it as deleted
   comments[index] = {
     ...comments[index],
-    pseudonym: 'deleted',
+    pseudonym: DELETED_MARKER,
+    msg: DELETED_MARKER,
     nameHash: undefined,
     email: undefined, // Currently not storing email
-    msg: 'deleted',
     modDate: Date.now(), // Update modification date
   };
 

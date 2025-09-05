@@ -2,6 +2,8 @@ import { validator } from 'hono/validator';
 import { customAlphabet } from 'nanoid';
 import sanitizeHtml from 'sanitize-html';
 
+export const DELETED_MARKER = 'deleted';
+
 export function sanitize(raw: unknown): string {
   if (typeof raw !== 'string') return '';
 
