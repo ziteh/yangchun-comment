@@ -2,11 +2,76 @@ import { Hono } from 'hono';
 import { validateQueryPost, getCommentKey } from './utils';
 import type { Comment } from '@yangchun-comment/shared';
 
+interface CommentWithPost extends Comment {
+  post: string;
+}
+
 const app = new Hono<{
   Bindings: {
     COMMENTS: KVNamespace;
   };
 }>();
+
+app.get('/site', async (c) => {
+  const siteUrl = 'https://example.com';
+  const keyPrefix = 'comments:';
+  const maxComments = 25;
+
+  // Get all comment keys from KV
+  const listResult = await c.env.COMMENTS.list({ prefix: keyPrefix });
+  let latestComments: CommentWithPost[] = [];
+
+  // Fetch comments from each key and maintain top N latest comments
+  for (const key of listResult.keys) {
+    const raw = await c.env.COMMENTS.get(key.name);
+    if (raw === null) continue;
+
+    const comments: Comment[] = JSON.parse(raw);
+    const post = key.name.replace(keyPrefix, '');
+    const commentsWithPost: CommentWithPost[] = comments.map((comment) => ({ ...comment, post }));
+    latestComments.push(...commentsWithPost);
+
+    // Sort by publication date (newest first) and keep only top 50
+    latestComments.sort((a, b) => b.pubDate - a.pubDate);
+    if (latestComments.length > maxComments) {
+      latestComments = latestComments.slice(0, maxComments);
+    }
+  }
+
+  const rssItems = latestComments
+    .map((comment) => {
+      if (comment.msg === 'deleted' || comment.pseudonym === 'deleted') {
+        return ''; // Skip
+      }
+
+      const title = `${comment.pseudonym || 'Anonymous'} commented on ${comment.post}`;
+      const link = `${siteUrl}${comment.post}#comment-${comment.id}`;
+
+      return `<item>
+  <title><![CDATA[${title}]]></title>
+  <description><![CDATA[${comment.msg}]]></description>
+  <link>${link}</link>
+  <pubDate>${new Date(comment.pubDate).toUTCString()}</pubDate>
+</item>`;
+    })
+    .join('');
+
+  const rss = `<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+  <channel>
+    <title>All Site Comments</title>
+    <link>${siteUrl}</link>
+    <description>Latest ${latestComments.length} comments from all posts on the site</description>
+    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
+    ${rssItems}
+  </channel>
+</rss>`;
+
+  return c.body(rss, 200, {
+    'Content-Type': 'application/xml; charset=utf-8',
+    'X-Content-Type-Options': 'nosniff',
+  });
+});
 
 app.get('/thread', validateQueryPost, async (c) => {
   const { post } = c.req.valid('query');
