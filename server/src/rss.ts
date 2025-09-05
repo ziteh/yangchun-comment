@@ -9,13 +9,21 @@ interface CommentWithPost extends Comment {
 const app = new Hono<{
   Bindings: {
     COMMENTS: KVNamespace;
+    RSS_SITE_PATH: string;
+    MAX_ALL_SITE_RSS_COMMENTS: number;
   };
 }>();
 
-app.get('/site', async (c) => {
+app.get('/:site', async (c) => {
+  const site = c.req.param('site');
+  const expectedSite = c.env.RSS_SITE_PATH;
+  if (site !== expectedSite) {
+    return c.notFound();
+  }
+
   const siteUrl = 'https://example.com';
   const keyPrefix = 'comments:';
-  const maxComments = 25;
+  const maxComments = c.env.MAX_ALL_SITE_RSS_COMMENTS;
 
   // Get all comment keys from KV
   const listResult = await c.env.COMMENTS.list({ prefix: keyPrefix });

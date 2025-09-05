@@ -30,9 +30,11 @@ simple = { limit = 20, period = 10 } # 20 requests every 10 seconds
 [vars]
 MAX_PSEUDONYM_LENGTH = 80
 MAX_MSG_LENGTH = 1000
+MAX_ALL_SITE_RSS_COMMENTS = 25
 # CORS_ORIGIN = "${CORS_ORIGIN}"
 # POST_REGEX = "${POST_REGEX}"
 HMAC_SECRET_KEY = "${HMAC_SECRET_KEY}"   # Should be set in Secrets
 ADMIN_SECRET_KEY = "${ADMIN_SECRET_KEY}" # JWT secret key for admin auth
 # ADMIN_USERNAME = "${ADMIN_USERNAME}"     # Admin username
 # ADMIN_PASSWORD = "${ADMIN_PASSWORD}"     # Admin password
+RSS_SITE_PATH = "${RSS_SITE_PATH}" # RSS feed URL prefix
