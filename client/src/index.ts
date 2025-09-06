@@ -76,6 +76,12 @@ export class YangchunCommentElement extends LitElement {
     this.reloadComments();
   }
 
+  disconnectedCallback(): void {
+    // Ensure body scroll is restored if component is removed while a modal is open
+    document.body.classList.remove('ycc-modal-open');
+    super.disconnectedCallback();
+  }
+
   protected updated(changed: Map<string, unknown>) {
     if (changed.has('apiUrl')) {
       this.apiService = createApiService(this.apiUrl);
@@ -806,6 +812,7 @@ export class YangchunCommentElement extends LitElement {
   // Toggle markdown help modal visibility
   private toggleMarkdownHelp(): void {
     this.showMarkdownHelp = !this.showMarkdownHelp;
+    this.updateBodyScrollLock();
   }
 
   // Render or hide markdown help modal
@@ -814,16 +821,17 @@ export class YangchunCommentElement extends LitElement {
   // modal helpers removed; flag drives rendering
 
   private createMarkdownHelpTemplate() {
-    return html`
+    return html` <div id="markdown-help-modal" class="active">
       <div class="markdown-help-container ycc-flex">
         <div
           class="markdown-help-backdrop ycc-clickable"
           @click=${() => this.toggleMarkdownHelp()}
         ></div>
-        <div class="markdown-help-content">
+        <div class="markdown-help-content" role="dialog" aria-modal="true">
           <button
             class="markdown-help-close ycc-clickable ycc-reset-button"
             @click=${() => this.toggleMarkdownHelp()}
+            aria-label="Close"
           >
             ×
           </button>
@@ -863,7 +871,7 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
           </div>
         </div>
       </div>
-    `;
+    </div>`;
   }
 
   private createFormTemplate(): TemplateResult {
@@ -1002,11 +1010,18 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
   // Show admin login modal
   private showAdminModal(): void {
     this.showAdminLogin = true;
+    this.updateBodyScrollLock();
   }
 
   // Hide admin login modal
   private hideAdminModal(): void {
     this.showAdminLogin = false;
+    this.updateBodyScrollLock();
+  }
+
+  private updateBodyScrollLock(): void {
+    const shouldLock = this.showMarkdownHelp || this.showAdminLogin;
+    document.body.classList.toggle('ycc-modal-open', shouldLock);
   }
 
   // Render admin login modal

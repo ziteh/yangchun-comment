@@ -24,6 +24,11 @@
   --ycc-overlay: color-mix(in srgb, var(--ycc-text-color) 50%, transparent);
 }
 
+/* Prevent background scroll when a modal is open */
+body.ycc-modal-open {
+  overflow: hidden;
+}
+
 /* Base Utilities */
 .ycc-flex {
   display: flex;
