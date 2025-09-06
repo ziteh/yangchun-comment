@@ -1,7 +1,8 @@
 import DOMPurify, { type Config as dompurifyConfig } from 'dompurify';
 import snarkdown from 'snarkdown';
-import { html, render, type TemplateResult } from 'lit-html';
-import { unsafeHTML } from 'lit-html/directives/unsafe-html.js';
+import { LitElement, html, nothing, type TemplateResult } from 'lit';
+import { property, state } from 'lit/decorators.js';
+import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import type { Comment } from '@yangchun-comment/shared';
 import { createApiService } from './apiService';
 import { createI18n, en, zhHant, type I18nStrings } from './i18n';
@@ -21,59 +22,81 @@ export function initYangchunComment(
     authorName?: string;
   } = {},
 ) {
-  const yangchunApp = new YangchunComment(elementId, options);
-  yangchunApp.renderApp();
-  return yangchunApp;
+  const host = document.getElementById(elementId);
+  if (!host) throw new Error(`Container #${elementId} not found`);
+
+  const el = document.createElement('yangchun-comment') as unknown as YangchunCommentElement;
+  if (options.post) el.post = options.post;
+  if (options.apiUrl) el.apiUrl = options.apiUrl;
+  if (options.authorName) el.authorName = options.authorName;
+  if (options.language) el.language = options.language as 'en' | 'zh-Hant' | I18nStrings;
+  host.innerHTML = '';
+  host.appendChild(el);
+  return el;
 }
 
-class YangchunComment {
-  private static readonly MAX_NAME_LENGTH = 25;
-  private static readonly MAX_MESSAGE_LENGTH = 1000;
+export class YangchunCommentElement extends LitElement {
+  static readonly MAX_NAME_LENGTH = 25;
+  static readonly MAX_MESSAGE_LENGTH = 1000;
   private static readonly MY_NAME_HASHES_KEY = 'ycc_my_name_hashes';
 
-  private elementId: string;
-  private post: string;
-  private apiUrl: string;
-  private authorName: string | undefined;
-  private apiService: ReturnType<typeof createApiService>;
-  private i18n: ReturnType<typeof createI18n>;
-  private commentMap: CommentMap = {};
-  private comments: Comment[] = [];
-  private currentReplyTo: string | null = null;
-  private previewText = '';
-  private previewName = '';
-  private previewPseudonym = '';
-  private editingComment: Comment | null = null;
-  private activeTab: TabType = 'write';
-  private showMarkdownHelp = false;
-  private showAdminLogin = false;
+  @property({ type: String }) post = '/blog/my-post';
+  @property({ type: String }) apiUrl = 'http://localhost:8787/';
+  @property({ type: String }) authorName: string | undefined = undefined;
+  // allow passing 'en' | 'zh-Hant' | custom strings via property (not attribute)
+  @property({ attribute: false }) language: 'en' | 'zh-Hant' | I18nStrings = 'en';
 
-  constructor(
-    elementId: string,
-    options: {
-      post?: string;
-      apiUrl?: string;
-      language?: 'en' | 'zh-Hant' | I18nStrings;
-      authorName?: string;
-    } = {},
-  ) {
-    this.elementId = elementId;
-    this.post = options.post || '/blog/my-post';
-    this.apiUrl = options.apiUrl || 'http://localhost:8787/';
-    this.authorName = options.authorName;
+  private apiService: ReturnType<typeof createApiService> = createApiService(this.apiUrl);
+  private i18n: ReturnType<typeof createI18n> = createI18n(en);
+
+  @state() private commentMap: CommentMap = {};
+  @state() private comments: Comment[] = [];
+  @state() private currentReplyTo: string | null = null;
+  @state() private previewText = '';
+  @state() private previewName = '';
+  @state() private previewPseudonym = '';
+  @state() private editingComment: Comment | null = null;
+  @state() private activeTab: TabType = 'write';
+  @state() private showMarkdownHelp = false;
+  @state() private showAdminLogin = false;
+
+  // no-op constructor
+
+  // keep global CSS from index.css by rendering into light DOM
+  protected createRenderRoot() {
+    return this;
+  }
+
+  connectedCallback(): void {
+    super.connectedCallback();
+    this.syncI18n();
     this.apiService = createApiService(this.apiUrl);
+    this.setupDOMPurify();
+    // initial load
+    this.reloadComments();
+  }
 
+  protected updated(changed: Map<string, unknown>) {
+    if (changed.has('apiUrl')) {
+      this.apiService = createApiService(this.apiUrl);
+    }
+    if (changed.has('language')) {
+      this.syncI18n();
+    }
+    if (changed.has('post')) {
+      this.reloadComments();
+    }
+  }
+
+  private syncI18n() {
     let languageStrings: I18nStrings = en;
-    if (options.language) {
-      if (typeof options.language === 'string') {
-        languageStrings = options.language === 'zh-Hant' ? zhHant : en;
-      } else {
-        languageStrings = options.language;
-      }
+    const lang = this.language;
+    if (typeof lang === 'string') {
+      languageStrings = lang === 'zh-Hant' ? zhHant : en;
+    } else if (lang && typeof lang === 'object') {
+      languageStrings = lang;
     }
     this.i18n = createI18n(languageStrings);
-
-    this.setupDOMPurify();
   }
 
   private setupDOMPurify() {
@@ -177,7 +200,10 @@ class YangchunComment {
       const existingHashes = this.getMyNameHashes();
       if (nameHash && !existingHashes.includes(nameHash)) {
         existingHashes.push(nameHash);
-        localStorage.setItem(YangchunComment.MY_NAME_HASHES_KEY, JSON.stringify(existingHashes));
+        localStorage.setItem(
+          YangchunCommentElement.MY_NAME_HASHES_KEY,
+          JSON.stringify(existingHashes),
+        );
       }
     } catch (error) {
       console.warn('Failed to save name hash to localStorage:', error);
@@ -186,7 +212,7 @@ class YangchunComment {
 
   private getMyNameHashes(): string[] {
     try {
-      const stored = localStorage.getItem(YangchunComment.MY_NAME_HASHES_KEY);
+      const stored = localStorage.getItem(YangchunCommentElement.MY_NAME_HASHES_KEY);
       return stored ? JSON.parse(stored) : [];
     } catch (error) {
       console.warn('Failed to get name hashes from localStorage:', error);
@@ -203,60 +229,14 @@ class YangchunComment {
     return await this.apiService.getComments(this.post);
   }
 
-  private renderForm(): void {
-    const formTemplate = this.createFormTemplate();
-    const formElement = document.getElementById('comment-form-container');
-    if (formElement) {
-      render(formTemplate, formElement);
-      this.restoreFormInputs();
-    }
+  private async reloadComments(): Promise<void> {
+    this.comments = await this.loadComments();
+    this.buildCommentMap();
   }
 
-  private restoreFormInputs(): void {
-    if (this.previewName) {
-      const nameInput = document.querySelector(
-        '#comment-form input[name="name"]',
-      ) as HTMLInputElement;
-      if (nameInput) {
-        nameInput.value = this.previewName;
-        // Update character count for name
-        this.updateCharCount('name', this.previewName.length);
+  // no-op: Lit manages input values via state
 
-        // Update over-limit styling
-        const nameCountEl = document.getElementById('name-char-count');
-        if (nameCountEl) {
-          if (this.previewName.length > YangchunComment.MAX_NAME_LENGTH) {
-            nameCountEl.classList.add('over-limit');
-          } else {
-            nameCountEl.classList.remove('over-limit');
-          }
-        }
-      }
-    }
-
-    if (this.previewText) {
-      const messageInput = document.querySelector(
-        '#comment-form textarea[name="message"]',
-      ) as HTMLTextAreaElement;
-      if (messageInput) {
-        messageInput.value = this.previewText;
-        // Update character count for message
-        this.updateCharCount('message', this.previewText.length);
-
-        // Update over-limit styling
-        const messageCountEl = document.getElementById('message-char-count');
-        if (messageCountEl) {
-          if (this.previewText.length > YangchunComment.MAX_MESSAGE_LENGTH) {
-            messageCountEl.classList.add('over-limit');
-          } else {
-            messageCountEl.classList.remove('over-limit');
-          }
-        }
-      }
-    }
-  }
-
-  private createPreviewTemplate(): TemplateResult<1> {
+  private createPreviewTemplate(): TemplateResult {
     const now = Date.now();
     const userName = this.previewPseudonym;
 
@@ -309,33 +289,14 @@ class YangchunComment {
           </div>
         </div>
       </div>
-
-      <div id="markdown-help-modal"></div>
     `;
   }
 
-  // Render preview template to DOM or fallback to form
-  private renderPreview(): void {
-    if (this.activeTab === 'preview') {
-      const previewTemplate = this.createPreviewTemplate();
-      const formElement = document.getElementById('comment-form-container');
-      if (formElement) {
-        render(previewTemplate, formElement);
-      }
-    } else {
-      this.renderForm();
-    }
-  }
+  // no-op: rendering is managed by Lit via state
 
   private switchTab(tab: 'write' | 'preview'): void {
     this.activeTab = tab;
-
-    if (tab === 'preview') {
-      this.saveCurrentFormInputs();
-      this.renderPreview();
-    } else {
-      this.renderForm();
-    }
+    if (tab === 'preview') this.saveCurrentFormInputs();
   }
 
   // Save current form input values to state
@@ -351,14 +312,7 @@ class YangchunComment {
   // Render comments list with error handling
   private async renderCommentsList(): Promise<void> {
     if (this.comments.length === 0) {
-      this.comments = await this.loadComments();
-      this.buildCommentMap();
-    }
-
-    const commentsTemplate = this.createCommentsTemplate();
-    const commentsElement = document.getElementById('comments-container');
-    if (commentsElement) {
-      render(commentsTemplate, commentsElement);
+      await this.reloadComments();
     }
   }
 
@@ -370,7 +324,7 @@ class YangchunComment {
     });
   }
   // Create template for comments container
-  private createCommentsTemplate(): TemplateResult<1> {
+  private createCommentsTemplate(): TemplateResult {
     if (this.comments.length === 0) {
       return html`
         <div id="comments">
@@ -391,17 +345,14 @@ class YangchunComment {
     }
 
     this.currentReplyTo = commentId;
-    this.renderForm();
-
-    const form = document.querySelector('#comment-form-container');
-    if (form) {
-      form.scrollIntoView({ behavior: 'smooth' });
-    }
+    // focus form area
+    const form = (this as unknown as HTMLElement).querySelector('#comment-form-container');
+    if (form) (form as HTMLElement).scrollIntoView({ behavior: 'smooth' });
   }
 
   private cancelReply(): void {
     this.currentReplyTo = null;
-    this.renderForm();
+    // state will trigger re-render
   }
   private handleInputChange(e: Event): void {
     const target = e.target as HTMLTextAreaElement;
@@ -413,16 +364,14 @@ class YangchunComment {
     // Validate length
     const messageCountEl = document.getElementById('message-char-count');
     if (messageCountEl) {
-      if (target.value.length > YangchunComment.MAX_MESSAGE_LENGTH) {
+      if (target.value.length > YangchunCommentElement.MAX_MESSAGE_LENGTH) {
         messageCountEl.classList.add('over-limit');
       } else {
         messageCountEl.classList.remove('over-limit');
       }
     }
 
-    if (this.activeTab === 'preview') {
-      this.renderPreview();
-    }
+    // Lit will re-render
   }
   private async handleNameInputChange(e: Event): Promise<void> {
     const target = e.target as HTMLInputElement;
@@ -445,7 +394,7 @@ class YangchunComment {
     this.updateCharCount('name', target.value.length); // Validate length
     const nameCountEl = document.getElementById('name-char-count');
     if (nameCountEl) {
-      if (target.value.length > YangchunComment.MAX_NAME_LENGTH) {
+      if (target.value.length > YangchunCommentElement.MAX_NAME_LENGTH) {
         nameCountEl.classList.add('over-limit');
       } else {
         nameCountEl.classList.remove('over-limit');
@@ -453,9 +402,7 @@ class YangchunComment {
     }
 
     // Update preview if in preview mode
-    if (this.activeTab === 'preview') {
-      this.renderPreview();
-    }
+    // Lit will re-render
   }
 
   private updateCharCount(type: 'name' | 'message', count: number): void {
@@ -472,7 +419,7 @@ class YangchunComment {
     replyToName: string | null = null,
     allReplies: Comment[] | null = null,
     commentMap: CommentMap | null = null,
-  ): TemplateResult<1> {
+  ): TemplateResult {
     const cssClasses = this.getCommentCssClasses(isRoot);
     const canEdit = this.canEditComment(comment.id);
 
@@ -502,7 +449,7 @@ class YangchunComment {
     cssClasses: ReturnType<typeof this.getCommentCssClasses>,
     replyToName: string | null,
     canEdit: boolean,
-  ): TemplateResult<1> {
+  ): TemplateResult {
     const isMyComment = this.isMyComment(comment);
     const isAdmin = comment.isAdmin;
 
@@ -534,7 +481,7 @@ class YangchunComment {
   private createReplyToIndicator(
     replyToName: string | null,
     replyToId?: string,
-  ): TemplateResult<1> | string {
+  ): TemplateResult | string {
     return replyToName
       ? html`<span class="reply-to">
           ${this.i18n.t('replyTo')}
@@ -544,7 +491,7 @@ class YangchunComment {
   }
 
   // Create comment control buttons template
-  private createCommentControls(canEdit: boolean, comment: Comment): TemplateResult<1> | string {
+  private createCommentControls(canEdit: boolean, comment: Comment): TemplateResult | string {
     return canEdit
       ? html`<span class="comment-controls ycc-flex ycc-gap-xs">
           <button
@@ -564,12 +511,12 @@ class YangchunComment {
   }
 
   // Create comment content template
-  private createCommentContent(comment: Comment, contentClass: string): TemplateResult<1> {
+  private createCommentContent(comment: Comment, contentClass: string): TemplateResult {
     return html`<div class="${contentClass}">${this.renderMarkdown(comment.msg)}</div>`;
   }
 
   // Create comment actions template
-  private createCommentActions(comment: Comment): TemplateResult<1> {
+  private createCommentActions(comment: Comment): TemplateResult {
     return html`
       <button
         class="reply-button ycc-clickable ycc-transition ycc-transparent-bg ycc-reset-button"
@@ -585,7 +532,7 @@ class YangchunComment {
     isRoot: boolean,
     allReplies: Comment[] | null,
     commentMap: CommentMap | null,
-  ): TemplateResult<1> | string {
+  ): TemplateResult | string {
     if (!isRoot) return '';
 
     return html`<div class="replies">
@@ -653,16 +600,16 @@ class YangchunComment {
     const message = formData.get('message') as string;
 
     // Validate lengths for original name
-    if (originalName && originalName.length > YangchunComment.MAX_NAME_LENGTH) {
+    if (originalName && originalName.length > YangchunCommentElement.MAX_NAME_LENGTH) {
       alert(
-        `${this.i18n.t('nameTooLong')} (${originalName.length}/${YangchunComment.MAX_NAME_LENGTH})`,
+        `${this.i18n.t('nameTooLong')} (${originalName.length}/${YangchunCommentElement.MAX_NAME_LENGTH})`,
       );
       return;
     }
 
-    if (message.length > YangchunComment.MAX_MESSAGE_LENGTH) {
+    if (message.length > YangchunCommentElement.MAX_MESSAGE_LENGTH) {
       alert(
-        `${this.i18n.t('messageTooLong')} (${message.length}/${YangchunComment.MAX_MESSAGE_LENGTH})`,
+        `${this.i18n.t('messageTooLong')} (${message.length}/${YangchunCommentElement.MAX_MESSAGE_LENGTH})`,
       );
       return;
     }
@@ -755,26 +702,25 @@ class YangchunComment {
     if (messageCountEl) {
       messageCountEl.classList.remove('over-limit');
     }
-    this.renderForm();
-    this.renderPreview();
+    // Lit will re-render
   }
 
   // Handle preview mode submission
   private async handlePreviewSubmit(): Promise<void> {
     // Validate lengths
-    if (this.previewName && this.previewName.length > YangchunComment.MAX_NAME_LENGTH) {
+    if (this.previewName && this.previewName.length > YangchunCommentElement.MAX_NAME_LENGTH) {
       alert(
         `${this.i18n.t('nameTooLong')} (${this.previewName.length}/${
-          YangchunComment.MAX_NAME_LENGTH
+          YangchunCommentElement.MAX_NAME_LENGTH
         })`,
       );
       return;
     }
 
-    if (this.previewText.length > YangchunComment.MAX_MESSAGE_LENGTH) {
+    if (this.previewText.length > YangchunCommentElement.MAX_MESSAGE_LENGTH) {
       alert(
         `${this.i18n.t('messageTooLong')} (${this.previewText.length}/${
-          YangchunComment.MAX_MESSAGE_LENGTH
+          YangchunCommentElement.MAX_MESSAGE_LENGTH
         })`,
       );
       return;
@@ -885,7 +831,7 @@ class YangchunComment {
       // Update over-limit styling
       const nameCountEl = document.getElementById('name-char-count');
       if (nameCountEl) {
-        if ((comment.pseudonym || '').length > YangchunComment.MAX_NAME_LENGTH) {
+        if ((comment.pseudonym || '').length > YangchunCommentElement.MAX_NAME_LENGTH) {
           nameCountEl.classList.add('over-limit');
         } else {
           nameCountEl.classList.remove('over-limit');
@@ -902,7 +848,7 @@ class YangchunComment {
       // Update over-limit styling
       const messageCountEl = document.getElementById('message-char-count');
       if (messageCountEl) {
-        if ((comment.msg || '').length > YangchunComment.MAX_MESSAGE_LENGTH) {
+        if ((comment.msg || '').length > YangchunCommentElement.MAX_MESSAGE_LENGTH) {
           messageCountEl.classList.add('over-limit');
         } else {
           messageCountEl.classList.remove('over-limit');
@@ -910,8 +856,7 @@ class YangchunComment {
       }
     }
 
-    this.renderForm();
-    this.renderPreview();
+    // Lit will re-render
   }
 
   // Scroll to form container
@@ -926,8 +871,6 @@ class YangchunComment {
   private cancelEdit(): void {
     this.editingComment = null;
     this.clearFormAndPreview();
-    this.renderForm();
-    this.renderPreview();
   }
   // Clear form data and preview state
   private clearFormAndPreview(): void {
@@ -957,32 +900,12 @@ class YangchunComment {
   // Toggle markdown help modal visibility
   private toggleMarkdownHelp(): void {
     this.showMarkdownHelp = !this.showMarkdownHelp;
-    this.renderMarkdownHelp();
   }
 
   // Render or hide markdown help modal
-  private renderMarkdownHelp(): void {
-    const helpElement = document.getElementById('markdown-help-modal');
-    if (!helpElement) return;
+  // Lit will render modal via flag
 
-    if (this.showMarkdownHelp) {
-      this.showHelpModal(helpElement);
-    } else {
-      this.hideHelpModal(helpElement);
-    }
-  }
-
-  // Show help modal with content
-  private showHelpModal(helpElement: HTMLElement): void {
-    render(this.createMarkdownHelpTemplate(), helpElement);
-    helpElement.classList.add('active');
-  }
-
-  // Hide help modal
-  private hideHelpModal(helpElement: HTMLElement): void {
-    render(html``, helpElement);
-    helpElement.classList.remove('active');
-  }
+  // modal helpers removed; flag drives rendering
 
   private createMarkdownHelpTemplate() {
     return html`
@@ -1037,15 +960,16 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
     `;
   }
 
-  private createFormTemplate(): TemplateResult<1> {
+  private createFormTemplate(): TemplateResult {
     return html`
-      ${this.createFormContent()} ${this.createStatusIndicators()}
-      <div id="markdown-help-modal"></div>
-      <div id="admin-login-modal"></div>
+      ${this.activeTab === 'preview' ? this.createPreviewTemplate() : this.createFormContent()}
+      ${this.createStatusIndicators()}
+      ${this.showMarkdownHelp ? this.createMarkdownHelpTemplate() : nothing}
+      ${this.showAdminLogin ? this.createAdminLoginTemplate() : nothing}
     `;
   }
 
-  private createFormContent(): TemplateResult<1> {
+  private createFormContent(): TemplateResult {
     return html`
       <div class="comment-box">
         <div id="form-content" class="${this.activeTab === 'write' ? 'active' : ''}">
@@ -1069,24 +993,25 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
       </div>
     `;
   }
-  // Create textarea input section
-  private createTextareaSection(): TemplateResult<1> {
+
+  private createTextareaSection(): TemplateResult {
     return html`
       <div class="comment-input">
         <textarea
           name="message"
           placeholder="${this.i18n.t('messagePlaceholder')}"
-          maxlength="${YangchunComment.MAX_MESSAGE_LENGTH}"
+          maxlength="${YangchunCommentElement.MAX_MESSAGE_LENGTH}"
           required
           @input=${(e: Event) => this.handleInputChange(e)}
         ></textarea>
         <div class="char-count">
-          <span id="message-char-count">0</span>/${YangchunComment.MAX_MESSAGE_LENGTH}
+          <span id="message-char-count">0</span>/${YangchunCommentElement.MAX_MESSAGE_LENGTH}
         </div>
       </div>
     `;
   }
-  private createFormFooter(): TemplateResult<1> {
+
+  private createFormFooter(): TemplateResult {
     return html`
       <div class="comment-footer ycc-flex ycc-flex-wrap ycc-gap-xs">
         <div class="name-input-container">
@@ -1095,7 +1020,7 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
             name="name"
             autocomplete="name"
             placeholder="${this.i18n.t('namePlaceholder')}"
-            maxlength="${YangchunComment.MAX_NAME_LENGTH}"
+            maxlength="${YangchunCommentElement.MAX_NAME_LENGTH}"
             ?disabled=${this.editingComment !== null}
             @input=${(e: Event) => this.handleNameInputChange(e)}
           />
@@ -1110,8 +1035,7 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
     `;
   }
 
-  // Create form action buttons
-  private createFormButtons(): TemplateResult<1> {
+  private createFormButtons(): TemplateResult {
     return html`
       <button
         type="button"
@@ -1139,7 +1063,7 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
 
   // Create admin button
   // TODO adjust position
-  private createAdminButton(): TemplateResult<1> {
+  private createAdminButton(): TemplateResult {
     return html`
       <button
         type="button"
@@ -1155,26 +1079,18 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
   // Show admin login modal
   private showAdminModal(): void {
     this.showAdminLogin = true;
-    this.renderAdminLogin();
   }
 
   // Hide admin login modal
   private hideAdminModal(): void {
     this.showAdminLogin = false;
-    this.renderAdminLogin();
   }
 
   // Render admin login modal
-  private renderAdminLogin(): void {
-    const adminTemplate = this.showAdminLogin ? this.createAdminLoginTemplate() : html``;
-    const modalElement = document.getElementById('admin-login-modal');
-    if (modalElement) {
-      render(adminTemplate, modalElement);
-    }
-  }
+  // Lit handles modal via flag, no imperative render needed
 
   // Create admin login modal template
-  private createAdminLoginTemplate(): TemplateResult<1> {
+  private createAdminLoginTemplate(): TemplateResult {
     return html`
       <div class="admin-modal-backdrop ycc-clickable" @click=${() => this.hideAdminModal()}>
         <div class="admin-modal-content" @click=${(e: Event) => e.stopPropagation()}>
@@ -1239,15 +1155,15 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
     }
   }
   // Create status indicators (reply/edit info)
-  private createStatusIndicators(): TemplateResult<1> | string {
+  private createStatusIndicators(): TemplateResult | typeof nothing {
     const replyIndicator = this.createReplyIndicator();
     const editIndicator = this.createEditIndicator();
-
-    return replyIndicator || editIndicator ? html`${replyIndicator}${editIndicator}` : '';
+    const hasAny = replyIndicator !== '' || editIndicator !== '';
+    return hasAny ? html`${replyIndicator}${editIndicator}` : nothing;
   }
 
   // Create reply status indicator
-  private createReplyIndicator(): TemplateResult<1> | string {
+  private createReplyIndicator(): TemplateResult | string {
     return this.currentReplyTo && this.commentMap[this.currentReplyTo]
       ? html`<div class="info ycc-flex ycc-gap-md">
           ${this.i18n.t('replyingTo')}
@@ -1263,7 +1179,7 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
   }
 
   // Create edit status indicator
-  private createEditIndicator(): TemplateResult<1> | string {
+  private createEditIndicator(): TemplateResult | string {
     return this.editingComment
       ? html`<div class="info ycc-flex ycc-gap-md">
           ${this.i18n.t('editing')} ${this.editingComment.id}<button
@@ -1276,30 +1192,29 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
         </div>`
       : '';
   }
-  public async renderApp(): Promise<void> {
-    const appTemplate = html`
+  protected render(): TemplateResult {
+    return html`
       <div class="ycc-container">
         <div class="comment-box-container">
-          <div id="comment-form-container" class="form-content"></div>
+          <div id="comment-form-container" class="form-content">${this.createFormTemplate()}</div>
           <!-- <div class="admin-btn-wrapper">${this.createAdminButton()}</div> -->
         </div>
-        <div id="comments-container"></div>
+        <div id="comments-container">${this.createCommentsTemplate()}</div>
       </div>
     `;
-
-    const appElement = document.getElementById(this.elementId);
-    if (appElement) {
-      render(appTemplate, appElement);
-      this.renderForm();
-      await this.renderCommentsList();
-      this.renderMarkdownHelp();
-    }
   }
 
   public async refresh(): Promise<void> {
-    this.comments = [];
-    await this.renderCommentsList();
+    await this.reloadComments();
   }
 }
 
+customElements.define('yangchun-comment', YangchunCommentElement);
+
 export default initYangchunComment;
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'yangchun-comment': YangchunCommentElement;
+  }
+}
