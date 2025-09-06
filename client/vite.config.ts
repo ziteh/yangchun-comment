@@ -15,6 +15,7 @@ export default defineConfig({
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
       name: 'YangchunComment',
+      formats: ['es', 'umd'],
     },
     rollupOptions: {
       external: [],

@@ -2,7 +2,21 @@
   "name": "@yangchun-comment/client",
   "version": "0.1.0",
   "type": "module",
-  "private": true,
+  "private": false,
+  "main": "./dist/yangchun-comment.umd.js",
+  "module": "./dist/yangchun-comment.es.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/yangchun-comment.es.js",
+      "require": "./dist/yangchun-comment.umd.js"
+    },
+    "./style.css": "./dist/yangchun-comment.css"
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",

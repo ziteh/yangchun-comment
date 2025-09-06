@@ -7,14 +7,16 @@ import starlightThemeNova from 'starlight-theme-nova';
 export default defineConfig({
   integrations: [
     starlight({
-      title: 'My Docs',
+      title: 'Yangchun Comment',
       plugins: [starlightThemeNova()],
-      social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/withastro/starlight' }],
+      social: [
+        { icon: 'github', label: 'GitHub', href: 'https://github.com/ziteh/wonton-comment' },
+      ],
       sidebar: [
         {
           label: 'Guides',
           items: [
-            // Each item here is one entry in the navigation menu.
+            { label: 'HTML Usage', slug: 'guides/html-usage' },
             { label: 'Example Guide', slug: 'guides/example' },
           ],
         },

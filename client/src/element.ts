@@ -68,7 +68,7 @@ export class YangchunCommentElement extends LitElement {
     this.i18n = createI18n(languageStrings);
   }
 
-  public renderMarkdown(md: string) {
+  public renderMarkdown(md: string): ReturnType<typeof unsafeHTML> {
     return unsafeHTML(sanitizeHtml(snarkdown(md || '')));
   }
 
