@@ -358,20 +358,7 @@ export class YangchunCommentElement extends LitElement {
     const target = e.target as HTMLTextAreaElement;
     this.previewText = target.value;
 
-    // Update character count
-    this.updateCharCount('message', target.value.length);
-
-    // Validate length
-    const messageCountEl = document.getElementById('message-char-count');
-    if (messageCountEl) {
-      if (target.value.length > YangchunCommentElement.MAX_MESSAGE_LENGTH) {
-        messageCountEl.classList.add('over-limit');
-      } else {
-        messageCountEl.classList.remove('over-limit');
-      }
-    }
-
-    // Lit will re-render
+    // Lit will re-render and update char count/state
   }
   private async handleNameInputChange(e: Event): Promise<void> {
     const target = e.target as HTMLInputElement;
@@ -390,27 +377,10 @@ export class YangchunCommentElement extends LitElement {
       this.previewPseudonym = '';
     }
 
-    // Update character count
-    this.updateCharCount('name', target.value.length); // Validate length
-    const nameCountEl = document.getElementById('name-char-count');
-    if (nameCountEl) {
-      if (target.value.length > YangchunCommentElement.MAX_NAME_LENGTH) {
-        nameCountEl.classList.add('over-limit');
-      } else {
-        nameCountEl.classList.remove('over-limit');
-      }
-    }
-
-    // Update preview if in preview mode
-    // Lit will re-render
+    // Lit will re-render and update char count/state
   }
 
-  private updateCharCount(type: 'name' | 'message', count: number): void {
-    const countElement = document.getElementById(`${type}-char-count`);
-    if (countElement) {
-      countElement.textContent = count.toString();
-    }
-  }
+  // removed imperative char counter; counts are now reactive via state
 
   // Create comment item template with proper type annotation
   private createCommentItemTemplate(
@@ -688,20 +658,6 @@ export class YangchunCommentElement extends LitElement {
     this.previewPseudonym = '';
     this.editingComment = null;
     this.currentReplyTo = null;
-
-    // Reset character counts
-    this.updateCharCount('message', 0);
-    this.updateCharCount('name', 0);
-
-    // Remove over-limit styling
-    const nameCountEl = document.getElementById('name-char-count');
-    const messageCountEl = document.getElementById('message-char-count');
-    if (nameCountEl) {
-      nameCountEl.classList.remove('over-limit');
-    }
-    if (messageCountEl) {
-      messageCountEl.classList.remove('over-limit');
-    }
     // Lit will re-render
   }
 
@@ -761,20 +717,6 @@ export class YangchunCommentElement extends LitElement {
     if (form) {
       form.reset();
     }
-
-    // Reset character counts
-    this.updateCharCount('message', 0);
-    this.updateCharCount('name', 0);
-
-    // Remove over-limit styling
-    const nameCountEl = document.getElementById('name-char-count');
-    const messageCountEl = document.getElementById('message-char-count');
-    if (nameCountEl) {
-      nameCountEl.classList.remove('over-limit');
-    }
-    if (messageCountEl) {
-      messageCountEl.classList.remove('over-limit');
-    }
   }
 
   private async handleDelete(commentId: string): Promise<void> {
@@ -825,35 +767,13 @@ export class YangchunCommentElement extends LitElement {
       nameInput.value = comment.pseudonym || '';
       this.previewName = comment.pseudonym || '';
       this.previewPseudonym = comment.pseudonym || '';
-      // Update character count for name
-      this.updateCharCount('name', (comment.pseudonym || '').length);
-
-      // Update over-limit styling
-      const nameCountEl = document.getElementById('name-char-count');
-      if (nameCountEl) {
-        if ((comment.pseudonym || '').length > YangchunCommentElement.MAX_NAME_LENGTH) {
-          nameCountEl.classList.add('over-limit');
-        } else {
-          nameCountEl.classList.remove('over-limit');
-        }
-      }
+      // Lit will render name char count and over-limit class
     }
 
     if (messageInput) {
       messageInput.value = comment.msg || '';
       this.previewText = comment.msg || '';
-      // Update character count for message
-      this.updateCharCount('message', (comment.msg || '').length);
-
-      // Update over-limit styling
-      const messageCountEl = document.getElementById('message-char-count');
-      if (messageCountEl) {
-        if ((comment.msg || '').length > YangchunCommentElement.MAX_MESSAGE_LENGTH) {
-          messageCountEl.classList.add('over-limit');
-        } else {
-          messageCountEl.classList.remove('over-limit');
-        }
-      }
+      // Lit will render message char count and over-limit class
     }
 
     // Lit will re-render
@@ -881,20 +801,6 @@ export class YangchunCommentElement extends LitElement {
     this.previewText = '';
     this.previewName = '';
     this.previewPseudonym = '';
-
-    // Reset character counts
-    this.updateCharCount('message', 0);
-    this.updateCharCount('name', 0);
-
-    // Remove over-limit styling
-    const nameCountEl = document.getElementById('name-char-count');
-    const messageCountEl = document.getElementById('message-char-count');
-    if (nameCountEl) {
-      nameCountEl.classList.remove('over-limit');
-    }
-    if (messageCountEl) {
-      messageCountEl.classList.remove('over-limit');
-    }
   }
 
   // Toggle markdown help modal visibility
@@ -1002,10 +908,17 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
           placeholder="${this.i18n.t('messagePlaceholder')}"
           maxlength="${YangchunCommentElement.MAX_MESSAGE_LENGTH}"
           required
+          .value=${this.previewText}
           @input=${(e: Event) => this.handleInputChange(e)}
         ></textarea>
         <div class="char-count">
-          <span id="message-char-count">0</span>/${YangchunCommentElement.MAX_MESSAGE_LENGTH}
+          <span
+            id="message-char-count"
+            class="${this.previewText.length > YangchunCommentElement.MAX_MESSAGE_LENGTH
+              ? 'over-limit'
+              : ''}"
+            >${this.previewText.length}</span
+          >/${YangchunCommentElement.MAX_MESSAGE_LENGTH}
         </div>
       </div>
     `;
@@ -1022,8 +935,18 @@ ${this.i18n.t('markdownCodeBlockExample')}</pre
             placeholder="${this.i18n.t('namePlaceholder')}"
             maxlength="${YangchunCommentElement.MAX_NAME_LENGTH}"
             ?disabled=${this.editingComment !== null}
+            .value=${this.previewName}
             @input=${(e: Event) => this.handleNameInputChange(e)}
           />
+          <div class="char-count" style="margin-top: 4px;">
+            <span
+              id="name-char-count"
+              class="${this.previewName.length > YangchunCommentElement.MAX_NAME_LENGTH
+                ? 'over-limit'
+                : ''}"
+              >${this.previewName.length}</span
+            >/${YangchunCommentElement.MAX_NAME_LENGTH}
+          </div>
           <div class="pseudonym-notice" style="font-size: 0.8em; color: #666; margin-top: 4px;">
             ${this.editingComment
               ? this.i18n.t('editingPseudonymNotice')
