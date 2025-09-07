@@ -1,0 +1,161 @@
+---
+import '@yangchun-comment/client/style.css';
+---
+
+<div id="msw-comment-system">
+  <div id="msw-status" class="status-banner">
+    <div class="status-content">
+      <span class="status-text">Mock Service Worker loading...</span>
+    </div>
+  </div>
+
+  <div id="comment-container" style="display: none;">
+    <yangchun-comment post="example-post" api-url="/" language="en" author-name="ZiTe"
+    ></yangchun-comment>
+  </div>
+</div>
+
+<script>
+  class MSWCommentSystem {
+    private statusEl: HTMLElement | null = null;
+    private containerEl: HTMLElement | null = null;
+
+    constructor() {
+      this.statusEl = document.querySelector('#msw-status .status-text');
+      this.containerEl = document.getElementById('comment-container');
+      this.init();
+    }
+
+    private updateStatus(text: string, type: 'loading' | 'success' | 'error' = 'loading') {
+      if (!this.statusEl) return;
+
+      this.statusEl.innerHTML = text;
+
+      const banner = document.getElementById('msw-status');
+      if (banner) {
+        banner.className = `status-banner ${type}`;
+      }
+    }
+
+    private async initMsw(): Promise<boolean> {
+      try {
+        const { worker } = await import('../mocks/browser');
+
+        this.updateStatus('Mock Service Worker starting...', 'loading');
+
+        await worker.start({
+          onUnhandledRequest: 'bypass',
+          serviceWorker: {
+            url: '/mockServiceWorker.js',
+          },
+        });
+
+        this.updateStatus('Waiting for Mock Service Worker...', 'loading');
+
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
+        // Test if MSW is working
+        const testResponse = await fetch('/api/comments?post=msw-test');
+        if (testResponse.ok) {
+          this.updateStatus('Mock Service Worker is running - Using mock data', 'success');
+          return true;
+        } else {
+          throw new Error('Mock Service Worker test request failed');
+        }
+      } catch (error) {
+        console.error('Mock Service Worker failed to start:', error);
+        // this.updateStatus('Mock Service Worker failed - Please check the console', 'error');
+        return false;
+      }
+    }
+
+    private async loadCommentComponent() {
+      try {
+        await import('@yangchun-comment/client');
+
+        if (this.containerEl) {
+          this.containerEl.style.display = 'block'; // Show the comment container
+        }
+
+        // console.log('Yang Chun Comment component loaded');
+      } catch (error) {
+        console.error('Error loading Yang Chun Comment component:', error);
+        this.updateStatus('Error loading Yang Chun Comment component', 'error');
+      }
+    }
+
+    private async init() {
+      if (!('serviceWorker' in navigator)) {
+        this.updateStatus('Browser does not support Service Worker', 'error');
+        await this.loadCommentComponent();
+        return;
+      }
+
+      const mswSuccess = await this.initMsw();
+      await this.loadCommentComponent();
+
+      if (mswSuccess) {
+        setTimeout(() => {
+          const banner = document.getElementById('msw-status');
+          if (banner) {
+            banner.style.opacity = '0.7';
+            banner.style.fontSize = '0.9em';
+          }
+        }, 1000);
+      }
+    }
+  }
+
+  // Init when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => new MSWCommentSystem());
+  } else {
+    new MSWCommentSystem();
+  }
+</script>
+
+<style>
+  #msw-comment-system {
+    /* Override CSS variables to follow site color scheme */
+    --ycc-text-color: var(--sl-color-text);
+    --ycc-background-color: var(--sl-color-bg);
+    --ycc-primary-color: var(--sl-color-text-accent);
+    --ycc-minimal: var(--sl-color-gray-7);
+  }
+
+  .status-banner {
+    margin-bottom: 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    border: 1px solid var(--sl-color-gray-5);
+    background: var(--sl-color-gray-6);
+    transition: all 0.3s ease;
+  }
+
+  .status-banner.loading {
+    background: var(--sl-color-blue-low);
+    border-color: var(--sl-color-blue);
+  }
+
+  .status-banner.success {
+    background: var(--sl-color-green-low);
+    border-color: var(--sl-color-green);
+  }
+
+  .status-banner.error {
+    background: var(--sl-color-red-low);
+    border-color: var(--sl-color-red);
+  }
+
+  .status-content {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  .status-icon {
+    font-size: 1.1em;
+  }
+</style>
