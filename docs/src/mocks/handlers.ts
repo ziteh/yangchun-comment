@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw';
 import type { Comment } from '@yangchun-comment/shared';
 
-const msOfOneDay = 86400000;
+const msOfOneDay = 24 * 60 * 60 * 1000;
 const tokenPrefix = 'mock-token-';
 
 const getCommentId = (index: number) => `comment-${index}`;

@@ -1,23 +1,21 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
-import starlightThemeNova from 'starlight-theme-nova';
 
 // https://astro.build/config
 export default defineConfig({
   integrations: [
     starlight({
-      title: 'Yangchun Comment',
-      plugins: [starlightThemeNova()],
+      title: 'Yang Chun Comment',
       social: [
-        { icon: 'github', label: 'GitHub', href: 'https://github.com/ziteh/wonton-comment' },
+        { icon: 'github', label: 'GitHub', href: 'https://github.com/ziteh/yangchun-comment' },
       ],
       sidebar: [
         {
           label: 'Guides',
           items: [
+            { label: 'Getting Started', slug: 'guides/get-started' },
             { label: 'HTML Usage', slug: 'guides/html-usage' },
-            { label: 'Example Guide', slug: 'guides/example' },
           ],
         },
         {
