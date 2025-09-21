@@ -382,7 +382,7 @@ export class YangchunCommentElement extends LitElement {
               href="https://github.com/ziteh/yangchun-comment"
               target="_blank"
               rel="noopener noreferrer"
-              >Yangchun</a
+              >Yang Chun Comment</a
             >
           </p>
           <h4>${this.i18n.t('markdownSyntax')}</h4>
