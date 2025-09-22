@@ -226,7 +226,10 @@ app.put('/', validateQueryPost, async (c) => {
 // Delete a comment
 app.delete('/', validateQueryPost, async (c) => {
   const { post } = c.req.valid('query');
-  const { id, timestamp, token } = await c.req.json();
+
+  const id = c.req.header('X-Comment-ID') || '';
+  const token = c.req.header('X-Comment-Token') || '';
+  const timestamp = parseInt(c.req.header('X-Comment-Timestamp') || '0');
 
   const hmacOk = await verifyHmac(c.env.HMAC_SECRET_KEY, id, timestamp, token);
   if (!hmacOk) {

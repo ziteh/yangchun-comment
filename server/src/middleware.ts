@@ -37,7 +37,7 @@ app.use('*', async (c, next) => {
 app.use('*', async (c, next) => {
   const corsMiddleware = cors({
     origin: c.env.CORS_ORIGIN || '*',
-    allowHeaders: ['Content-Type'],
+    allowHeaders: ['Content-Type', 'X-Comment-ID', 'X-Comment-Token', 'X-Comment-Timestamp'],
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     exposeHeaders: ['Content-Length'],
     maxAge: 600,

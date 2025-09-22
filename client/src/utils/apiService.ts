@@ -95,12 +95,12 @@ export const createApiService = (apiUrl: string) => {
 
       const response = await fetch(url, {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: authInfo.id,
-          timestamp: authInfo.timestamp,
-          token: authInfo.token,
-        }),
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Comment-ID': authInfo.id,
+          'X-Comment-Token': authInfo.token,
+          'X-Comment-Timestamp': authInfo.timestamp.toString(),
+        },
       });
 
       if (response.ok) {
