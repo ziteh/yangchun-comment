@@ -1,9 +1,7 @@
 import { validator } from 'hono/validator';
 import { customAlphabet } from 'nanoid';
+import { CONSTANTS } from './const';
 import sanitizeHtml from 'sanitize-html';
-
-export const DELETED_MARKER = 'deleted';
-export const COMMENTS_KEY_PREFIX = 'comments:';
 
 export function sanitize(raw: unknown): string {
   if (typeof raw !== 'string') return '';
@@ -34,7 +32,7 @@ export function genId() {
 }
 
 export function getCommentKey(post: string) {
-  return `${COMMENTS_KEY_PREFIX}${post}`;
+  return `${CONSTANTS.commentsKeyPrefix}${post}`;
 }
 
 export const validateQueryPost = validator('query', (value, c) => {

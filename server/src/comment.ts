@@ -8,8 +8,8 @@ import {
   genHmac,
   verifyHmac,
   validatePostUrl,
-  DELETED_MARKER,
 } from './utils';
+import { DEF, CONSTANTS } from './const';
 import type { Comment } from '@ziteh/yangchun-comment-shared';
 
 const app = new Hono<{
@@ -54,8 +54,9 @@ app.post(
       return c.text('Missing or invalid msg field', 400);
     }
 
-    if (msg.length > c.env.MAX_MSG_LENGTH) {
-      return c.text(`Message is too long (maximum ${c.env.MAX_MSG_LENGTH} characters)`, 400);
+    const maxMsgLength = c.env.MAX_MSG_LENGTH || DEF.maxMsgLength;
+    if (msg.length > maxMsgLength) {
+      return c.text(`Message is too long (maximum ${maxMsgLength} characters)`, 400);
     }
 
     const cleanMsg = sanitize(msg);
@@ -63,15 +64,9 @@ app.post(
       return c.text('Message is invalid', 400);
     }
 
-    if (
-      pseudonym &&
-      typeof pseudonym === 'string' &&
-      pseudonym.length > c.env.MAX_PSEUDONYM_LENGTH
-    ) {
-      return c.text(
-        `Pseudonym is too long (maximum ${c.env.MAX_PSEUDONYM_LENGTH} characters)`,
-        400,
-      );
+    const maxPseudonymLength = c.env.MAX_PSEUDONYM_LENGTH || DEF.maxPseudonymLength;
+    if (pseudonym && typeof pseudonym === 'string' && pseudonym.length > maxPseudonymLength) {
+      return c.text(`Pseudonym is too long (maximum ${maxPseudonymLength} characters)`, 400);
     }
     const cleanPseudonym = pseudonym ? sanitize(pseudonym) : undefined;
     if (pseudonym && cleanPseudonym !== undefined && cleanPseudonym.length === 0) {
@@ -112,7 +107,7 @@ app.post(
     const rawComments = await c.env.COMMENTS.get(key);
     if (!rawComments) {
       // No comments yet for this post
-      const baseUrl = c.env.POST_BASE_URL || null;
+      const baseUrl = c.env.POST_BASE_URL || DEF.postBaseUrl;
       if (baseUrl) {
         // Validate the post URL if POST_BASE_URL is set
         const fullUrl = `${baseUrl}${post}`;
@@ -157,9 +152,10 @@ app.put('/', validateQueryPost, async (c) => {
     return c.text('Missing fields', 400); // 400 Bad Request
   }
 
-  if (msg.length > c.env.MAX_MSG_LENGTH) {
+  const maxMsgLength = c.env.MAX_MSG_LENGTH || DEF.maxMsgLength;
+  if (msg.length > maxMsgLength) {
     console.warn('Message too long for update:', msg.length);
-    return c.text(`Message is too long (maximum ${c.env.MAX_MSG_LENGTH} characters)`, 400);
+    return c.text(`Message is too long (maximum ${maxMsgLength} characters)`, 400);
   }
 
   const cleanMsg = sanitize(msg);
@@ -167,9 +163,10 @@ app.put('/', validateQueryPost, async (c) => {
     return c.text('Message is invalid', 400);
   }
 
-  if (pseudonym && typeof pseudonym === 'string' && pseudonym.length > c.env.MAX_PSEUDONYM_LENGTH) {
+  const maxPseudonymLength = c.env.MAX_PSEUDONYM_LENGTH || DEF.maxPseudonymLength;
+  if (pseudonym && typeof pseudonym === 'string' && pseudonym.length > maxPseudonymLength) {
     console.warn('Pseudonym too long for update:', pseudonym.length);
-    return c.text(`Pseudonym is too long (maximum ${c.env.MAX_PSEUDONYM_LENGTH} characters)`, 400);
+    return c.text(`Pseudonym is too long (maximum ${maxPseudonymLength} characters)`, 400);
   }
   const cleanPseudonym = pseudonym ? sanitize(pseudonym) : undefined;
   if (pseudonym && cleanPseudonym !== undefined && cleanPseudonym.length === 0) {
@@ -250,8 +247,8 @@ app.delete('/', validateQueryPost, async (c) => {
   // Mark it as deleted
   comments[index] = {
     ...comments[index],
-    pseudonym: DELETED_MARKER,
-    msg: DELETED_MARKER,
+    pseudonym: CONSTANTS.deletedMarker,
+    msg: CONSTANTS.deletedMarker,
     nameHash: undefined,
     email: undefined, // Currently not storing email
     modDate: Date.now(), // Update modification date

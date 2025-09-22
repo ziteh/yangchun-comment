@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 // import { validateQueryPost, getCommentKey } from './utils';
-import { DELETED_MARKER, COMMENTS_KEY_PREFIX } from './utils';
+import { DEF, CONSTANTS } from './const';
 import type { Comment } from '@ziteh/yangchun-comment-shared';
 
 interface CommentWithPost extends Comment {
@@ -19,16 +19,16 @@ const app = new Hono<{
 // RSS feed for all site comments
 app.get('/:site', async (c) => {
   const site = c.req.param('site');
-  const expectedSite = c.env.RSS_SITE_PATH || 'site';
+  const expectedSite = c.env.RSS_SITE_PATH || DEF.rssSitePath;
   if (site !== expectedSite) {
     return c.notFound();
   }
 
-  const siteUrl = c.env.FRONTEND_URL || 'https://example.com';
-  const maxComments = c.env.MAX_ALL_SITE_RSS_COMMENTS || 25;
+  const siteUrl = c.env.FRONTEND_URL || DEF.frontendUrl;
+  const maxComments = c.env.MAX_ALL_SITE_RSS_COMMENTS || DEF.maxAllSiteRssComments;
 
   // Get all comment keys from KV
-  const listResult = await c.env.COMMENTS.list({ prefix: COMMENTS_KEY_PREFIX });
+  const listResult = await c.env.COMMENTS.list({ prefix: CONSTANTS.commentsKeyPrefix });
   let latestComments: CommentWithPost[] = [];
 
   // Fetch comments from each key and maintain top N latest comments
@@ -37,11 +37,11 @@ app.get('/:site', async (c) => {
     if (raw === null) continue;
 
     const comments: Comment[] = JSON.parse(raw);
-    const post = key.name.replace(COMMENTS_KEY_PREFIX, '');
+    const post = key.name.replace(CONSTANTS.commentsKeyPrefix, '');
     const commentsWithPost: CommentWithPost[] = comments.map((comment) => ({ ...comment, post }));
     latestComments.push(...commentsWithPost);
 
-    // Sort by publication date (newest first) and keep only top 50
+    // Sort by publication date (newest first) and keep only top N
     latestComments.sort((a, b) => b.pubDate - a.pubDate);
     if (latestComments.length > maxComments) {
       latestComments = latestComments.slice(0, maxComments);
@@ -50,8 +50,11 @@ app.get('/:site', async (c) => {
 
   const rssItems = latestComments
     .map((comment) => {
-      if (comment.msg === DELETED_MARKER && comment.pseudonym === DELETED_MARKER) {
-        return ''; // Skip
+      if (
+        comment.msg === CONSTANTS.deletedMarker &&
+        comment.pseudonym === CONSTANTS.deletedMarker
+      ) {
+        return ''; // Skip deleted comments
       }
 
       const title = `${comment.pseudonym || 'Anonymous'} commented on ${comment.post}`;

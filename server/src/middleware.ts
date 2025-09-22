@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { hashFnv1a } from './utils';
+import { DEF } from './const';
 
 const app = new Hono<{
   Bindings: {
@@ -36,7 +37,7 @@ app.use('*', async (c, next) => {
 // CORS middleware
 app.use('*', async (c, next) => {
   const corsMiddleware = cors({
-    origin: c.env.CORS_ORIGIN || '*',
+    origin: c.env.CORS_ORIGIN || DEF.corsOrigin,
     allowHeaders: ['Content-Type', 'X-Comment-ID', 'X-Comment-Token', 'X-Comment-Timestamp'],
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     exposeHeaders: ['Content-Length'],

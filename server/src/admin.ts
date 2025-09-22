@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { sign } from 'hono/jwt';
+import { DEF } from './const';
 
 const app = new Hono<{
   Bindings: {
@@ -139,8 +140,8 @@ app.post('/login', async (c) => {
   const { username, password } = await c.req.json();
 
   // Get admin username and password from environment variables, use defaults if not set
-  const adminUsername = c.env.ADMIN_USERNAME || 'admin';
-  const adminPassword = c.env.ADMIN_PASSWORD || 'admin';
+  const adminUsername = c.env.ADMIN_USERNAME || DEF.adminUsername;
+  const adminPassword = c.env.ADMIN_PASSWORD || DEF.adminPassword;
 
   if (username !== adminUsername || password !== adminPassword) {
     return c.json({ error: 'Invalid username or password' }, 401);
