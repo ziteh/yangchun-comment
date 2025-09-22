@@ -2,7 +2,7 @@ import snarkdown from 'snarkdown';
 import { LitElement, html, nothing, type TemplateResult } from 'lit';
 import { property, state } from 'lit/decorators.js';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
-import type { Comment } from '@yangchun-comment/shared';
+import type { Comment } from '@ziteh/yangchun-comment-shared';
 import { createApiService } from './utils/apiService';
 import { createI18n, en, zhHant, type I18nStrings } from './utils/i18n';
 import { generatePseudonymAndHash } from './utils/pseudonym';

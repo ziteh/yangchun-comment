@@ -1,5 +1,5 @@
 ---
-import '@yangchun-comment/client/style.css';
+import '@ziteh/yangchun-comment-client/style.css';
 ---
 
 <div id="msw-comment-system">
@@ -71,7 +71,7 @@ import '@yangchun-comment/client/style.css';
 
     private async loadCommentComponent() {
       try {
-        await import('@yangchun-comment/client');
+        await import('@ziteh/yangchun-comment-client');
 
         if (this.containerEl) {
           this.containerEl.style.display = 'block'; // Show the comment container

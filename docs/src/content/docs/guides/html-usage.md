@@ -15,7 +15,10 @@ Here's how to use Yangchun Comment in a plain HTML page:
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Yangchun Comment Example</title>
     <!-- Include the component styles -->
-    <link rel="stylesheet" href="node_modules/@yangchun-comment/client/dist/yangchun-comment.css" />
+    <link
+      rel="stylesheet"
+      href="node_modules/@ziteh/yangchun-comment-client/dist/yangchun-comment.css"
+    />
   </head>
   <body>
     <h1>My Blog Post</h1>
@@ -28,7 +31,7 @@ Here's how to use Yangchun Comment in a plain HTML page:
     <!-- Include the JavaScript -->
     <script
       type="module"
-      src="node_modules/@yangchun-comment/client/dist/yangchun-comment.es.js"
+      src="node_modules/@ziteh/yangchun-comment-client/dist/yangchun-comment.es.js"
     ></script>
   </body>
 </html>
@@ -48,7 +51,7 @@ Once published to npm, you could also use it via CDN:
     <!-- Include from CDN -->
     <link
       rel="stylesheet"
-      href="https://unpkg.com/@yangchun-comment/client/dist/yangchun-comment.css"
+      href="https://unpkg.com/@ziteh/yangchun-comment-client/dist/yangchun-comment.css"
     />
   </head>
   <body>
@@ -62,7 +65,7 @@ Once published to npm, you could also use it via CDN:
     <!-- Include the JavaScript from CDN -->
     <script
       type="module"
-      src="https://unpkg.com/@yangchun-comment/client/dist/yangchun-comment.es.js"
+      src="https://unpkg.com/@ziteh/yangchun-comment-client/dist/yangchun-comment.es.js"
     ></script>
   </body>
 </html>
@@ -76,8 +79,8 @@ For React applications:
 import { useEffect } from 'react';
 
 // Import the component (this registers the custom element)
-import '@yangchun-comment/client';
-import '@yangchun-comment/client/style.css';
+import '@ziteh/yangchun-comment-client';
+import '@ziteh/yangchun-comment-client/style.css';
 
 declare global {
   namespace JSX {
@@ -129,8 +132,8 @@ import { onMounted } from 'vue';
 
 onMounted(() => {
   // Import the component (this registers the custom element)
-  import('@yangchun-comment/client');
-  import('@yangchun-comment/client/style.css');
+  import('@ziteh/yangchun-comment-client');
+  import('@ziteh/yangchun-comment-client/style.css');
 });
 </script>
 ```

@@ -1,5 +1,5 @@
 import { http, HttpResponse } from 'msw';
-import type { Comment } from '@yangchun-comment/shared';
+import type { Comment } from '@ziteh/yangchun-comment-shared';
 
 const msOfOneDay = 24 * 60 * 60 * 1000;
 const tokenPrefix = 'mock-token-';

@@ -1,4 +1,4 @@
-import type { Comment } from '@yangchun-comment/shared';
+import type { Comment } from '@ziteh/yangchun-comment-shared';
 
 export type CommentMap = Record<string, Comment>;
 

@@ -1,7 +1,7 @@
 import { env } from 'cloudflare:test';
 import { describe, it, expect, assert } from 'vitest';
 import app from '../src/comment';
-import { isComment } from '@yangchun-comment/shared';
+import { isComment } from '@ziteh/yangchun-comment-shared';
 
 describe('Comment', () => {
   it('New comment', async () => {

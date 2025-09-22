@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 // import { validateQueryPost, getCommentKey } from './utils';
 import { DELETED_MARKER, COMMENTS_KEY_PREFIX } from './utils';
-import type { Comment } from '@yangchun-comment/shared';
+import type { Comment } from '@ziteh/yangchun-comment-shared';
 
 interface CommentWithPost extends Comment {
   post: string;

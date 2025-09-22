@@ -1,5 +1,5 @@
 {
-  "name": "@yangchun-comment/docs",
+  "name": "@ziteh/yangchun-comment-docs",
   "version": "0.1.0",
   "type": "module",
   "private": true,
@@ -12,8 +12,8 @@
   },
   "dependencies": {
     "@astrojs/starlight": "^0.35.2",
-    "@yangchun-comment/client": "workspace:*",
-    "@yangchun-comment/shared": "workspace:*",
+    "@ziteh/yangchun-comment-client": "workspace:*",
+    "@ziteh/yangchun-comment-shared": "workspace:*",
     "astro": "^5.6.1",
     "sharp": "^0.34.2"
   },

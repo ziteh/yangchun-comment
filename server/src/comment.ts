@@ -10,7 +10,7 @@ import {
   validatePostUrl,
   DELETED_MARKER,
 } from './utils';
-import type { Comment } from '@yangchun-comment/shared';
+import type { Comment } from '@ziteh/yangchun-comment-shared';
 
 const app = new Hono<{
   Bindings: {

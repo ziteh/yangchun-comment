@@ -1,5 +1,5 @@
 import { html, type TemplateResult } from 'lit';
-import type { Comment } from '@yangchun-comment/shared';
+import type { Comment } from '@ziteh/yangchun-comment-shared';
 import type { CommentMap } from '../types';
 import type { YangchunCommentElement } from '../element';
 
