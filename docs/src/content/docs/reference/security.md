@@ -20,6 +20,8 @@ Currently, sanitization is performed on both the frontend and the backend.
 - Adds `loading="lazy"` to all `<img>` elements (performance optimization).
 - Allows only `http:` and `https:` URLs, removing unsafe protocols (e.g. `javascript:`).
 
+[source code](https://github.com/ziteh/yangchun-comment/blob/main/client/src/utils/sanitize.ts)
+
 ```ts
 import DOMPurify, { type Config as DomPurifyConfig } from 'dompurify';
 
@@ -86,6 +88,8 @@ export function sanitizeHtml(html: string) {
 ## sanitize-html
 
 - Strips all HTML, leaving only plain Markdown.
+
+[source code](https://github.com/ziteh/yangchun-comment/blob/main/server/src/utils.ts)
 
 ```ts
 export function sanitize(raw: unknown): string {
