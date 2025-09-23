@@ -145,7 +145,10 @@ app.post(
 // Update a comment
 app.put('/', validateQueryPost, async (c) => {
   const { post } = c.req.valid('query');
-  const { id, timestamp, token, pseudonym, nameHash, msg } = await c.req.json();
+  const { pseudonym, nameHash, msg } = await c.req.json();
+  const id = c.req.header('X-Comment-ID') || '';
+  const token = c.req.header('X-Comment-Token') || '';
+  const timestamp = parseInt(c.req.header('X-Comment-Timestamp') || '0');
 
   if (!msg || typeof msg !== 'string') {
     console.warn('Invalid message for update:', msg);

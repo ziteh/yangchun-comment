@@ -68,11 +68,13 @@ export const createApiService = (apiUrl: string) => {
 
       const response = await fetch(url, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Comment-ID': authInfo.id,
+          'X-Comment-Token': authInfo.token,
+          'X-Comment-Timestamp': authInfo.timestamp.toString(),
+        },
         body: JSON.stringify({
-          id: authInfo.id,
-          timestamp: authInfo.timestamp,
-          token: authInfo.token,
           pseudonym,
           nameHash,
           msg,
