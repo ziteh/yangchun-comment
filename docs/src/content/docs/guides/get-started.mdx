@@ -2,6 +2,8 @@
 title: Getting Started
 ---
 
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
 The frontend of this comment system uses [Lit](https://lit.dev/), while the backend uses [Hono](https://hono.dev/) and is designed to run on a [Cloudflare Worker](https://workers.cloudflare.com/).
 
 ✨ Feature:
@@ -24,20 +26,18 @@ In the future, considering using **Proof-of-Work** to prevent malicious traffic 
 
 </details>
 
-## 1. Git Clone
+## 1. Backend
 
 ```bash
+# Clone
 git clone https://github.com/ziteh/yangchun-comment.git
 cd yangchun-comment
+
+# Install dependencies and build
 pnpm install
 pnpm build
-```
 
-## 2. Backend
-
-Move into the `server` folder.
-
-```bash
+# Go to server folder
 cd server
 ```
 
@@ -120,17 +120,22 @@ pnpm exec wrangler secret put "ADMIN_PASSWORD"
 
 Once completed, you can test it by visiting `https://yangchun-comment-be.<YOUR_SUBDOMAIN>.workers.dev/rss/<RSS_SITE_PATH>`, which is an RSS feed and will return XML content. Note that the URL does **NOT** have a trailing slash.
 
-## 3. Frontend
+## 2. Frontend
 
 Install package:
 
+<Tabs syncKey="package-manager">
+  <TabItem label="pnpm">
 ```bash
-# npm
-npm i @ziteh/yangchun-comment-client
-
-# pnpm
-pnpm add @ziteh/yangchun-comment-client
+pnpm app @ziteh/yangchun-comment-client
 ```
+  </TabItem>
+  <TabItem label="npm">
+```bash
+npm i @ziteh/yangchun-comment-client
+```
+  </TabItem>
+</Tabs>
 
 Add to page:
 
