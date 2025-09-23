@@ -16,7 +16,6 @@ export default defineConfig({
           items: [
             { label: 'Getting Started', slug: 'guides/get-started' },
             { label: 'Development', slug: 'guides/development' },
-            { label: 'HTML Usage', slug: 'guides/html-usage' },
           ],
         },
         {

@@ -2,6 +2,8 @@
 title: Development
 ---
 
+🚧 Work in progress 🚧
+
 This project is a **monorepo** and uses [pnpm workspace](https://pnpm.io/workspaces).
 
 ## Common
