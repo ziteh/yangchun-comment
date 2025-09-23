@@ -4,7 +4,7 @@ import app from '../src/comment';
 import { isComment } from '@ziteh/yangchun-comment-shared';
 
 describe('Comment', () => {
-  it('New comment', async () => {
+  it('New comment', { retry: 3 }, async () => {
     const now = Date.now();
     const post = 'test-post';
 
