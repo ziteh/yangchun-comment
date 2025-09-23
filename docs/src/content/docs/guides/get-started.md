@@ -4,6 +4,28 @@ title: Getting Started
 
 The frontend of this comment system uses [Lit](https://lit.dev/), while the backend uses [Hono](https://hono.dev/) and is designed to run on a [Cloudflare Worker](https://workers.cloudflare.com/).
 
+✨ Feature:
+
+- No login
+- No cookie
+- No fingerprinting\*
+
+<details>
+<summary>About the fingerprinting</summary>
+
+Currently, a **hashed IP** address is used as the key for rate limiting on the backend. It offers a degree of identifiability and traceability, but it is still a little different from browser fingerprinting.
+
+1. people on public networks (like those in cafes, companies, or libraries) may share the same IP.
+2. a single person might have different IP addresses due to their ISP's dynamic IP allocation.
+
+Therefore, an IP address cannot truly and uniquely identify a specific user.
+
+In the future, considering using **Proof-of-Work** to prevent malicious traffic and completely avoid hashed IP.
+
+</details>
+
+## 1. Git Clone
+
 ```bash
 git clone https://github.com/ziteh/yangchun-comment.git
 cd yangchun-comment
@@ -11,7 +33,7 @@ pnpm install
 pnpm build
 ```
 
-## Backend
+## 2. Backend
 
 Move into the `server` folder.
 
@@ -98,7 +120,7 @@ pnpm exec wrangler secret put "ADMIN_PASSWORD"
 
 Once completed, you can test it by visiting `https://yangchun-comment-be.<YOUR_SUBDOMAIN>.workers.dev/rss/<RSS_SITE_PATH>`, which is an RSS feed and will return XML content. Note that the URL does **NOT** have a trailing slash.
 
-## Frontend
+## 3. Frontend
 
 Install package:
 
