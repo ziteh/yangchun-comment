@@ -1,8 +1,15 @@
 {
   "name": "@ziteh/yangchun-comment-client",
   "version": "0.1.0",
+  "description": "A simple and private comment system.",
   "type": "module",
   "private": false,
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ziteh/yangchun-comment.git"
+  },
+  "homepage": "https://github.com/ziteh/yangchun-comment#readme",
   "main": "./dist/yangchun-comment.umd.js",
   "module": "./dist/yangchun-comment.es.js",
   "types": "./dist/index.d.ts",
