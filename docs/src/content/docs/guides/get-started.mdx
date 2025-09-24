@@ -4,26 +4,23 @@ title: Getting Started
 
 import { Tabs, TabItem } from '@astrojs/starlight/components';
 
-The frontend of this comment system uses [Lit](https://lit.dev/), while the backend uses [Hono](https://hono.dev/) and is designed to run on a [Cloudflare Worker](https://workers.cloudflare.com/).
+**Yang Chun** (陽春 — meaning “simple and unadorned”) Comment is a lightweight, privacy-first commenting system built with [Lit](https://lit.dev/) and [Hono](https://hono.dev/), designed to run on [Cloudflare Workers](https://workers.cloudflare.com/). No registration required and no personal data is stored—ideal for small sites and blogs.
 
-✨ Feature:
+✨ Features:
 
 - No login
-- No cookie
-- No fingerprinting\*
+- No cookies
+- No personal data collection
+- No browser fingerprinting*
 
 <details>
-<summary>About the fingerprinting</summary>
-
-Currently, a **hashed IP** address is used as the key for rate limiting on the backend. It offers a degree of identifiability and traceability, but it is still a little different from browser fingerprinting.
-
-1. people on public networks (like those in cafes, companies, or libraries) may share the same IP.
-2. a single person might have different IP addresses due to their ISP's dynamic IP allocation.
-
-Therefore, an IP address cannot truly and uniquely identify a specific user.
-
-In the future, considering using **Proof-of-Work** to prevent malicious traffic and completely avoid hashed IP.
-
+<summary>About fingerprinting</summary>
+  Currently we use a **hashed IP** for backend rate limiting. This provides partial identifiability but is not equivalent to full browser fingerprinting:
+  
+  1. Multiple users on public networks can share the same IP.
+  2. A single user may have different IPs due to ISP dynamic addressing.
+  
+  An IP cannot uniquely identify a person. In the future we may consider a Proof-of-Work approach to reduce malicious traffic while avoiding hashed IPs.
 </details>
 
 ## 1. Backend
@@ -37,17 +34,17 @@ cd yangchun-comment
 pnpm install
 pnpm build
 
-# Go to server folder
+# Move to server folder
 cd server
 ```
 
-Create a new [KV][cf-kv] namespace, all comments data will be stored here.
+Create a [KV][cf-kv] namespace (comments data stored here):
 
 ```bash
 pnpm exec wrangler kv namespace create "yangchun-comment-kv"
 ```
 
-and it will return the access `id`:
+Example response (you'll get an `id` to copy):
 
 ```bash "506ac68ae906458692g22933d3896af3"
 ...
@@ -60,38 +57,37 @@ binding = "yangchun_comment_kv"
 id = "506ac68ae906458692g22933d3896af3"
 ```
 
-Modify the `wrangler.toml` config file and replace with actual `id` value. If necessary, you can adjust the value of the `[vars]` area.
+Update your `wrangler.toml` and replace the `id` value with the one returned above:
 
-```toml "506ac68ae906458692g22933d3896af3"
+```toml frame="auto" "506ac68ae906458692g22933d3896af3"
 # wrangler.toml
 
 ...
 
 [[kv_namespaces]]
 binding = "COMMENTS"
-id = "506ac68ae906458692g22933d3896af3"
+id = "506ac68ae906458692g22933d3896af3" # Replace with your KV ID
 
 ...
 
+# You may modify these values as needed
 [vars]
 FRONTEND_URL = "https://your-frontend-url.com"  # Frontend URL
-CORS_ORIGIN = "*"          # CORS origin, use "*" to allow all origins
-RSS_SITE_PATH = "site"     # The path for the all-site RSS feed
-ADMIN_USERNAME = "admin"   # Admin username
-MAX_MSG_LENGTH = 1000            # The max length of the comment message in characters
-MAX_PSEUDONYM_LENGTH = 80        # The max length of the pseudonym in characters
-MAX_ALL_SITE_RSS_COMMENTS = 25   # The max number of comments in the all-site RSS feed
-
-...
+CORS_ORIGIN = "*"               # CORS origin, use "*" to allow all origins
+RSS_SITE_PATH = "site"          # The path for the all-site RSS feed
+ADMIN_USERNAME = "admin"        # Admin username
+MAX_MSG_LENGTH = 1000           # The max length of the comment message in characters
+MAX_PSEUDONYM_LENGTH = 80       # The max length of the pseudonym in characters
+MAX_ALL_SITE_RSS_COMMENTS = 25  # The max number of comments in the all-site RSS feed
 ```
 
-Deploy to Cloudflare Workers.
+Deploy to Cloudflare Workers:
 
 ```bash
 pnpm run deploy
 ```
 
-and it will return the API endpoint URL:
+You should see an endpoint like:
 
 ```bash "https://yangchun-comment-be.<YOUR_SUBDOMAIN>.workers.dev"
 ...
@@ -107,14 +103,13 @@ Update [Secrets][cf-secret]. You need to set a security key for `HMAC_SECRET_KEY
 Use the `wrangler secret put` to set the secret, which will start the interactive operation and prompt you to enter the value.
 
 ```bash
+# HMAC secret key
 pnpm exec wrangler secret put "HMAC_SECRET_KEY"
-```
 
-```bash
+# Admin JWT signature key
 pnpm exec wrangler secret put "ADMIN_SECRET_KEY"
-```
 
-```bash
+# Admin login password
 pnpm exec wrangler secret put "ADMIN_PASSWORD"
 ```
 
@@ -122,12 +117,12 @@ Once completed, you can test it by visiting `https://yangchun-comment-be.<YOUR_S
 
 ## 2. Frontend
 
-Install package:
+Install the client package.
 
 <Tabs syncKey="package-manager">
   <TabItem label="pnpm">
 ```bash
-pnpm app @ziteh/yangchun-comment-client
+pnpm add @ziteh/yangchun-comment-client
 ```
   </TabItem>
   <TabItem label="npm">
@@ -137,14 +132,14 @@ npm i @ziteh/yangchun-comment-client
   </TabItem>
 </Tabs>
 
-Add to page:
+Add to your project:
 
 ```tsx
-// React
+// React example
 
 import { useEffect, useRef } from 'react';
-import '@yangchun-comment/client';
-import '@yangchun-comment/client/style.css';
+import '@ziteh/yangchun-comment-client';
+import '@ziteh/yangchun-comment-client/style.css';
 
 const API_URL = 'https://yangchun-comment-be.<YOUR_SUBDOMAIN>.workers.dev';
 

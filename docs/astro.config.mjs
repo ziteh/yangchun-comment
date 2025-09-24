@@ -53,6 +53,7 @@ export default defineConfig({
         themes: ['one-dark-pro', 'catppuccin-latte'],
         defaultProps: {
           wrap: false,
+          frame: 'none',
         },
         styleOverrides: {
           codeFontFamily:
