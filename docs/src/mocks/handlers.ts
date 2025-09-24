@@ -101,22 +101,30 @@ export const handlers = [
 
   http.put('*/api/comments', async ({ request }) => {
     try {
+      const id = request.headers.get('x-comment-id') || request.headers.get('X-Comment-ID');
+      const token =
+        request.headers.get('x-comment-token') || request.headers.get('X-Comment-Token') || '';
+      const tsHeader =
+        request.headers.get('x-comment-timestamp') || request.headers.get('X-Comment-Timestamp');
+      const timestamp = tsHeader ? parseInt(tsHeader, 10) : NaN;
+
       const body = (await request.json()) as {
-        id: string;
-        timestamp: number;
-        token: string;
         pseudonym: string;
         nameHash: string;
         msg: string;
       };
 
-      console.debug('MSW: PUT:', body);
+      console.debug('MSW: PUT:', { id, token, timestamp, body });
 
-      if (!body.token.startsWith(tokenPrefix)) {
+      if (!token || !token.startsWith(tokenPrefix)) {
         return HttpResponse.json({ error: 'Invalid token' }, { status: 401 });
       }
 
-      const commentIndex = commentStorage.findIndex((c) => c.id === body.id);
+      if (!id) {
+        return HttpResponse.json({ error: 'Missing comment id' }, { status: 400 });
+      }
+
+      const commentIndex = commentStorage.findIndex((c) => c.id === id);
       if (commentIndex === -1) {
         return HttpResponse.json({ error: 'Comment not found' }, { status: 404 });
       }
@@ -138,19 +146,21 @@ export const handlers = [
 
   http.delete('*/api/comments', async ({ request }) => {
     try {
-      const body = (await request.json()) as {
-        id: string;
-        timestamp: number;
-        token: string;
-      };
+      const id = request.headers.get('x-comment-id') || request.headers.get('X-Comment-ID');
+      const token =
+        request.headers.get('x-comment-token') || request.headers.get('X-Comment-Token') || '';
 
-      console.debug('MSW: DELETE:', body);
+      console.debug('MSW: DELETE:', { id, token });
 
-      if (!body.token.startsWith(tokenPrefix)) {
+      if (!token || !token.startsWith(tokenPrefix)) {
         return HttpResponse.json({ error: 'Invalid token' }, { status: 401 });
       }
 
-      const commentIndex = commentStorage.findIndex((c) => c.id === body.id);
+      if (!id) {
+        return HttpResponse.json({ error: 'Missing comment id' }, { status: 400 });
+      }
+
+      const commentIndex = commentStorage.findIndex((c) => c.id === id);
       if (commentIndex === -1) {
         return HttpResponse.json({ error: 'Comment not found' }, { status: 404 });
       }
