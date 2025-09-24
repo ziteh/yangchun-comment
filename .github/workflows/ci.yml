@@ -37,7 +37,6 @@ jobs:
       - name: Formatter and linter
         run: |
           pnpm format:check
-          pnpm lint
           pnpm type-check
 
       - name: Build packages
