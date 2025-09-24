@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "pnpm build:shared && pnpm --parallel --recursive dev",
-    "build": "pnpm build:shared && pnpm --filter @ziteh/yangchun-comment-client build && pnpm --filter @ziteh/yangchun-comment-server build",
+    "build": "pnpm build:shared && pnpm --filter @ziteh/yangchun-comment-client build && pnpm --filter @ziteh/yangchun-comment-server build && pnpm --filter @ziteh/yangchun-comment-docs build",
     "build:shared": "pnpm --filter @ziteh/yangchun-comment-shared build",
     "build:client": "pnpm --filter @ziteh/yangchun-comment-client build",
     "build:server": "pnpm --filter @ziteh/yangchun-comment-server build",
