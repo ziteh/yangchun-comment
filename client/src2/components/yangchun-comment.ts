@@ -8,8 +8,6 @@ import './list/comment-list';
 @customElement('yangchun-comment')
 export class YangChunComment extends LitElement {
   static styles = yangChunCommentStyles;
-  static readonly MAX_NAME_LENGTH: number = 25;
-  static readonly MAX_MESSAGE_LENGTH: number = 1000;
 
   @state() private accessor draft = '';
   @state() private accessor nickname = '';
@@ -35,11 +33,11 @@ export class YangChunComment extends LitElement {
   }
 
   private onDraftChange(e: CustomEvent<string>) {
-    this.draft = e.detail.slice(0, YangChunComment.MAX_MESSAGE_LENGTH);
+    this.draft = e.detail.trim();
   }
 
   private onNicknameChange(e: CustomEvent<string>) {
-    this.nickname = e.detail.slice(0, YangChunComment.MAX_NAME_LENGTH);
+    this.nickname = e.detail.trim();
   }
 
   private onDraftSubmit() {

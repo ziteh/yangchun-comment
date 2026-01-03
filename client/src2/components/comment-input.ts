@@ -3,6 +3,8 @@ import { customElement, state } from 'lit/decorators.js';
 
 @customElement('comment-input')
 export class CommentInput extends LitElement {
+  static readonly MAX_NICKNAME_LENGTH: number = 25;
+  static readonly MAX_MESSAGE_LENGTH: number = 1000;
   static properties = {
     message: { type: String },
     nickname: { type: String },
@@ -30,11 +32,20 @@ export class CommentInput extends LitElement {
             />
           </div>`}
 
-      <button @click=${this.togglePreview} ?disabled=${this.message.trim().length === 0}>
+      <button @click=${this.togglePreview} ?disabled=${!this.isValidComment()}>
         ${this.isPreview ? 'Edit' : 'Preview'}
       </button>
-      <button @click=${this.onSubmit} ?disabled=${this.message.trim().length === 0}>Submit</button>
+      <button @click=${this.onSubmit} ?disabled=${!this.isValidComment()}>Submit</button>
     `;
+  }
+
+  private isValidComment(): boolean {
+    const msgLength = this.message.trim().length;
+    const nicknameLength = this.nickname.trim().length;
+
+    const isValidMessage = msgLength > 0 && msgLength <= CommentInput.MAX_MESSAGE_LENGTH;
+    const isValidNickname = nicknameLength <= CommentInput.MAX_NICKNAME_LENGTH;
+    return isValidMessage && isValidNickname;
   }
 
   private togglePreview() {
@@ -45,7 +56,7 @@ export class CommentInput extends LitElement {
     const target = e.target as HTMLTextAreaElement;
     this.dispatchEvent(
       new CustomEvent('comment-change', {
-        detail: target.value,
+        detail: target.value.slice(0, CommentInput.MAX_MESSAGE_LENGTH),
         bubbles: true,
         composed: true,
       }),
@@ -56,7 +67,7 @@ export class CommentInput extends LitElement {
     const target = e.target as HTMLInputElement;
     this.dispatchEvent(
       new CustomEvent('nickname-change', {
-        detail: target.value,
+        detail: target.value.slice(0, CommentInput.MAX_NICKNAME_LENGTH),
         bubbles: true,
         composed: true,
       }),
