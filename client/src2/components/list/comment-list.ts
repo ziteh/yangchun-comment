@@ -10,6 +10,21 @@ export class CommentList extends LitElement {
   };
   comments: Comment[] = [];
 
+  testSubComments: Comment[] = [
+    {
+      id: 'sub1',
+      msg: 'This is a sub-comment.',
+      pubDate: Date.now(),
+      replyTo: 'sub0',
+    },
+    {
+      id: 'sub2',
+      msg: 'This is another sub-comment.',
+      pubDate: Date.now(),
+      replyTo: 'sub0',
+    },
+  ];
+
   render() {
     return html`
       <div>
@@ -17,6 +32,7 @@ export class CommentList extends LitElement {
           (comment) => html`
             <comment-list-item
               .comment=${comment}
+              .replyComments=${this.testSubComments}
               @comment-reply=${this.onReply}
             ></comment-list-item>
           `,
