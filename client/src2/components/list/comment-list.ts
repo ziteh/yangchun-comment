@@ -11,11 +11,18 @@ export class CommentList extends LitElement {
   comments: Comment[] = [];
 
   render() {
-    return html`${this.comments.map(
-      (comment) => html`
-        <comment-list-item .comment=${comment} @comment-reply=${this.onReply}></comment-list-item>
-      `,
-    )}`;
+    return html`
+      <div>
+        ${this.comments.map(
+          (comment) => html`
+            <comment-list-item
+              .comment=${comment}
+              @comment-reply=${this.onReply}
+            ></comment-list-item>
+          `,
+        )}
+      </div>
+    `;
   }
 
   private onReply(e: CustomEvent<string>) {

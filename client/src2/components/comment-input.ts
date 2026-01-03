@@ -16,26 +16,28 @@ export class CommentInput extends LitElement {
 
   render() {
     return html`
-      ${this.isPreview
-        ? html`<div>${this.message}</div>`
-        : html`<div>
-            <textarea
-              .value=${this.message}
-              @input=${this.onInputMessage}
-              placeholder="Write a comment..."
-            ></textarea>
-            <input
-              .value=${this.nickname}
-              @input=${this.onInputNickname}
-              type="text"
-              placeholder="Nickname"
-            />
-          </div>`}
+      <div>
+        ${this.isPreview
+          ? html`<div>${this.message}</div>`
+          : html`<div>
+              <textarea
+                .value=${this.message}
+                @input=${this.onInputMessage}
+                placeholder="Write a comment..."
+              ></textarea>
+              <input
+                .value=${this.nickname}
+                @input=${this.onInputNickname}
+                type="text"
+                placeholder="Nickname"
+              />
+            </div>`}
 
-      <button @click=${this.togglePreview} ?disabled=${!this.isValidComment()}>
-        ${this.isPreview ? 'Edit' : 'Preview'}
-      </button>
-      <button @click=${this.onSubmit} ?disabled=${!this.isValidComment()}>Submit</button>
+        <button @click=${this.togglePreview} ?disabled=${!this.isValidComment()}>
+          ${this.isPreview ? 'Edit' : 'Preview'}
+        </button>
+        <button @click=${this.onSubmit} ?disabled=${!this.isValidComment()}>Submit</button>
+      </div>
     `;
   }
 
