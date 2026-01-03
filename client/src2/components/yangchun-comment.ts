@@ -3,6 +3,7 @@ import { customElement, state } from 'lit/decorators.js';
 import { yangChunCommentStyles } from './yangchun-comment.styles';
 import type { Comment } from '@ziteh/yangchun-comment-shared';
 import './comment-input';
+import './comment-info';
 import './list/comment-list';
 
 @customElement('yangchun-comment')
@@ -74,6 +75,7 @@ export class YangChunComment extends LitElement {
           @nickname-change=${this.onNicknameChange}
           @comment-submit=${this.onDraftSubmit}
         ></comment-input>
+        <comment-info></comment-info>
         <comment-list
           .comments=${this.comments}
           @comment-reply=${this.onReplyToComment}
