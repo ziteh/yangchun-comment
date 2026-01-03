@@ -12,6 +12,7 @@ export class YangChunComment extends LitElement {
   static readonly MAX_MESSAGE_LENGTH: number = 1000;
 
   @state() private accessor draft = '';
+  @state() private accessor nickname = '';
   @state() private accessor comments: Comment[] = [];
 
   render() {
@@ -19,8 +20,10 @@ export class YangChunComment extends LitElement {
       <div class="root" part="root">
         <!-- <slot></slot> -->
         <comment-input
-          .value=${this.draft}
+          .message=${this.draft}
+          .nickname=${this.nickname}
           @comment-change=${this.onDraftChange}
+          @nickname-change=${this.onNicknameChange}
           @comment-submit=${this.onDraftSubmit}
         ></comment-input>
         <comment-list
@@ -35,12 +38,17 @@ export class YangChunComment extends LitElement {
     this.draft = e.detail.slice(0, YangChunComment.MAX_MESSAGE_LENGTH);
   }
 
+  private onNicknameChange(e: CustomEvent<string>) {
+    this.nickname = e.detail.slice(0, YangChunComment.MAX_NAME_LENGTH);
+  }
+
   private onDraftSubmit() {
     if (this.draft.trim().length === 0) return;
 
     const newComment: Comment = {
       id: crypto.randomUUID(),
       msg: this.draft.trim(),
+      pseudonym: this.nickname,
       pubDate: Date.now(),
     };
 
