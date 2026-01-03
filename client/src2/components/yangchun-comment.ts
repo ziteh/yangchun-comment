@@ -1,6 +1,7 @@
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { yangChunCommentStyles } from './yangchun-comment.styles';
+import type { Comment } from '@ziteh/yangchun-comment-shared';
 import './comment-input';
 import './list/comment-list';
 
@@ -11,7 +12,7 @@ export class YangChunComment extends LitElement {
   static readonly MAX_MESSAGE_LENGTH: number = 1000;
 
   @state() private accessor draft = '';
-  @state() private accessor comments: string[] = [];
+  @state() private accessor comments: Comment[] = [];
 
   render() {
     return html`
@@ -22,7 +23,7 @@ export class YangChunComment extends LitElement {
           @comment-change=${this.onDraftChange}
           @comment-submit=${this.onDraftSubmit}
         ></comment-input>
-        <comment-list .value=${this.comments}></comment-list>
+        <comment-list .comments=${this.comments}></comment-list>
         <slot></slot>
       </div>
     `;
@@ -35,7 +36,13 @@ export class YangChunComment extends LitElement {
   private onDraftSubmit() {
     if (this.draft.trim().length === 0) return;
 
-    this.comments = [...this.comments, this.draft.trim()];
+    const newComment: Comment = {
+      id: crypto.randomUUID(),
+      msg: this.draft.trim(),
+      pubDate: Date.now(),
+    };
+
+    this.comments = [...this.comments, newComment];
     this.draft = '';
   }
 }
