@@ -12,7 +12,20 @@ export class CommentList extends LitElement {
 
   render() {
     return html`${this.comments.map(
-      (comment) => html`<comment-list-item .comment=${comment}></comment-list-item>`,
+      (comment) => html`
+        <comment-list-item .comment=${comment} @comment-reply=${this.onReply}></comment-list-item>
+      `,
     )}`;
+  }
+
+  private onReply(e: CustomEvent<string>) {
+    const replyToId = e.detail;
+    this.dispatchEvent(
+      new CustomEvent('comment-reply', {
+        detail: replyToId,
+        bubbles: true,
+        composed: true,
+      }),
+    );
   }
 }

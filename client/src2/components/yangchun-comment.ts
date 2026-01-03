@@ -23,7 +23,10 @@ export class YangChunComment extends LitElement {
           @comment-change=${this.onDraftChange}
           @comment-submit=${this.onDraftSubmit}
         ></comment-input>
-        <comment-list .comments=${this.comments}></comment-list>
+        <comment-list
+          .comments=${this.comments}
+          @comment-reply=${this.onReplyToComment}
+        ></comment-list>
         <slot></slot>
       </div>
     `;
@@ -44,6 +47,10 @@ export class YangChunComment extends LitElement {
 
     this.comments = [...this.comments, newComment];
     this.draft = '';
+  }
+
+  private onReplyToComment(e: CustomEvent<string>) {
+    console.debug('Reply to comment ID:', e.detail);
   }
 }
 
