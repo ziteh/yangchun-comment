@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Yangchun Comment</title>
+    <script type="module" src="/src2/components/yangchun-comment.ts"></script>
   </head>
   <body>
     <article>
@@ -17,37 +18,8 @@
       </p>
     </article>
 
-    <div id="ycc-app"></div>
-
-    <!-- Development -->
-    <script type="module">
-      import { initYangchunComment } from '/src/index.ts';
-
-      const commentApp = initYangchunComment('ycc-app', {
-        post: '/blog/my-post',
-        apiUrl: 'http://localhost:8787/',
-        authorName: 'Test Author',
-        // language: 'zh-Hant',
-      });
-    </script>
-
-    <!-- Production ESM -->
-    <!-- <script type="module">
-      import { initYangchunComment } from '/yangchun-comment.es.js';
-
-      initYangchunComment('ycc-app', {
-        post: window.location.pathname,
-        apiUrl: 'https://your-api-url.com/',
-      });
-    </script> -->
-
-    <!-- Production UMD -->
-    <!-- <script src="/yangchun-comment.umd.js"></script>
-    <script>
-      window.YangchunComment.default('ycc-app', {
-        post: window.location.pathname,
-        apiUrl: 'https://your-api-url.com/',
-      });
-    </script> -->
+    <yangchun-comment>
+      <h1>Hello</h1>
+    </yangchun-comment>
   </body>
 </html>
