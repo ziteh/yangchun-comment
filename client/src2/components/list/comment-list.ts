@@ -2,6 +2,7 @@ import { LitElement, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import type { Comment } from '@ziteh/yangchun-comment-shared';
 import './comment-list-item';
+import { sortCommentsByDate, filterRootComments, findReplyComments } from '../../utils/comment';
 
 @customElement('comment-list')
 export class CommentList extends LitElement {
@@ -28,11 +29,14 @@ export class CommentList extends LitElement {
   render() {
     return html`
       <div>
-        ${this.comments.map(
+        ${sortCommentsByDate(filterRootComments(this.comments), true).map(
           (comment) => html`
             <comment-list-item
               .comment=${comment}
-              .replyComments=${this.testSubComments}
+              .replyComments=${sortCommentsByDate(
+                findReplyComments(this.comments, comment.id),
+                false,
+              )}
               @comment-reply=${this.onReply}
             ></comment-list-item>
           `,
