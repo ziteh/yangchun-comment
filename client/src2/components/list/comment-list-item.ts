@@ -21,7 +21,7 @@ export class CommentListItem extends LitElement {
   render() {
     return html`
       <div>
-        <div class=${this.comment.replyTo ? 'reply-comment' : 'root-comment'}>
+        <div class=${this.comment.replyTo ? 'reply-comment' : 'root-comment'} id=${this.comment.id}>
           <strong>${this.comment.pseudonym ?? '?'}</strong>
           <span> at ${new Date(this.comment.pubDate).toLocaleString()}</span>
           <p>${this.comment.msg ?? ''}</p>
