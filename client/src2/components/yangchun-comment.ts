@@ -17,7 +17,7 @@ export class YangChunComment extends LitElement {
   render() {
     return html`
       <div class="root" part="root">
-        <h1>Comment</h1>
+        <!-- <slot></slot> -->
         <comment-input
           .value=${this.draft}
           @comment-change=${this.onDraftChange}
@@ -27,7 +27,6 @@ export class YangChunComment extends LitElement {
           .comments=${this.comments}
           @comment-reply=${this.onReplyToComment}
         ></comment-list>
-        <slot></slot>
       </div>
     `;
   }
