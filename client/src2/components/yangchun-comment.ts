@@ -197,6 +197,9 @@ export class YangChunComment extends LitElement {
       this.referenceComment = null;
       return;
     }
+    if (!this.isReply) {
+      this.draft = ''; // If was editing, cancel editing first
+    }
     this.referenceComment = refComment;
     this.isReply = true;
   }
