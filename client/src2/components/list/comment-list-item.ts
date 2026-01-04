@@ -13,14 +13,14 @@ export class CommentListItem extends LitElement {
         margin-bottom: var(--ycc-spacing-s);
       }
       .comment-box {
-        padding: var(--ycc-spacing-m);
+        padding: var(--ycc-spacing-s);
         // border: 1px solid var(--ycc-border-color);
         // border-radius: var(--ycc-radius);
         border: none;
         background-color: var(--ycc-bg-color);
       }
       .reply-comment .comment-box {
-        background-color: var(--ycc-bg-secondary);
+        // background-color: var(--ycc-bg-secondary);
       }
       .header {
         display: flex;
@@ -36,9 +36,10 @@ export class CommentListItem extends LitElement {
         font-size: 1.1em;
       }
       .content {
-        margin: 0 0 var(--ycc-spacing-s) 0;
+        margin: 0;
         line-height: 1.6;
         white-space: pre-wrap;
+        word-break: break-word;
       }
       .actions {
         display: flex;
@@ -46,9 +47,9 @@ export class CommentListItem extends LitElement {
       }
       .reply-comments {
         margin-left: var(--ycc-spacing-l);
-        margin-top: var(--ycc-spacing-s);
+        // margin-top: var(--ycc-spacing-s);
         padding-left: var(--ycc-spacing-s);
-        border-left: 2px solid var(--ycc-border-color);
+        border-left: 4px solid var(--ycc-border-color);
       }
     `,
   ];

@@ -10,40 +10,47 @@ export const createMockApiService = (): ApiService => {
       [
         // test
         {
+          pseudonym: 'Alice',
           id: 'a0',
           msg: 'a0',
           pubDate: date,
         },
         {
+          pseudonym: 'Alice',
           id: 'a1',
           msg: 'a1',
           pubDate: date + 1000,
           replyTo: 'a0',
         },
         {
+          pseudonym: 'Alice',
           id: 'b0',
           msg: 'b0',
           pubDate: date + 2000,
         },
         {
+          pseudonym: 'Alice',
           id: 'b1',
           msg: 'b1',
           pubDate: date + 3000,
           replyTo: 'b0',
         },
         {
+          pseudonym: 'Alice',
           id: 'b2',
           msg: 'b2',
           pubDate: date + 4000,
           replyTo: 'b0',
         },
         {
+          pseudonym: 'Alice',
           id: 'b21',
           msg: 'b21',
           pubDate: date + 6000,
           replyTo: 'b2',
         },
         {
+          pseudonym: 'Alice',
           id: 'b22',
           msg: 'b22',
           pubDate: date + 6000,
