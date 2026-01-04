@@ -71,8 +71,8 @@ export class CommentListItem extends LitElement {
   static properties = {
     comment: { type: Object },
     replyComments: { type: Array },
-    badge: { type: String },
-    canEditCallback: { type: Function },
+    author: { type: String },
+    canEditCallback: { type: Function }, // TODO: rename refactor
   };
   comment: Comment = {
     id: '',
@@ -80,7 +80,7 @@ export class CommentListItem extends LitElement {
     pubDate: 0,
   };
   replyComments: Comment[] = [];
-  badge: 'author' | 'me' | '' = 'author'; // TODO: default
+  author = 'Author'; // TODO: default
   canEditCallback: (commentId: string) => boolean = () => false;
 
   render() {
@@ -89,9 +89,14 @@ export class CommentListItem extends LitElement {
         <div class="comment-box" id=${this.comment.id}>
           <div class="header">
             <span class="author">${this.comment.pseudonym ?? '?'}</span>
-            ${this.badge
-              ? html`<span class="badge">${this.badge === 'author' ? 'Author' : 'Me'}</span>`
-              : null}
+            ${(() => {
+              if (this.comment.isAdmin) {
+                return html`<span class="badge">${this.author ? this.author : 'Author'}</span>`;
+              } else if (this.canEditCallback(this.comment.id)) {
+                return html`<span class="badge">Me</span>`;
+              }
+              return null;
+            })()}
             <span class="date">${new Date(this.comment.pubDate).toLocaleString()}</span>
           </div>
           <p class="content">${this.renderMarkdown(this.comment.msg)}</p>
@@ -112,7 +117,12 @@ export class CommentListItem extends LitElement {
 
         <div class="reply-comments">
           ${this.replyComments.map(
-            (cmt) => html` <comment-list-item .comment=${cmt}></comment-list-item> `,
+            (cmt) => html`
+              <comment-list-item
+                .comment=${cmt}
+                .canEditCallback=${this.canEditCallback}
+              ></comment-list-item>
+            `,
           )}
         </div>
       </div>
