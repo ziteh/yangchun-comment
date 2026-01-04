@@ -35,6 +35,16 @@ export class CommentListItem extends LitElement {
         color: var(--ycc-text-color);
         font-size: 1.1em;
       }
+      .badge {
+        background-color: var(--ycc-primary-color);
+        color: var(--ycc-bg-color);
+        border-radius: var(--ycc-radius);
+        padding: 2px var(--ycc-spacing-xs);
+        font-size: 0.8em;
+      }
+      .date {
+        // font-style: italic;
+      }
       .content {
         margin: 0;
         line-height: 1.6;
@@ -58,6 +68,7 @@ export class CommentListItem extends LitElement {
   static properties = {
     comment: { type: Object },
     replyComments: { type: Array },
+    badge: { type: String },
   };
   comment: Comment = {
     id: '',
@@ -65,6 +76,7 @@ export class CommentListItem extends LitElement {
     pubDate: 0,
   };
   replyComments: Comment[] = [];
+  badge: 'author' | 'me' | '' = 'author'; // TODO: default
 
   render() {
     return html`
@@ -72,6 +84,9 @@ export class CommentListItem extends LitElement {
         <div class="comment-box" id=${this.comment.id}>
           <div class="header">
             <span class="author">${this.comment.pseudonym ?? '?'}</span>
+            ${this.badge
+              ? html`<span class="badge">${this.badge === 'author' ? 'Author' : 'Me'}</span>`
+              : null}
             <span class="date">${new Date(this.comment.pubDate).toLocaleString()}</span>
           </div>
           <p class="content">${this.comment.msg ?? ''}</p>
