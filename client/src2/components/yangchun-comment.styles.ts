@@ -101,6 +101,5 @@ export const yangChunCommentStyles = css`
   textarea:focus {
     outline: none;
     border-color: var(--ycc-primary-color);
-    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
   }
 `;

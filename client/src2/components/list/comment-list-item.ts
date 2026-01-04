@@ -14,8 +14,9 @@ export class CommentListItem extends LitElement {
       }
       .comment-box {
         padding: var(--ycc-spacing-m);
-        border: 1px solid var(--ycc-border-color);
-        border-radius: var(--ycc-radius);
+        // border: 1px solid var(--ycc-border-color);
+        // border-radius: var(--ycc-radius);
+        border: none;
         background-color: var(--ycc-bg-color);
       }
       .reply-comment .comment-box {

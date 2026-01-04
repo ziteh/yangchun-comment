@@ -14,29 +14,54 @@ export class CommentInput extends LitElement {
         display: block;
         margin-bottom: var(--ycc-spacing-m);
       }
-      .input-container {
+      .comment-input-container {
+        // border: 1px solid var(--ycc-border-color);
+        // border-radius: var(--ycc-radius);
+        // padding: var(--ycc-spacing-s);
+        // background-color: var(--ycc-bg-color);
+      }
+      .draft-container {
         display: flex;
         flex-direction: column;
         gap: var(--ycc-spacing-s);
-        margin-bottom: var(--ycc-spacing-s);
+        padding: var(--ycc-spacing-s);
       }
       textarea {
+        // margin: var(--ycc-spacing-s);
         min-height: 100px;
         resize: vertical;
+        border: none;
+        resize: none;
       }
       .actions {
         display: flex;
         justify-content: flex-end;
         gap: var(--ycc-spacing-s);
       }
+      .message-row {
+        border: 1px solid var(--ycc-border-color);
+        border-bottom: none;
+        border-radius: var(--ycc-radius) var(--ycc-radius) 0 0;
+      }
       .controls-row {
+        border: 1px solid var(--ycc-border-color);
+        border-radius: 0 0 var(--ycc-radius) var(--ycc-radius);
         display: flex;
         justify-content: space-between;
         gap: var(--ycc-spacing-s);
+        padding: var(--ycc-spacing-s);
       }
       .nickname-input {
         flex: 1;
+        border: none !important;
+        outline: none !important;
+        // max-width: 250px;
       }
+      .preview-container {
+        padding: var(--ycc-spacing-s);
+        comment-list-item {
+          // margin: 0;
+        }
     `,
   ];
 
@@ -54,18 +79,20 @@ export class CommentInput extends LitElement {
 
   render() {
     return html`
-      <div>
-        ${this.isPreview && this.previewComment
-          ? html`<div class="preview-container">
-              <comment-list-item .comment=${this.previewComment}></comment-list-item>
-            </div>`
-          : html`<div class="input-container">
-              <textarea
-                .value=${this.message}
-                @input=${this.onInputMessage}
-                placeholder="Write a comment..."
-              ></textarea>
-            </div>`}
+      <div class="comment-input-container">
+        <div class="message-row">
+          ${this.isPreview && this.previewComment
+            ? html`<div class="preview-container">
+                <comment-list-item .comment=${this.previewComment}></comment-list-item>
+              </div>`
+            : html`<div class="draft-container">
+                <textarea
+                  .value=${this.message}
+                  @input=${this.onInputMessage}
+                  placeholder="Write a comment..."
+                ></textarea>
+              </div>`}
+        </div>
 
         <div class="controls-row">
           <input
@@ -74,6 +101,7 @@ export class CommentInput extends LitElement {
             @input=${this.onInputNickname}
             type="text"
             placeholder="Nickname"
+            ?disabled=${this.isPreview}
           />
           <div class="actions">
             <button
