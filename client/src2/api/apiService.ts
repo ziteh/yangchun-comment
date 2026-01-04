@@ -1,12 +1,41 @@
 import type { Comment } from '@ziteh/yangchun-comment-shared';
 
-interface AuthInfo {
+export interface AuthInfo {
   timestamp: number;
   token: string;
 }
 
+export interface CommentAuthInfo {
+  id: string;
+  timestamp: number;
+  token: string;
+}
+
+export interface ApiService {
+  getComments: (post: string) => Promise<Comment[]>;
+  addComment: (
+    post: string,
+    pseudonym: string,
+    nameHash: string,
+    msg: string,
+    replyTo: string | null,
+  ) => Promise<string | null>;
+  updateComment: (
+    post: string,
+    commentId: string,
+    pseudonym: string,
+    nameHash: string,
+    msg: string,
+  ) => Promise<boolean>;
+  deleteComment: (post: string, commentId: string) => Promise<boolean>;
+  saveAuthInfo: (id: string, timestamp: number, token: string) => void;
+  getAuthInfo: (commentId: string) => CommentAuthInfo | null;
+  removeAuthInfo: (commentId: string) => void;
+  canEditComment: (commentId: string) => boolean;
+}
+
 // TODO HttpOnly Cookie?
-export const createApiService = (apiUrl: string) => {
+export const createApiService = (apiUrl: string): ApiService => {
   const commentAuthMap = new Map<string, AuthInfo>();
 
   const getComments = async (post: string): Promise<Comment[]> => {
@@ -123,9 +152,7 @@ export const createApiService = (apiUrl: string) => {
     sessionStorage.setItem(`comment_auth_${id}`, encryptedInfo);
   };
 
-  const getAuthInfo = (
-    commentId: string,
-  ): { id: string; timestamp: number; token: string } | null => {
+  const getAuthInfo = (commentId: string): CommentAuthInfo | null => {
     const authInfo = commentAuthMap.get(commentId);
     if (authInfo) return { id: commentId, ...authInfo };
 
