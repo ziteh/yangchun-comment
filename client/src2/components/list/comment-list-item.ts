@@ -3,6 +3,7 @@ import { customElement } from 'lit/decorators.js';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { yangChunCommentStyles } from '../yangchun-comment.styles';
 import type { Comment } from '@ziteh/yangchun-comment-shared';
+import { sanitizeHtml } from '../../utils/sanitize';
 import snarkdown from 'snarkdown';
 
 @customElement('comment-list-item')
@@ -151,7 +152,6 @@ export class CommentListItem extends LitElement {
   }
 
   private renderMarkdown(raw: string | undefined | null): ReturnType<typeof unsafeHTML> {
-    // return unsafeHTML(sanitizeHtml(snarkdown(md || ''))); // TODO: sanitize
-    return unsafeHTML(snarkdown(raw || ''));
+    return unsafeHTML(sanitizeHtml(snarkdown(raw || '')));
   }
 }

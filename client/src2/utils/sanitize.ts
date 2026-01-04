@@ -1,6 +1,6 @@
 import DOMPurify, { type Config as DomPurifyConfig } from 'dompurify';
 
-export const DOMPURIFY_CONFIG: DomPurifyConfig = {
+const DOMPURIFY_CONFIG: DomPurifyConfig = {
   ALLOWED_TAGS: [
     'a',
     'b',
@@ -31,15 +31,15 @@ export const DOMPURIFY_CONFIG: DomPurifyConfig = {
 
 export function setupDOMPurifyHooks() {
   DOMPurify.addHook('afterSanitizeAttributes', (node) => {
-    // Make all links open in a new tab, and prevent window.opener vulnerability
-    if ((node as Element).tagName === 'A') {
-      (node as Element).setAttribute('rel', 'noopener noreferrer');
-      (node as Element).setAttribute('target', '_blank');
+    // <a> Make all links open in a new tab, and prevent window.opener vulnerability
+    if (node instanceof HTMLAnchorElement) {
+      node.setAttribute('rel', 'noopener noreferrer');
+      node.setAttribute('target', '_blank');
     }
 
-    // Optimize image loading
-    if ((node as Element).tagName === 'IMG') {
-      (node as Element).setAttribute('loading', 'lazy');
+    // <img> Optimize image loading
+    if (node instanceof HTMLImageElement) {
+      node.setAttribute('loading', 'lazy');
     }
   });
 
@@ -59,6 +59,6 @@ export function setupDOMPurifyHooks() {
   });
 }
 
-export function sanitizeHtml(html: string) {
-  return DOMPurify.sanitize(html, DOMPURIFY_CONFIG);
+export function sanitizeHtml(dirtyHtml: string) {
+  return DOMPurify.sanitize(dirtyHtml, DOMPURIFY_CONFIG);
 }

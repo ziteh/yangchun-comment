@@ -9,6 +9,7 @@ import './list/comment-list';
 import type { ApiService } from '../api/apiService';
 import { createMockApiService } from '../api/apiService.mock';
 import { generatePseudonymAndHash } from '../utils/pseudonym';
+import { setupDOMPurifyHooks } from '../utils/sanitize';
 
 const HelpContent = html`
   <p>Markdown is supported.</p>
@@ -138,6 +139,7 @@ export class YangChunComment extends LitElement {
 
   async firstUpdated() {
     console.debug('firstUpdated');
+    setupDOMPurifyHooks(); // TODO: notice the order of initialization, connectedCallback?
     await this.updatedComments();
   }
 
