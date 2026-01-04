@@ -96,7 +96,7 @@ export class CommentListItem extends LitElement {
             ? null
             : html`
                 <div class="actions">
-                  <button class="text-btn">Delete</button>
+                  <button class="text-btn" @click=${this.onDelete}>Delete</button>
                   <button class="text-btn" @click=${this.onEdit}>Edit</button>
                   <button class="text-btn" @click=${this.onReply}>Reply</button>
                 </div>
@@ -117,9 +117,19 @@ export class CommentListItem extends LitElement {
     return this.comment.id === magicString && this.comment.nameHash === magicString;
   }
 
+  private onDelete() {
+    if (!this.comment.id) return;
+    this.dispatchEvent(
+      new CustomEvent('comment-delete', {
+        detail: this.comment.id,
+        bubbles: true,
+        composed: true,
+      }),
+    );
+  }
+
   private onEdit() {
     if (!this.comment.id) return;
-
     this.dispatchEvent(
       new CustomEvent('comment-edit', {
         detail: this.comment.id,
@@ -131,7 +141,6 @@ export class CommentListItem extends LitElement {
 
   private onReply() {
     if (!this.comment.id) return;
-
     this.dispatchEvent(
       new CustomEvent('comment-reply', {
         detail: this.comment.id,

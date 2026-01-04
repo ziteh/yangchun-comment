@@ -1,4 +1,4 @@
-import { LitElement, html } from 'lit';
+import { LitElement, css, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { yangChunCommentStyles } from './yangchun-comment.styles';
 import type { Comment } from '@ziteh/yangchun-comment-shared';
@@ -22,6 +22,21 @@ const HelpContent = html`
 
 @customElement('yangchun-comment')
 export class YangChunComment extends LitElement {
+  static styles = [
+    yangChunCommentStyles,
+    css`
+      :host {
+        display: block;
+      }
+      .dialog-actions {
+        margin-top: var(--ycc-spacing-m);
+        display: flex;
+        justify-content: flex-end;
+        gap: var(--ycc-spacing-s);
+      }
+    `,
+  ];
+
   static properties = {
     post: { type: String },
     apiUrl: { type: String },
@@ -32,20 +47,20 @@ export class YangChunComment extends LitElement {
   apiUrl = '';
   authorName = '';
 
-  static styles = yangChunCommentStyles;
-
   @state() private accessor apiService: ApiService = createMockApiService();
 
   @state() private accessor draft = '';
   @state() private accessor nickname = '';
   @state() private accessor comments: Comment[] = [];
   @state() private accessor editPseudonym = ''; // for editing comment the pseudonym does not change
+  @state() private accessor deleteCommentId = '';
 
   @state() private accessor referenceComment: Comment | null = null;
   @state() private accessor isReply = true; // true: reply, false: edit
 
   @state() private accessor showHelp = false;
   @state() private accessor showNotify = false;
+  @state() private accessor showConfirmDelete = false; // TODO: combine to deleteCommentId !== '' ?
 
   render() {
     return html`
@@ -70,8 +85,39 @@ export class YangChunComment extends LitElement {
           .comments=${this.comments}
           @comment-reply=${this.onReplyToComment}
           @comment-edit=${this.onEditComment}
+          @comment-delete=${(e: CustomEvent<string>) => {
+            this.deleteCommentId = e.detail;
+            this.showConfirmDelete = true;
+          }}
         ></comment-list>
 
+        <comment-dialog
+          header="Confirm Delete"
+          .open=${this.showConfirmDelete && this.deleteCommentId !== ''}
+          @close=${() => (this.showConfirmDelete = false)}
+        >
+          <p>Are you sure you want to delete this comment: ${this.deleteCommentId} ?</p>
+          <strong>This action cannot be undone.</strong>
+          <div class="dialog-actions">
+            <button
+              class="secondary"
+              @click=${() => {
+                this.showConfirmDelete = false;
+                this.deleteComment();
+              }}
+            >
+              Delete
+            </button>
+            <button
+              @click=${() => {
+                this.showConfirmDelete = false;
+                this.deleteCommentId = '';
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </comment-dialog>
         <comment-dialog
           header="Notify"
           .open=${this.showNotify}
@@ -166,6 +212,21 @@ export class YangChunComment extends LitElement {
     this.isReply = false;
     this.draft = refComment.msg || '';
     this.editPseudonym = refComment.pseudonym || '';
+  }
+
+  private async deleteComment() {
+    if (!this.deleteCommentId) return;
+    console.debug('Delete comment ID:', this.deleteCommentId);
+
+    try {
+      const ok = await this.apiService.deleteComment(this.post, this.deleteCommentId);
+      if (ok) {
+        console.debug('Deleted comment ID:', this.deleteCommentId);
+        await this.updatedComments();
+      }
+    } catch (err) {
+      console.error('Failed to delete comment:', err);
+    }
   }
 }
 
