@@ -154,6 +154,7 @@ export class YangChunComment extends LitElement {
     console.debug('Cancel reply to comment ID:', commentId);
     if (this.referenceComment?.id === commentId) {
       this.referenceComment = null;
+      this.isReply = true;
     }
   }
 
@@ -165,7 +166,40 @@ export class YangChunComment extends LitElement {
     this.nickname = e.detail.trim();
   }
 
+  private async editedSubmit() {
+    if (!this.referenceComment) return;
+    if (this.isReply) return;
+
+    const pureDraft = this.draft.trim();
+    if (!pureDraft) return;
+
+    try {
+      const ok = this.apiService.updateComment(
+        this.post,
+        this.referenceComment.id,
+        this.referenceComment.pseudonym || '',
+        this.referenceComment.nameHash || '',
+        pureDraft,
+      );
+
+      console.debug('Edit comment ID:', this.referenceComment.id, ok);
+      this.draft = '';
+      this.editPseudonym = '';
+      this.referenceComment = null;
+      this.isReply = true;
+
+      await this.updatedComments();
+    } catch (err) {
+      console.error('Failed to add comment:', err);
+    }
+  }
+
   private async onDraftSubmit() {
+    if (this.referenceComment && !this.isReply) {
+      this.editedSubmit();
+      return;
+    }
+
     const pureDraft = this.draft.trim();
     if (!pureDraft) return;
 
