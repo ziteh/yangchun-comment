@@ -37,22 +37,10 @@ export class CommentList extends LitElement {
                 findReplyComments(this.comments, comment.id),
                 false,
               )}
-              @comment-reply=${this.onReply}
             ></comment-list-item>
           `,
         )}
       </div>
     `;
-  }
-
-  private onReply(e: CustomEvent<string>) {
-    const replyToId = e.detail;
-    this.dispatchEvent(
-      new CustomEvent('comment-reply', {
-        detail: replyToId,
-        bubbles: true,
-        composed: true,
-      }),
-    );
   }
 }

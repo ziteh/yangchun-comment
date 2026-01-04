@@ -30,9 +30,7 @@ export class CommentListItem extends LitElement {
 
         <div class="reply-comments">
           ${this.replyComments.map(
-            (cmt) => html`
-              <comment-list-item .comment=${cmt} @comment-reply=${this.onReply}></comment-list-item>
-            `,
+            (cmt) => html` <comment-list-item .comment=${cmt}></comment-list-item> `,
           )}
         </div>
       </div>
@@ -40,7 +38,6 @@ export class CommentListItem extends LitElement {
   }
 
   private onReply() {
-    // TODO: check replyComments event path, double shooting?
     if (!this.comment.id) return;
 
     this.dispatchEvent(
