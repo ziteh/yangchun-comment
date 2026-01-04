@@ -1,7 +1,9 @@
 import { LitElement, html, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
+import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { yangChunCommentStyles } from '../yangchun-comment.styles';
 import type { Comment } from '@ziteh/yangchun-comment-shared';
+import snarkdown from 'snarkdown';
 
 @customElement('comment-list-item')
 export class CommentListItem extends LitElement {
@@ -89,7 +91,7 @@ export class CommentListItem extends LitElement {
               : null}
             <span class="date">${new Date(this.comment.pubDate).toLocaleString()}</span>
           </div>
-          <p class="content">${this.comment.msg ?? ''}</p>
+          <p class="content">${this.renderMarkdown(this.comment.msg)}</p>
           ${this.isPreviewComment()
             ? null
             : html`
@@ -125,5 +127,10 @@ export class CommentListItem extends LitElement {
         composed: true,
       }),
     );
+  }
+
+  private renderMarkdown(raw: string | undefined | null): ReturnType<typeof unsafeHTML> {
+    // return unsafeHTML(sanitizeHtml(snarkdown(md || ''))); // TODO: sanitize
+    return unsafeHTML(snarkdown(raw || ''));
   }
 }
