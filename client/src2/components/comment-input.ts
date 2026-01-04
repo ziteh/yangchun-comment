@@ -170,6 +170,10 @@ Markdown syntax is supported"
   }
 
   private onSubmit() {
+    // back to edit mode
+    this.isPreview = false;
+    this.previewComment = null;
+
     this.dispatchEvent(
       new CustomEvent('comment-submit', {
         bubbles: true,
