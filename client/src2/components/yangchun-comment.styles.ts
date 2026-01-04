@@ -50,11 +50,19 @@ export const yangChunCommentStyles = css`
     cursor: not-allowed;
   }
   button.secondary {
+    background-color: var(--ycc-border-color);
+    color: var(--ycc-text-color);
+  }
+  button.secondary:hover {
+    background-color: var(--ycc-bg-secondary);
+    color: var(--ycc-text-secondary);
+  }
+  button.outline {
     background-color: transparent;
     color: var(--ycc-text-secondary);
     border: 1px solid var(--ycc-border-color);
   }
-  button.secondary:hover {
+  button.outline:hover {
     background-color: var(--ycc-bg-secondary);
     color: var(--ycc-text-color);
   }
