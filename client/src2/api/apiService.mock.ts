@@ -66,12 +66,12 @@ export const createMockApiService = (): ApiService => {
   };
 
   const getComments: ApiService['getComments'] = async (post) => {
-    simulateNetworkDelay();
-    return mockComments.get(post) || [];
+    await simulateNetworkDelay();
+    return [...(mockComments.get(post) || [])];
   };
 
   const addComment: ApiService['addComment'] = async (post, pseudonym, nameHash, msg, replyTo) => {
-    simulateNetworkDelay();
+    await simulateNetworkDelay();
 
     const now = Date.now();
     const newComment: Comment = {

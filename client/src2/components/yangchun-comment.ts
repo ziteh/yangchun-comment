@@ -57,7 +57,12 @@ export class YangChunComment extends LitElement {
 
   async firstUpdated() {
     console.debug('firstUpdated');
-    this.comments = await this.apiService.getComments(this.post);
+    await this.updatedComments();
+  }
+
+  private async updatedComments() {
+    const newComments = await this.apiService.getComments(this.post);
+    this.comments = [...newComments];
   }
 
   private onCommentInfoCancel(e: CustomEvent<string>) {
@@ -76,20 +81,30 @@ export class YangChunComment extends LitElement {
     this.nickname = e.detail.trim();
   }
 
-  private onDraftSubmit() {
+  private async onDraftSubmit() {
     const pureDraft = this.draft.trim();
     if (!pureDraft) return;
 
-    const newComment: Comment = {
-      id: crypto.randomUUID(), // TODO
-      msg: pureDraft,
-      pseudonym: this.nickname, // TODO
-      pubDate: Date.now(),
-      replyTo: this.referenceComment ? this.referenceComment.id : undefined,
-    };
+    const replyTo =
+      this.referenceComment && this.referenceComment.id && this.isReply
+        ? this.referenceComment.id
+        : null;
 
-    this.comments = [...this.comments, newComment];
-    this.draft = '';
+    try {
+      const id = await this.apiService.addComment(
+        this.post,
+        this.nickname, // TODO: pseudonym
+        this.nickname, // TODO: nameHash
+        pureDraft,
+        replyTo,
+      );
+      console.debug('Added comment ID:', id);
+      this.draft = '';
+      await this.updatedComments();
+    } catch (err) {
+      console.error('Failed to add comment:', err);
+      return;
+    }
   }
 
   private onReplyToComment(e: CustomEvent<string>) {
