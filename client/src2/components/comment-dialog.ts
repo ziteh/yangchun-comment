@@ -2,8 +2,8 @@ import { LitElement, html, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { yangChunCommentStyles } from './yangchun-comment.styles';
 
-@customElement('comment-help-dialog')
-export class CommentHelpDialog extends LitElement {
+@customElement('comment-dialog')
+export class CommentDialog extends LitElement {
   static styles = [
     yangChunCommentStyles,
     css`
@@ -65,14 +65,7 @@ export class CommentHelpDialog extends LitElement {
       <div class="overlay" @click=${this.onOverlayClick}>
         <div class="dialog">
           <button class="close-btn" @click=${this.onClose}>&times;</button>
-          <h2>Help</h2>
-          <p>Markdown is supported.</p>
-          <ul>
-            <li>**bold**</li>
-            <li>*italic*</li>
-            <li>[link](url)</li>
-            <li>\`code\`</li>
-          </ul>
+          <slot></slot>
         </div>
       </div>
     `;

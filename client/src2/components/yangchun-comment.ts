@@ -4,11 +4,22 @@ import { yangChunCommentStyles } from './yangchun-comment.styles';
 import type { Comment } from '@ziteh/yangchun-comment-shared';
 import './comment-input';
 import './comment-info';
-import './comment-help-dialog';
+import './comment-dialog';
 import './list/comment-list';
 import type { ApiService } from '../api/apiService';
 import { createMockApiService } from '../api/apiService.mock';
 import { generatePseudonymAndHash } from '../utils/pseudonym';
+
+const HelpContent = html`
+  <h2>Help</h2>
+  <p>Markdown is supported.</p>
+  <ul>
+    <li>**bold**</li>
+    <li>*italic*</li>
+    <li>[link](url)</li>
+    <li>\`code\`</li>
+  </ul>
+`;
 
 @customElement('yangchun-comment')
 export class YangChunComment extends LitElement {
@@ -55,10 +66,9 @@ export class YangChunComment extends LitElement {
           .comments=${this.comments}
           @comment-reply=${this.onReplyToComment}
         ></comment-list>
-        <comment-help-dialog
-          .open=${this.showHelp}
-          @close=${() => (this.showHelp = false)}
-        ></comment-help-dialog>
+        <comment-dialog .open=${this.showHelp} @close=${() => (this.showHelp = false)}>
+          ${HelpContent}
+        </comment-dialog>
       </div>
     `;
   }
