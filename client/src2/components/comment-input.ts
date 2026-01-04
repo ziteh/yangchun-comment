@@ -1,11 +1,45 @@
-import { LitElement, html } from 'lit';
+import { LitElement, html, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
+import { yangChunCommentStyles } from './yangchun-comment.styles';
 import './list/comment-list-item';
 import { generatePseudonymAndHash } from '../utils/pseudonym';
 import type { Comment } from '@ziteh/yangchun-comment-shared';
 
 @customElement('comment-input')
 export class CommentInput extends LitElement {
+  static styles = [
+    yangChunCommentStyles,
+    css`
+      :host {
+        display: block;
+        margin-bottom: var(--ycc-spacing-m);
+      }
+      .input-container {
+        display: flex;
+        flex-direction: column;
+        gap: var(--ycc-spacing-s);
+        margin-bottom: var(--ycc-spacing-s);
+      }
+      textarea {
+        min-height: 100px;
+        resize: vertical;
+      }
+      .actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: var(--ycc-spacing-s);
+      }
+      .controls-row {
+        display: flex;
+        justify-content: space-between;
+        gap: var(--ycc-spacing-s);
+      }
+      .nickname-input {
+        flex: 1;
+      }
+    `,
+  ];
+
   static readonly MAX_NICKNAME_LENGTH: number = 25;
   static readonly MAX_MESSAGE_LENGTH: number = 1000;
   static properties = {
@@ -22,27 +56,36 @@ export class CommentInput extends LitElement {
     return html`
       <div>
         ${this.isPreview && this.previewComment
-          ? html`<div>
+          ? html`<div class="preview-container">
               <comment-list-item .comment=${this.previewComment}></comment-list-item>
             </div>`
-          : html`<div>
+          : html`<div class="input-container">
               <textarea
                 .value=${this.message}
                 @input=${this.onInputMessage}
                 placeholder="Write a comment..."
               ></textarea>
-              <input
-                .value=${this.nickname}
-                @input=${this.onInputNickname}
-                type="text"
-                placeholder="Nickname"
-              />
             </div>`}
 
-        <button @click=${this.togglePreview} ?disabled=${!this.isValidComment()}>
-          ${this.isPreview ? 'Edit' : 'Preview'}
-        </button>
-        <button @click=${this.onSubmit} ?disabled=${!this.isValidComment()}>Submit</button>
+        <div class="controls-row">
+          <input
+            class="nickname-input"
+            .value=${this.nickname}
+            @input=${this.onInputNickname}
+            type="text"
+            placeholder="Nickname"
+          />
+          <div class="actions">
+            <button
+              class="secondary"
+              @click=${this.togglePreview}
+              ?disabled=${!this.isValidComment()}
+            >
+              ${this.isPreview ? 'Edit' : 'Preview'}
+            </button>
+            <button @click=${this.onSubmit} ?disabled=${!this.isValidComment()}>Submit</button>
+          </div>
+        </div>
       </div>
     `;
   }
