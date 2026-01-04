@@ -89,7 +89,8 @@ export class CommentInput extends LitElement {
                 <textarea
                   .value=${this.message}
                   @input=${this.onInputMessage}
-                  placeholder="Write a comment..."
+                  placeholder="Write a comment...
+Markdown syntax is supported"
                 ></textarea>
               </div>`}
         </div>
@@ -100,7 +101,7 @@ export class CommentInput extends LitElement {
             .value=${this.nickname}
             @input=${this.onInputNickname}
             type="text"
-            placeholder="Nickname"
+            placeholder="Nickname (optional), will be converted to pseudonym"
             ?disabled=${this.isPreview}
           />
           <div class="actions">
