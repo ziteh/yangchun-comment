@@ -4,33 +4,26 @@ export const yangChunCommentStyles = css`
   :host {
     display: block;
 
-    /* --- Design Tokens --- */
-
-    /* Colors */
-    --ycc-primary-color: #2563eb; /* Blue 600 */
-    --ycc-primary-hover: #1d4ed8; /* Blue 700 */
-    --ycc-text-color: #1f2937; /* Gray 800 */
-    --ycc-text-secondary: #6b7280; /* Gray 500 */
+    --ycc-primary-color: #2563eb;
+    --ycc-primary-hover: #1d4ed8;
+    --ycc-text-color: #1f2937;
+    --ycc-text-secondary: #6b7280;
     --ycc-bg-color: #ffffff;
-    --ycc-bg-secondary: #f3f4f6; /* Gray 100 */
-    --ycc-border-color: #e5e7eb; /* Gray 200 */
-    --ycc-error-color: #ef4444; /* Red 500 */
+    --ycc-bg-secondary: #f3f4f6;
+    --ycc-border-color: #e5e7eb;
+    --ycc-error-color: #ef4444;
 
-    /* Spacing */
     --ycc-spacing-xs: 4px;
     --ycc-spacing-s: 8px;
     --ycc-spacing-m: 16px;
     --ycc-spacing-l: 24px;
 
-    /* Typography */
     --ycc-font-family:
       -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     --ycc-font-size: 14px;
     --ycc-line-height: 1.5;
     --ycc-radius: 6px;
   }
-
-  /* --- Shared Styles --- */
 
   .root {
     font-family: var(--ycc-font-family);
@@ -39,7 +32,6 @@ export const yangChunCommentStyles = css`
     font-size: var(--ycc-font-size);
   }
 
-  /* Buttons */
   button {
     background-color: var(--ycc-primary-color);
     color: white;
@@ -50,27 +42,22 @@ export const yangChunCommentStyles = css`
     font-size: var(--ycc-font-size);
     transition: background-color 0.2s;
   }
-
   button:hover {
     background-color: var(--ycc-primary-hover);
   }
-
   button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
   }
-
   button.secondary {
     background-color: transparent;
     color: var(--ycc-text-secondary);
     border: 1px solid var(--ycc-border-color);
   }
-
   button.secondary:hover {
     background-color: var(--ycc-bg-secondary);
     color: var(--ycc-text-color);
   }
-
   button.text-btn {
     background: none;
     border: none;
@@ -79,24 +66,20 @@ export const yangChunCommentStyles = css`
     text-decoration: underline;
     font-size: 0.9em;
   }
-
   button.text-btn:hover {
     color: var(--ycc-primary-color);
     background: none;
   }
 
-  /* Inputs */
   input[type='text'],
   textarea {
     width: 100%;
     padding: var(--ycc-spacing-s);
-    border: 1px solid var(--ycc-border-color);
     border-radius: var(--ycc-radius);
     font-family: inherit;
     font-size: inherit;
     box-sizing: border-box; /* Important for width: 100% */
   }
-
   input[type='text']:focus,
   textarea:focus {
     outline: none;

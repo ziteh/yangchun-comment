@@ -53,8 +53,8 @@ export class CommentInput extends LitElement {
       }
       .nickname-input {
         flex: 1;
-        border: none !important;
-        outline: none !important;
+        border: none;
+        outline: none;
         // max-width: 250px;
       }
       .preview-container {
