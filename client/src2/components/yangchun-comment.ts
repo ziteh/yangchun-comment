@@ -39,6 +39,7 @@ export class YangChunComment extends LitElement {
   @state() private accessor draft = '';
   @state() private accessor nickname = '';
   @state() private accessor comments: Comment[] = [];
+  @state() private accessor editPseudonym = ''; // for editing comment the pseudonym does not change
 
   @state() private accessor referenceComment: Comment | null = null;
   @state() private accessor isReply = true; // true: reply, false: edit
@@ -53,6 +54,7 @@ export class YangChunComment extends LitElement {
         <comment-input
           .message=${this.draft}
           .nickname=${this.nickname}
+          .editPseudonym=${this.editPseudonym}
           @comment-change=${this.onDraftChange}
           @nickname-change=${this.onNicknameChange}
           @comment-submit=${this.onDraftSubmit}
@@ -128,6 +130,9 @@ export class YangChunComment extends LitElement {
       const id = await this.apiService.addComment(this.post, pseudonym, hash, pureDraft, replyTo);
       console.debug('Added comment ID:', id);
       this.draft = '';
+      this.editPseudonym = '';
+      this.referenceComment = null;
+
       await this.updatedComments();
     } catch (err) {
       console.error('Failed to add comment:', err);
@@ -160,6 +165,7 @@ export class YangChunComment extends LitElement {
     this.referenceComment = refComment;
     this.isReply = false;
     this.draft = refComment.msg || '';
+    this.editPseudonym = refComment.pseudonym || '';
   }
 }
 

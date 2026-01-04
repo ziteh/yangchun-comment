@@ -70,9 +70,11 @@ export class CommentInput extends LitElement {
   static properties = {
     message: { type: String },
     nickname: { type: String },
+    editPseudonym: { type: String },
   };
   message = '';
   nickname = '';
+  editPseudonym = '';
 
   @state() private accessor isPreview = false;
   @state() private accessor previewComment: Comment | null = null;
@@ -121,10 +123,18 @@ Markdown syntax is supported"
 
   private async createPreviewComment() {
     const magicString = '_PREVIEW';
-    const { pseudonym } = await generatePseudonymAndHash(this.nickname);
+
+    let pseudonym: string;
+    if (this.editPseudonym) {
+      pseudonym = this.editPseudonym;
+    } else {
+      const res = await generatePseudonymAndHash(this.nickname);
+      pseudonym = res.pseudonym;
+    }
+
     return {
       msg: this.message,
-      pseudonym: pseudonym,
+      pseudonym,
       pubDate: Date.now(),
       id: magicString,
       nameHash: magicString,
