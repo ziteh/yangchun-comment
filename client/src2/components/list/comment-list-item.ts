@@ -97,7 +97,7 @@ export class CommentListItem extends LitElement {
             : html`
                 <div class="actions">
                   <button class="text-btn">Delete</button>
-                  <button class="text-btn">Edit</button>
+                  <button class="text-btn" @click=${this.onEdit}>Edit</button>
                   <button class="text-btn" @click=${this.onReply}>Reply</button>
                 </div>
               `}
@@ -115,6 +115,18 @@ export class CommentListItem extends LitElement {
   private isPreviewComment(): boolean {
     const magicString = '_PREVIEW';
     return this.comment.id === magicString && this.comment.nameHash === magicString;
+  }
+
+  private onEdit() {
+    if (!this.comment.id) return;
+
+    this.dispatchEvent(
+      new CustomEvent('comment-edit', {
+        detail: this.comment.id,
+        bubbles: true,
+        composed: true,
+      }),
+    );
   }
 
   private onReply() {

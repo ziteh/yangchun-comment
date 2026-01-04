@@ -67,6 +67,7 @@ export class YangChunComment extends LitElement {
         <comment-list
           .comments=${this.comments}
           @comment-reply=${this.onReplyToComment}
+          @comment-edit=${this.onEditComment}
         ></comment-list>
 
         <comment-dialog
@@ -137,8 +138,28 @@ export class YangChunComment extends LitElement {
   private onReplyToComment(e: CustomEvent<string>) {
     const commentId = e.detail;
     console.debug('Reply to comment ID:', commentId);
-    this.referenceComment = this.comments.find((cmt) => cmt.id === commentId) || null;
+
+    const refComment = this.comments.find((cmt) => cmt.id === commentId);
+    if (!refComment) {
+      this.referenceComment = null;
+      return;
+    }
+    this.referenceComment = refComment;
     this.isReply = true;
+  }
+
+  private onEditComment(e: CustomEvent<string>) {
+    const commentId = e.detail;
+    console.debug('Edit comment ID:', commentId);
+
+    const refComment = this.comments.find((cmt) => cmt.id === commentId);
+    if (!refComment) {
+      this.referenceComment = null;
+      return;
+    }
+    this.referenceComment = refComment;
+    this.isReply = false;
+    this.draft = refComment.msg || '';
   }
 }
 
