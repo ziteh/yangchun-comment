@@ -47,7 +47,7 @@ export class CommentInfo extends LitElement {
           <!-- TODO: refactor this -->
           <div></div>
           <div class="actions">
-            <button class="text-btn">Notify</button>
+            <button class="text-btn" @click=${this.onNotify}>Notify</button>
             <button class="text-btn" @click=${this.onHelp}>Help</button>
           </div>
         </div>
@@ -63,7 +63,7 @@ export class CommentInfo extends LitElement {
           <button class="text-btn" @click=${this.onCancel}>Cancel</button>
         </div>
         <div class="actions">
-          <button class="text-btn">Notify</button>
+          <button class="text-btn" @click=${this.onNotify}>Notify</button>
           <button class="text-btn" @click=${this.onHelp}>Help</button>
         </div>
       </div>
@@ -73,6 +73,15 @@ export class CommentInfo extends LitElement {
   private onHelp() {
     this.dispatchEvent(
       new CustomEvent('help-request', {
+        bubbles: true,
+        composed: true,
+      }),
+    );
+  }
+
+  private onNotify() {
+    this.dispatchEvent(
+      new CustomEvent('notify-request', {
         bubbles: true,
         composed: true,
       }),

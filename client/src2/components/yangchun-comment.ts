@@ -11,7 +11,6 @@ import { createMockApiService } from '../api/apiService.mock';
 import { generatePseudonymAndHash } from '../utils/pseudonym';
 
 const HelpContent = html`
-  <h2>Help</h2>
   <p>Markdown is supported.</p>
   <ul>
     <li>**bold**</li>
@@ -43,7 +42,9 @@ export class YangChunComment extends LitElement {
 
   @state() private accessor referenceComment: Comment | null = null;
   @state() private accessor isReply = true; // true: reply, false: edit
+
   @state() private accessor showHelp = false;
+  @state() private accessor showNotify = false;
 
   render() {
     return html`
@@ -60,13 +61,26 @@ export class YangChunComment extends LitElement {
           .comment=${this.referenceComment}
           .isReply=${this.isReply}
           @reference-comment-cancel=${this.onCommentInfoCancel}
+          @notify-request=${() => (this.showNotify = true)}
           @help-request=${() => (this.showHelp = true)}
         ></comment-info>
         <comment-list
           .comments=${this.comments}
           @comment-reply=${this.onReplyToComment}
         ></comment-list>
-        <comment-dialog .open=${this.showHelp} @close=${() => (this.showHelp = false)}>
+
+        <comment-dialog
+          header="Notify"
+          .open=${this.showNotify}
+          @close=${() => (this.showNotify = false)}
+        >
+          <p>Notification feature is coming soon!</p>
+        </comment-dialog>
+        <comment-dialog
+          header="Help"
+          .open=${this.showHelp}
+          @close=${() => (this.showHelp = false)}
+        >
           ${HelpContent}
         </comment-dialog>
       </div>

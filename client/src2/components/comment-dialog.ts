@@ -1,5 +1,5 @@
 import { LitElement, html, css } from 'lit';
-import { customElement } from 'lit/decorators.js';
+import { customElement, property } from 'lit/decorators.js';
 import { yangChunCommentStyles } from './yangchun-comment.styles';
 
 @customElement('comment-dialog')
@@ -53,10 +53,8 @@ export class CommentDialog extends LitElement {
     `,
   ];
 
-  static properties = {
-    open: { type: Boolean },
-  };
-  open = false;
+  @property({ type: Boolean }) accessor open = false;
+  @property({ type: String }) accessor header = '';
 
   render() {
     if (!this.open) return null;
@@ -65,6 +63,7 @@ export class CommentDialog extends LitElement {
       <div class="overlay" @click=${this.onOverlayClick}>
         <div class="dialog">
           <button class="close-btn" @click=${this.onClose}>&times;</button>
+          <h2>${this.header}</h2>
           <slot></slot>
         </div>
       </div>
