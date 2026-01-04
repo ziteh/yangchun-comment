@@ -108,13 +108,15 @@ export class YangChunComment extends LitElement {
   }
 
   private onDraftSubmit() {
-    if (this.draft.trim().length === 0) return;
+    const pureDraft = this.draft.trim();
+    if (!pureDraft) return;
 
     const newComment: Comment = {
-      id: crypto.randomUUID(),
-      msg: this.draft.trim(),
-      pseudonym: this.nickname,
+      id: crypto.randomUUID(), // TODO
+      msg: pureDraft,
+      pseudonym: this.nickname, // TODO
       pubDate: Date.now(),
+      replyTo: this.referenceComment ? this.referenceComment.id : undefined,
     };
 
     this.comments = [...this.comments, newComment];
