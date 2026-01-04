@@ -16,9 +16,9 @@ export class CommentInfo extends LitElement {
         justify-content: space-between;
         align-items: center;
         padding: var(--ycc-spacing-s);
-        background-color: var(--ycc-bg-secondary);
-        border-radius: var(--ycc-radius);
-        margin-bottom: var(--ycc-spacing-m);
+        // background-color: var(--ycc-bg-secondary);
+        // border-radius: var(--ycc-radius);
+        // margin-bottom: var(--ycc-spacing-s);
         font-size: 0.9em;
       }
       .reference-comment-info {

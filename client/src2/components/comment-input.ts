@@ -12,7 +12,7 @@ export class CommentInput extends LitElement {
     css`
       :host {
         display: block;
-        margin-bottom: var(--ycc-spacing-m);
+        // margin-bottom: var(--ycc-spacing-m);
       }
       .comment-input-container {
         // border: 1px solid var(--ycc-border-color);
