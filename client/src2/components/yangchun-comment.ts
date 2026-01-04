@@ -4,6 +4,7 @@ import { yangChunCommentStyles } from './yangchun-comment.styles';
 import type { Comment } from '@ziteh/yangchun-comment-shared';
 import './comment-input';
 import './comment-info';
+import './comment-help-dialog';
 import './list/comment-list';
 import type { ApiService } from '../api/apiService';
 import { createMockApiService } from '../api/apiService.mock';
@@ -31,6 +32,7 @@ export class YangChunComment extends LitElement {
 
   @state() private accessor referenceComment: Comment | null = null;
   @state() private accessor isReply = true; // true: reply, false: edit
+  @state() private accessor showHelp = false;
 
   render() {
     return html`
@@ -47,11 +49,16 @@ export class YangChunComment extends LitElement {
           .comment=${this.referenceComment}
           .isReply=${this.isReply}
           @reference-comment-cancel=${this.onCommentInfoCancel}
+          @help-request=${() => (this.showHelp = true)}
         ></comment-info>
         <comment-list
           .comments=${this.comments}
           @comment-reply=${this.onReplyToComment}
         ></comment-list>
+        <comment-help-dialog
+          .open=${this.showHelp}
+          @close=${() => (this.showHelp = false)}
+        ></comment-help-dialog>
       </div>
     `;
   }

@@ -44,10 +44,11 @@ export class CommentInfo extends LitElement {
     if (!this.comment) {
       return html`
         <div class="info-bar">
+          <!-- TODO: refactor this -->
           <div></div>
           <div class="actions">
             <button class="text-btn">Notify</button>
-            <button class="text-btn">Help</button>
+            <button class="text-btn" @click=${this.onHelp}>Help</button>
           </div>
         </div>
       `;
@@ -62,11 +63,20 @@ export class CommentInfo extends LitElement {
           <button class="text-btn" @click=${this.onCancel}>Cancel</button>
         </div>
         <div class="actions">
-          <button class="text-btn">RSS</button>
-          <button class="text-btn">Help</button>
+          <button class="text-btn">Notify</button>
+          <button class="text-btn" @click=${this.onHelp}>Help</button>
         </div>
       </div>
     `;
+  }
+
+  private onHelp() {
+    this.dispatchEvent(
+      new CustomEvent('help-request', {
+        bubbles: true,
+        composed: true,
+      }),
+    );
   }
 
   private onCancel() {
