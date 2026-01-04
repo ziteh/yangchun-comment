@@ -19,7 +19,7 @@ export class CommentInfo extends LitElement {
             ? html`${this.isReply
                   ? html`<span>Replying to: ${this.comment.pseudonym}</span>`
                   : html`<span>Editing: ${this.comment.id}</span>`}
-                <button>Cancel</button> `
+                <button @click=${this.onCancel}>Cancel</button> `
             : html``}
         </div>
         <div>
@@ -28,5 +28,17 @@ export class CommentInfo extends LitElement {
         </div>
       </div>
     `;
+  }
+
+  private onCancel() {
+    if (!this.comment?.id) return;
+
+    this.dispatchEvent(
+      new CustomEvent('reference-comment-cancel', {
+        detail: this.comment.id,
+        bubbles: true,
+        composed: true,
+      }),
+    );
   }
 }

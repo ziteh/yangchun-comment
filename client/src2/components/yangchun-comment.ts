@@ -64,6 +64,9 @@ export class YangChunComment extends LitElement {
     },
   ];
 
+  @state() private accessor referenceComment: Comment | null = null;
+  @state() private accessor isReply = true; // true: reply, false: edit
+
   render() {
     return html`
       <div class="root" part="root">
@@ -75,13 +78,25 @@ export class YangChunComment extends LitElement {
           @nickname-change=${this.onNicknameChange}
           @comment-submit=${this.onDraftSubmit}
         ></comment-input>
-        <comment-info></comment-info>
+        <comment-info
+          .comment=${this.referenceComment}
+          .isReply=${this.isReply}
+          @reference-comment-cancel=${this.onCommentInfoCancel}
+        ></comment-info>
         <comment-list
           .comments=${this.comments}
           @comment-reply=${this.onReplyToComment}
         ></comment-list>
       </div>
     `;
+  }
+
+  private onCommentInfoCancel(e: CustomEvent<string>) {
+    const commentId = e.detail;
+    console.debug('Cancel reply to comment ID:', commentId);
+    if (this.referenceComment?.id === commentId) {
+      this.referenceComment = null;
+    }
   }
 
   private onDraftChange(e: CustomEvent<string>) {
@@ -107,7 +122,10 @@ export class YangChunComment extends LitElement {
   }
 
   private onReplyToComment(e: CustomEvent<string>) {
-    console.debug('Reply to comment ID:', e.detail);
+    const commentId = e.detail;
+    console.debug('Reply to comment ID:', commentId);
+    this.referenceComment = this.comments.find((cmt) => cmt.id === commentId) || null;
+    this.isReply = true;
   }
 }
 
