@@ -84,6 +84,7 @@ export class YangChunComment extends LitElement {
         ></comment-info>
         <comment-list
           .comments=${this.comments}
+          .canEditCallback=${this.apiService.canEditComment}
           @comment-reply=${this.onReplyToComment}
           @comment-edit=${this.onEditComment}
           @comment-delete=${(e: CustomEvent<string>) => {

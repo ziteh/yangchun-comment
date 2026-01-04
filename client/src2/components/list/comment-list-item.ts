@@ -72,6 +72,7 @@ export class CommentListItem extends LitElement {
     comment: { type: Object },
     replyComments: { type: Array },
     badge: { type: String },
+    canEditCallback: { type: Function },
   };
   comment: Comment = {
     id: '',
@@ -80,6 +81,7 @@ export class CommentListItem extends LitElement {
   };
   replyComments: Comment[] = [];
   badge: 'author' | 'me' | '' = 'author'; // TODO: default
+  canEditCallback: (commentId: string) => boolean = () => false;
 
   render() {
     return html`
@@ -97,8 +99,12 @@ export class CommentListItem extends LitElement {
             ? null
             : html`
                 <div class="actions">
-                  <button class="text-btn" @click=${this.onDelete}>Delete</button>
-                  <button class="text-btn" @click=${this.onEdit}>Edit</button>
+                  ${this.canEditCallback(this.comment.id) // TODO: to @state ?
+                    ? html`
+                        <button class="text-btn" @click=${this.onDelete}>Delete</button>
+                        <button class="text-btn" @click=${this.onEdit}>Edit</button>
+                      `
+                    : null}
                   <button class="text-btn" @click=${this.onReply}>Reply</button>
                 </div>
               `}
