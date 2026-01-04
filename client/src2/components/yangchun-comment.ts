@@ -7,6 +7,7 @@ import './comment-info';
 import './list/comment-list';
 import type { ApiService } from '../api/apiService';
 import { createMockApiService } from '../api/apiService.mock';
+import { generatePseudonymAndHash } from '../utils/pseudonym';
 
 @customElement('yangchun-comment')
 export class YangChunComment extends LitElement {
@@ -85,19 +86,14 @@ export class YangChunComment extends LitElement {
     const pureDraft = this.draft.trim();
     if (!pureDraft) return;
 
+    const { pseudonym, hash } = await generatePseudonymAndHash(this.nickname);
     const replyTo =
       this.referenceComment && this.referenceComment.id && this.isReply
         ? this.referenceComment.id
         : null;
 
     try {
-      const id = await this.apiService.addComment(
-        this.post,
-        this.nickname, // TODO: pseudonym
-        this.nickname, // TODO: nameHash
-        pureDraft,
-        replyTo,
-      );
+      const id = await this.apiService.addComment(this.post, pseudonym, hash, pureDraft, replyTo);
       console.debug('Added comment ID:', id);
       this.draft = '';
       await this.updatedComments();

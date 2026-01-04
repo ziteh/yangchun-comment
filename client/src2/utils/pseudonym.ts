@@ -1,6 +1,6 @@
 import { adjectives, nouns } from './wordBank';
 
-export async function generateSHA256Hash(text: string): Promise<string> {
+async function generateSHA256Hash(text: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(text);
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
