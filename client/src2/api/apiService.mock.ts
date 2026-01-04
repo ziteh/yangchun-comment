@@ -2,7 +2,62 @@ import type { Comment } from '@ziteh/yangchun-comment-shared';
 import type { ApiService, AuthInfo, CommentAuthInfo } from './apiService';
 
 export const createMockApiService = (): ApiService => {
-  const mockComments = new Map<string, Comment[]>();
+  const date = Date.now(); // test
+
+  const mockComments = new Map<string, Comment[]>([
+    [
+      'default-post',
+      [
+        // test
+        {
+          id: 'a0',
+          msg: 'a0',
+          pubDate: date,
+        },
+        {
+          id: 'a1',
+          msg: 'a1',
+          pubDate: date + 1000,
+          replyTo: 'a0',
+        },
+        {
+          id: 'b0',
+          msg: 'b0',
+          pubDate: date + 2000,
+        },
+        {
+          id: 'b1',
+          msg: 'b1',
+          pubDate: date + 3000,
+          replyTo: 'b0',
+        },
+        {
+          id: 'b2',
+          msg: 'b2',
+          pubDate: date + 4000,
+          replyTo: 'b0',
+        },
+        {
+          id: 'b21',
+          msg: 'b21',
+          pubDate: date + 6000,
+          replyTo: 'b2',
+        },
+        {
+          id: 'b22',
+          msg: 'b22',
+          pubDate: date + 6000,
+          replyTo: 'b21',
+        },
+        {
+          id: 'b23',
+          msg: 'b23',
+          pubDate: date + 7000,
+          replyTo: 'b2',
+        },
+      ],
+    ],
+  ]);
   const commentAuthMap = new Map<string, AuthInfo>();
   let commentIdCounter = 1;
 

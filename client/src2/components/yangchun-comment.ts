@@ -5,6 +5,8 @@ import type { Comment } from '@ziteh/yangchun-comment-shared';
 import './comment-input';
 import './comment-info';
 import './list/comment-list';
+import type { ApiService } from '../api/apiService';
+import { createMockApiService } from '../api/apiService.mock';
 
 @customElement('yangchun-comment')
 export class YangChunComment extends LitElement {
@@ -12,56 +14,58 @@ export class YangChunComment extends LitElement {
 
   date = Date.now(); // test
 
+  @state() private accessor apiService: ApiService = createMockApiService();
+
   @state() private accessor draft = '';
   @state() private accessor nickname = '';
   @state() private accessor comments: Comment[] = [
     // test
-    {
-      id: 'a0',
-      msg: 'a0',
-      pubDate: this.date,
-    },
-    {
-      id: 'a1',
-      msg: 'a1',
-      pubDate: this.date + 1000,
-      replyTo: 'a0',
-    },
-    {
-      id: 'b0',
-      msg: 'b0',
-      pubDate: this.date + 2000,
-    },
-    {
-      id: 'b1',
-      msg: 'b1',
-      pubDate: this.date + 3000,
-      replyTo: 'b0',
-    },
-    {
-      id: 'b2',
-      msg: 'b2',
-      pubDate: this.date + 4000,
-      replyTo: 'b0',
-    },
-    {
-      id: 'b21',
-      msg: 'b21',
-      pubDate: this.date + 6000,
-      replyTo: 'b2',
-    },
-    {
-      id: 'b22',
-      msg: 'b22',
-      pubDate: this.date + 6000,
-      replyTo: 'b21',
-    },
-    {
-      id: 'b23',
-      msg: 'b23',
-      pubDate: this.date + 7000,
-      replyTo: 'b2',
-    },
+    // {
+    //   id: 'a0',
+    //   msg: 'a0',
+    //   pubDate: this.date,
+    // },
+    // {
+    //   id: 'a1',
+    //   msg: 'a1',
+    //   pubDate: this.date + 1000,
+    //   replyTo: 'a0',
+    // },
+    // {
+    //   id: 'b0',
+    //   msg: 'b0',
+    //   pubDate: this.date + 2000,
+    // },
+    // {
+    //   id: 'b1',
+    //   msg: 'b1',
+    //   pubDate: this.date + 3000,
+    //   replyTo: 'b0',
+    // },
+    // {
+    //   id: 'b2',
+    //   msg: 'b2',
+    //   pubDate: this.date + 4000,
+    //   replyTo: 'b0',
+    // },
+    // {
+    //   id: 'b21',
+    //   msg: 'b21',
+    //   pubDate: this.date + 6000,
+    //   replyTo: 'b2',
+    // },
+    // {
+    //   id: 'b22',
+    //   msg: 'b22',
+    //   pubDate: this.date + 6000,
+    //   replyTo: 'b21',
+    // },
+    // {
+    //   id: 'b23',
+    //   msg: 'b23',
+    //   pubDate: this.date + 7000,
+    //   replyTo: 'b2',
+    // },
   ];
 
   @state() private accessor referenceComment: Comment | null = null;
@@ -89,6 +93,11 @@ export class YangChunComment extends LitElement {
         ></comment-list>
       </div>
     `;
+  }
+
+  async firstUpdated() {
+    console.debug('firstUpdated');
+    this.comments = await this.apiService.getComments('default-post');
   }
 
   private onCommentInfoCancel(e: CustomEvent<string>) {
