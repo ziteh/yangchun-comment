@@ -10,63 +10,23 @@ import { createMockApiService } from '../api/apiService.mock';
 
 @customElement('yangchun-comment')
 export class YangChunComment extends LitElement {
-  static styles = yangChunCommentStyles;
+  static properties = {
+    post: { type: String },
+    apiUrl: { type: String },
+    authorName: { type: String },
+    // TODO: i18n
+  };
+  post = '';
+  apiUrl = '';
+  authorName = '';
 
-  date = Date.now(); // test
+  static styles = yangChunCommentStyles;
 
   @state() private accessor apiService: ApiService = createMockApiService();
 
   @state() private accessor draft = '';
   @state() private accessor nickname = '';
-  @state() private accessor comments: Comment[] = [
-    // test
-    // {
-    //   id: 'a0',
-    //   msg: 'a0',
-    //   pubDate: this.date,
-    // },
-    // {
-    //   id: 'a1',
-    //   msg: 'a1',
-    //   pubDate: this.date + 1000,
-    //   replyTo: 'a0',
-    // },
-    // {
-    //   id: 'b0',
-    //   msg: 'b0',
-    //   pubDate: this.date + 2000,
-    // },
-    // {
-    //   id: 'b1',
-    //   msg: 'b1',
-    //   pubDate: this.date + 3000,
-    //   replyTo: 'b0',
-    // },
-    // {
-    //   id: 'b2',
-    //   msg: 'b2',
-    //   pubDate: this.date + 4000,
-    //   replyTo: 'b0',
-    // },
-    // {
-    //   id: 'b21',
-    //   msg: 'b21',
-    //   pubDate: this.date + 6000,
-    //   replyTo: 'b2',
-    // },
-    // {
-    //   id: 'b22',
-    //   msg: 'b22',
-    //   pubDate: this.date + 6000,
-    //   replyTo: 'b21',
-    // },
-    // {
-    //   id: 'b23',
-    //   msg: 'b23',
-    //   pubDate: this.date + 7000,
-    //   replyTo: 'b2',
-    // },
-  ];
+  @state() private accessor comments: Comment[] = [];
 
   @state() private accessor referenceComment: Comment | null = null;
   @state() private accessor isReply = true; // true: reply, false: edit
@@ -97,7 +57,7 @@ export class YangChunComment extends LitElement {
 
   async firstUpdated() {
     console.debug('firstUpdated');
-    this.comments = await this.apiService.getComments('default-post');
+    this.comments = await this.apiService.getComments(this.post);
   }
 
   private onCommentInfoCancel(e: CustomEvent<string>) {

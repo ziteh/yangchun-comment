@@ -56,6 +56,8 @@ export const createApiService = (apiUrl: string): ApiService => {
       const url = new URL('/api/comments', apiUrl);
       url.searchParams.append('post', post); // Get honeypot field if present
       const websiteField = document.querySelector('input[name="website"]') as HTMLInputElement;
+      // const websiteField = document.querySelector('input[name="website"]') as HTMLInputElement;
+      // FIXME: directly from global DOM may break encapsulation
       const website = websiteField ? websiteField.value : '';
 
       const res = await fetch(url, {
