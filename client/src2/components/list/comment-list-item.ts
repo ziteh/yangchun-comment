@@ -25,7 +25,7 @@ export class CommentListItem extends LitElement {
           <strong>${this.comment.pseudonym ?? '?'}</strong>
           <span> at ${new Date(this.comment.pubDate).toLocaleString()}</span>
           <p>${this.comment.msg ?? ''}</p>
-          <button @click=${this.onReply}>Reply</button>
+          ${this.isPreviewComment() ? null : html`<button @click=${this.onReply}>Reply</button>`}
         </div>
 
         <div class="reply-comments">
@@ -35,6 +35,11 @@ export class CommentListItem extends LitElement {
         </div>
       </div>
     `;
+  }
+
+  private isPreviewComment(): boolean {
+    const magicString = '_PREVIEW';
+    return this.comment.id === magicString && this.comment.nameHash === magicString;
   }
 
   private onReply() {

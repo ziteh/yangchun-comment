@@ -1,5 +1,8 @@
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
+import './list/comment-list-item';
+import { generatePseudonymAndHash } from '../utils/pseudonym';
+import type { Comment } from '@ziteh/yangchun-comment-shared';
 
 @customElement('comment-input')
 export class CommentInput extends LitElement {
@@ -13,12 +16,15 @@ export class CommentInput extends LitElement {
   nickname = '';
 
   @state() private accessor isPreview = false;
+  @state() private accessor previewComment: Comment | null = null;
 
   render() {
     return html`
       <div>
-        ${this.isPreview
-          ? html`<div>${this.message}</div>`
+        ${this.isPreview && this.previewComment
+          ? html`<div>
+              <comment-list-item .comment=${this.previewComment}></comment-list-item>
+            </div>`
           : html`<div>
               <textarea
                 .value=${this.message}
@@ -41,6 +47,18 @@ export class CommentInput extends LitElement {
     `;
   }
 
+  private async createPreviewComment() {
+    const magicString = '_PREVIEW';
+    const { pseudonym } = await generatePseudonymAndHash(this.nickname);
+    return {
+      msg: this.message,
+      pseudonym: pseudonym,
+      pubDate: Date.now(),
+      id: magicString,
+      nameHash: magicString,
+    };
+  }
+
   private isValidComment(): boolean {
     const msgLength = this.message.trim().length;
     const nicknameLength = this.nickname.trim().length;
@@ -50,8 +68,11 @@ export class CommentInput extends LitElement {
     return isValidMessage && isValidNickname;
   }
 
-  private togglePreview() {
+  private async togglePreview() {
     this.isPreview = !this.isPreview;
+    if (this.isPreview) {
+      this.previewComment = await this.createPreviewComment();
+    }
   }
 
   private onInputMessage(e: Event) {

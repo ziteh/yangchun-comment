@@ -11,20 +11,20 @@ export class CommentList extends LitElement {
   };
   comments: Comment[] = [];
 
-  testSubComments: Comment[] = [
-    {
-      id: 'sub1',
-      msg: 'This is a sub-comment.',
-      pubDate: Date.now(),
-      replyTo: 'sub0',
-    },
-    {
-      id: 'sub2',
-      msg: 'This is another sub-comment.',
-      pubDate: Date.now(),
-      replyTo: 'sub0',
-    },
-  ];
+  // testSubComments: Comment[] = [
+  //   {
+  //     id: 'sub1',
+  //     msg: 'This is a sub-comment.',
+  //     pubDate: Date.now(),
+  //     replyTo: 'sub0',
+  //   },
+  //   {
+  //     id: 'sub2',
+  //     msg: 'This is another sub-comment.',
+  //     pubDate: Date.now(),
+  //     replyTo: 'sub0',
+  //   },
+  // ];
 
   render() {
     return html`
