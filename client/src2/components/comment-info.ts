@@ -46,7 +46,7 @@ export class CommentInfo extends LitElement {
         <div class="info-bar">
           <div></div>
           <div class="actions">
-            <button class="text-btn">RSS</button>
+            <button class="text-btn">Notify</button>
             <button class="text-btn">Help</button>
           </div>
         </div>

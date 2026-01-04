@@ -42,6 +42,7 @@ export class CommentListItem extends LitElement {
         word-break: break-word;
       }
       .actions {
+        gap: var(--ycc-spacing-s);
         display: flex;
         justify-content: flex-end;
       }
@@ -74,11 +75,15 @@ export class CommentListItem extends LitElement {
             <span class="date">${new Date(this.comment.pubDate).toLocaleString()}</span>
           </div>
           <p class="content">${this.comment.msg ?? ''}</p>
-          <div class="actions">
-            ${this.isPreviewComment()
-              ? null
-              : html`<button class="text-btn" @click=${this.onReply}>Reply</button>`}
-          </div>
+          ${this.isPreviewComment()
+            ? null
+            : html`
+                <div class="actions">
+                  <button class="text-btn">Delete</button>
+                  <button class="text-btn">Edit</button>
+                  <button class="text-btn" @click=${this.onReply}>Reply</button>
+                </div>
+              `}
         </div>
 
         <div class="reply-comments">
