@@ -38,16 +38,40 @@ export interface I18nStrings {
   noComments: string;
 }
 
-// export const enUS: I18nStrings = {
-// bcp47: 'en-US',
-//   anonymous: 'Anonymous',
-//   submit: 'Submit',
-//   preview: 'Preview',
-//   edit: 'Edit',
-//   delete: 'Delete',
-//   reply: 'Reply',
-//   replyTo: 'Reply to',
-// };
+export const enUS: I18nStrings = {
+  bcp47: 'en-US',
+  anonymous: 'Anonymous',
+  submit: 'Submit',
+  preview: 'Preview',
+  edit: 'Edit',
+  edited: 'Edited',
+  editing: 'Editing: ',
+  delete: 'Delete',
+  reply: 'Reply',
+  replyTo: 'Reply to',
+  replyingTo: 'Replying to: ',
+  notify: 'Notify',
+  help: 'Help',
+  cancel: 'Cancel',
+  author: 'Author',
+  me: 'Me',
+  messagePlaceholder: 'Write a comment...\nSupports Markdown',
+  nicknamePlaceholder: 'Nickname (optional), it will be converted to a pseudonym',
+  confirmDelete: 'Confirm delete',
+  confirmDeleteDesc1: 'Are you sure you want to delete this comment? Comment ID: ',
+  confirmDeleteDesc2: 'This action cannot be undone!',
+  helpDesc:
+    'This is a simple comment system — you can post comments and reply to others. You may preview your content before posting.\nYou can fill in a nickname which will be converted to a pseudonym for privacy, or leave it blank to remain anonymous.\nAfter posting, you can edit or delete your own comment within two minutes without leaving or refreshing the page.\nComment content supports basic Markdown and does not support HTML.',
+  helpMdLink: 'Link',
+  helpMdImage: 'Image',
+  helpMdItalic: 'Italic',
+  helpMdBold: 'Bold',
+  helpMdList: 'List item',
+  helpMdOrderedList: 'Ordered list item',
+  helpMdInlineCode: 'Inline code',
+  helpMdCodeBlock: 'Code block',
+  noComments: 'No comments yet',
+};
 
 export const zhTW: I18nStrings = {
   bcp47: 'zh-TW',
@@ -67,7 +91,7 @@ export const zhTW: I18nStrings = {
   author: '作者',
   me: '我',
   messagePlaceholder: '請輸入留言...\n支援 Markdown',
-  nicknamePlaceholder: '暱稱（選填），將會被轉換為假名',
+  nicknamePlaceholder: '暱稱（選填）將會被轉換為假名',
   confirmDelete: '確認刪除',
   confirmDeleteDesc1: '確定要刪除此留言嗎？留言 ID: ',
   confirmDeleteDesc2: '此操作無法復原！',
@@ -81,11 +105,10 @@ export const zhTW: I18nStrings = {
   helpMdOrderedList: '有序清單項目',
   helpMdInlineCode: '行內程式碼',
   helpMdCodeBlock: '程式碼區塊',
-
   noComments: '目前還沒有留言',
 };
 
-let currentLanguage: I18nStrings;
+let currentLanguage: I18nStrings = enUS;
 
 export function t(key: keyof I18nStrings): string {
   return currentLanguage[key] || key;

@@ -10,7 +10,7 @@ import type { ApiService } from '../api/apiService';
 import { createMockApiService } from '../api/apiService.mock';
 import { generatePseudonymAndHash } from '../utils/pseudonym';
 import { setupDOMPurifyHooks } from '../utils/sanitize';
-import { initI18n, zhTW, t } from '../utils/i18n';
+import { initI18n, enUS, t } from '../utils/i18n';
 
 @customElement('yangchun-comment')
 export class YangChunComment extends LitElement {
@@ -205,8 +205,7 @@ ${t('helpMdCodeBlock')}
   }
 
   connectedCallback() {
-    initI18n(zhTW);
-    // initI18n(enUS);
+    initI18n(enUS);
     super.connectedCallback();
   }
 
