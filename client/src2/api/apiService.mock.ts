@@ -27,6 +27,7 @@ export const createMockApiService = (): ApiService => {
           id: 'b0',
           msg: 'b0',
           pubDate: date + 2000,
+          modDate: date + 3000,
           isAdmin: true,
         },
         {

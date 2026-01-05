@@ -111,8 +111,17 @@ export class CommentListItem extends LitElement {
               }
               return null;
             })()}
-            <span class="date-relative">${formatRelativeDate(this.comment.pubDate)}</span>
-            <span class="date-absolute">${formatAbsoluteDate(this.comment.pubDate)}</span>
+            ${this.comment.modDate && this.comment.modDate > this.comment.pubDate
+              ? html`
+                  <span class="date-relative">
+                    edited ${formatRelativeDate(this.comment.modDate)}
+                  </span>
+                  <span class="date-absolute">${formatAbsoluteDate(this.comment.modDate)}</span>
+                `
+              : html`
+                  <span class="date-relative">${formatRelativeDate(this.comment.pubDate)}</span>
+                  <span class="date-absolute">${formatAbsoluteDate(this.comment.pubDate)}</span>
+                `}
             <span class="comment-id">#${this.comment.id}</span>
           </div>
           <p class="content">${this.renderMarkdown(this.comment.msg)}</p>
