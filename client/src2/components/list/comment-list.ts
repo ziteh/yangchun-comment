@@ -29,8 +29,10 @@ export class CommentList extends LitElement {
   static properties = {
     comments: { type: Array },
     canEditCallback: { type: Function },
+    author: { type: String },
   };
   comments: Comment[] = [];
+  author = '';
   canEditCallback: (commentId: string) => boolean = () => false;
 
   render() {
@@ -44,6 +46,7 @@ export class CommentList extends LitElement {
           (comment) => html`
             <comment-list-item
               .comment=${comment}
+              .author=${this.author}
               .canEditCallback=${this.canEditCallback}
               .replyComments=${sortCommentsByDate(
                 findReplyComments(this.comments, comment.id),

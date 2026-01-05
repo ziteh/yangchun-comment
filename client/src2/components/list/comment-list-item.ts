@@ -168,7 +168,7 @@ export class CommentListItem extends LitElement {
     pubDate: 0,
   };
   replyComments: Comment[] = [];
-  author = 'Author'; // TODO: default
+  author = '';
   canEditCallback: (commentId: string) => boolean = () => false;
 
   render() {
@@ -176,7 +176,11 @@ export class CommentListItem extends LitElement {
       <div class=${this.comment.replyTo ? 'reply-comment' : 'root-comment'}>
         <div class="comment-box" id=${this.comment.id}>
           <div class="header">
-            <span class="author">${this.comment.pseudonym || t('anonymous')}</span>
+            <span class="author"
+              >${this.comment.isAdmin && this.author
+                ? this.author
+                : this.comment.pseudonym || t('anonymous')}</span
+            >
             ${(() => {
               if (this.comment.isAdmin) {
                 return html`<span class="badge">${t('author')}</span>`;
@@ -232,6 +236,7 @@ export class CommentListItem extends LitElement {
             (cmt) => html`
               <comment-list-item
                 .comment=${cmt}
+                .author=${this.author}
                 .canEditCallback=${this.canEditCallback}
               ></comment-list-item>
             `,
