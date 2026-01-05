@@ -94,6 +94,15 @@ export class CommentInput extends LitElement {
       .message-counter {
         text-align: right;
       }
+      .input-email {
+        position: absolute;
+        left: -9999px;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+        pointer-events: none;
+        tab-index: -1;
+      }
     `,
   ];
 
@@ -110,6 +119,7 @@ export class CommentInput extends LitElement {
 
   @state() private accessor isPreview = false;
   @state() private accessor previewComment: Comment | null = null;
+  @state() private accessor honeypot = '';
 
   render() {
     return html`
@@ -129,6 +139,15 @@ export class CommentInput extends LitElement {
                 <div class="char-counter message-counter">
                   ${this.message.length}/${CommentInput.MAX_MESSAGE_LENGTH}
                 </div>
+                <input
+                  type="email"
+                  name="email"
+                  class="input-email"
+                  .value=${this.honeypot}
+                  @input=${this.onHoneypotInput}
+                  tabindex="-1"
+                  autocomplete="off"
+                />
               </div>`}
         </div>
 
@@ -226,7 +245,16 @@ export class CommentInput extends LitElement {
     );
   }
 
+  private onHoneypotInput(e: Event) {
+    const target = e.target as HTMLInputElement;
+    this.honeypot = target.value;
+  }
+
   private onSubmit() {
+    if (this.honeypot !== '') {
+      return;
+    }
+
     // back to edit mode
     this.isPreview = false;
     this.previewComment = null;
