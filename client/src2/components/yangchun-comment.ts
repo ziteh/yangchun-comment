@@ -1,4 +1,4 @@
-import { LitElement, css, html } from 'lit';
+import { LitElement, css, html, type PropertyValues } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { yangChunCommentStyles } from './yangchun-comment.styles';
 import type { Comment } from '@ziteh/yangchun-comment-shared';
@@ -10,7 +10,7 @@ import type { ApiService } from '../api/apiService';
 import { createMockApiService } from '../api/apiService.mock';
 import { generatePseudonymAndHash } from '../utils/pseudonym';
 import { setupDOMPurifyHooks } from '../utils/sanitize';
-import { initI18n, enUS, t } from '../utils/i18n';
+import { initI18n, enUS, zhTW, t, type I18nStrings } from '../utils/i18n';
 
 @customElement('yangchun-comment')
 export class YangChunComment extends LitElement {
@@ -68,11 +68,14 @@ export class YangChunComment extends LitElement {
     post: { type: String },
     apiUrl: { type: String },
     authorName: { type: String },
-    // TODO: i18n
+    lang: { type: String },
+    customMessages: { type: Object, attribute: false },
   };
   post = '';
   apiUrl = '';
   authorName = '';
+  lang = 'en-US';
+  customMessages?: I18nStrings;
 
   @state() private accessor apiService: ApiService = createMockApiService();
 
@@ -204,9 +207,17 @@ ${t('helpMdCodeBlock')}
     `;
   }
 
-  connectedCallback() {
-    initI18n(enUS);
-    super.connectedCallback();
+  protected willUpdate(changedProperties: PropertyValues<this>) {
+    if (changedProperties.has('customMessages') || changedProperties.has('lang')) {
+      if (this.customMessages) {
+        initI18n(this.customMessages);
+      } else {
+        const availableLangs = [enUS, zhTW];
+        const selectedLang = availableLangs.find((l) => l.bcp47 === this.lang) || enUS;
+        initI18n(selectedLang);
+      }
+    }
+    super.willUpdate(changedProperties);
   }
 
   async firstUpdated() {
