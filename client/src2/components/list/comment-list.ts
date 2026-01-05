@@ -4,6 +4,7 @@ import type { Comment } from '@ziteh/yangchun-comment-shared';
 import './comment-list-item';
 import { sortCommentsByDate, filterRootComments, findReplyComments } from '../../utils/comment';
 import { yangChunCommentStyles } from '../yangchun-comment.styles';
+import { t } from '../../utils/i18n';
 
 @customElement('comment-list')
 export class CommentList extends LitElement {
@@ -16,6 +17,12 @@ export class CommentList extends LitElement {
       .reply-comments-container {
         margin-bottom: var(--ycc-spacing-m);
       }
+      .no-comments {
+        text-align: center;
+        color: var(--ycc-text-secondary);
+        font-style: italic;
+        font-size: 0.9em;
+      }
     `,
   ];
 
@@ -27,6 +34,10 @@ export class CommentList extends LitElement {
   canEditCallback: (commentId: string) => boolean = () => false;
 
   render() {
+    if (this.comments.length === 0) {
+      return html`<p class="no-comments">${t('noComments')}</p>`;
+    }
+
     return html`
       <div class="reply-comments-container">
         ${sortCommentsByDate(filterRootComments(this.comments), true).map(

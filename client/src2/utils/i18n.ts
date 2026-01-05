@@ -34,6 +34,8 @@ export interface I18nStrings {
   helpMdOrderedList: string;
   helpMdInlineCode: string;
   helpMdCodeBlock: string;
+
+  noComments: string;
 }
 
 // export const enUS: I18nStrings = {
@@ -79,6 +81,8 @@ export const zhTW: I18nStrings = {
   helpMdOrderedList: '有序清單項目',
   helpMdInlineCode: '行內程式碼',
   helpMdCodeBlock: '程式碼區塊',
+
+  noComments: '目前還沒有留言',
 };
 
 let currentLanguage: I18nStrings;
