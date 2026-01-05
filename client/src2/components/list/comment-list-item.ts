@@ -69,6 +69,72 @@ export class CommentListItem extends LitElement {
         white-space: pre-wrap;
         word-break: break-word;
       }
+      .content p {
+        margin: 0.5em 0;
+      }
+      .content a {
+        color: var(--ycc-primary-color);
+        text-decoration: underline;
+      }
+      .content a:hover {
+        color: var(--ycc-primary-hover);
+      }
+      .content img {
+        max-width: 100%;
+        height: auto;
+        border-radius: var(--ycc-radius);
+        display: block;
+        margin: var(--ycc-spacing-s) 0;
+      }
+      .content code {
+        background-color: var(--ycc-bg-secondary);
+        padding: 2px 4px;
+        border-radius: 4px;
+        font-family: var(--ycc-font-monospace);
+        font-size: 0.9em;
+      }
+      .content pre {
+        background-color: var(--ycc-bg-secondary);
+        padding: var(--ycc-spacing-s);
+        border-radius: var(--ycc-radius);
+        overflow-x: auto;
+        margin: var(--ycc-spacing-s) 0;
+      }
+      .content pre code {
+        padding: 0;
+        background-color: transparent;
+        display: block;
+      }
+      .content ul,
+      .content ol {
+        padding-left: var(--ycc-spacing-l);
+        margin: var(--ycc-spacing-s) 0;
+      }
+      .content li {
+        margin: 0.2em 0;
+      }
+      .content hr {
+        border: none;
+        border-top: 1px solid var(--ycc-border-color);
+        margin: var(--ycc-spacing-m) 0;
+      }
+      .content blockquote {
+        border-left: 4px solid var(--ycc-border-color);
+        margin: var(--ycc-spacing-s) 0;
+        padding-left: var(--ycc-spacing-m);
+        color: var(--ycc-text-secondary);
+      }
+      .content strong {
+        font-weight: bold;
+      }
+      .content em {
+        font-style: italic;
+      }
+      .content h6 {
+        font-size: 1em;
+        margin: var(--ycc-spacing-s) 0;
+        font-weight: bold;
+      }
       .actions {
         gap: var(--ycc-spacing-s);
         display: flex;
@@ -127,7 +193,7 @@ export class CommentListItem extends LitElement {
                 `}
             <span class="comment-id">#${this.comment.id}</span>
           </div>
-          <p class="content">${this.renderMarkdown(this.comment.msg)}</p>
+          <div class="content">${this.renderMarkdown(this.comment.msg)}</div>
           ${this.isPreviewComment()
             ? null
             : html`

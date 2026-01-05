@@ -99,12 +99,19 @@ export class YangChunComment extends LitElement {
         </div>
         <pre class="help-md-sample">
 [${t('helpMdLink')}](https://example.com)
+
 ![${t('helpMdImage')}](https://example.com/img.jpg)
+
 *${t('helpMdItalic')}*
+
 **${t('helpMdBold')}**
+
 - ${t('helpMdList')}
+
 1. ${t('helpMdOrderedList')}
+
 \`${t('helpMdInlineCode')}\`
+
 \`\`\`
 ${t('helpMdCodeBlock')}
 \`\`\`</pre
