@@ -33,7 +33,7 @@ export const createMockApiService = (): ApiService => {
           pseudonym: 'Alice',
           id: 'b1',
           msg: 'b1',
-          pubDate: date + 3000,
+          pubDate: date - 25 * 5 * 7 * 24 * 60 * 60 * 1000,
           replyTo: 'b0',
         },
         {

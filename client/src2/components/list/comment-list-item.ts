@@ -5,6 +5,7 @@ import { yangChunCommentStyles } from '../yangchun-comment.styles';
 import type { Comment } from '@ziteh/yangchun-comment-shared';
 import { sanitizeHtml } from '../../utils/sanitize';
 import snarkdown from 'snarkdown';
+import { formatRelativeDate, formatAbsoluteDate } from '../../utils/format';
 
 @customElement('comment-list-item')
 export class CommentListItem extends LitElement {
@@ -45,8 +46,21 @@ export class CommentListItem extends LitElement {
         padding: 2px var(--ycc-spacing-xs);
         font-size: 0.8em;
       }
-      .date {
-        // font-style: italic;
+      .date-relative {
+      }
+      .date-absolute {
+        display: none;
+      }
+      .comment-id {
+        display: none;
+      }
+      .header:hover .date-absolute {
+        display: block;
+        opacity: 0.6;
+      }
+      .header:hover .comment-id {
+        display: block;
+        opacity: 0.6;
       }
       .content {
         margin: 0;
@@ -97,7 +111,9 @@ export class CommentListItem extends LitElement {
               }
               return null;
             })()}
-            <span class="date">${new Date(this.comment.pubDate).toLocaleString()}</span>
+            <span class="date-relative">${formatRelativeDate(this.comment.pubDate)}</span>
+            <span class="date-absolute">${formatAbsoluteDate(this.comment.pubDate)}</span>
+            <span class="comment-id">#${this.comment.id}</span>
           </div>
           <p class="content">${this.renderMarkdown(this.comment.msg)}</p>
           ${this.isPreviewComment()
@@ -110,7 +126,13 @@ export class CommentListItem extends LitElement {
                         <button class="text-btn" @click=${this.onEdit}>Edit</button>
                       `
                     : null}
-                  <button class="text-btn" @click=${this.onReply}>Reply</button>
+                  <button
+                    class="text-btn"
+                    @click=${this.onReply}
+                    title=${'Reply to #' + this.comment.id}
+                  >
+                    Reply
+                  </button>
                 </div>
               `}
         </div>
