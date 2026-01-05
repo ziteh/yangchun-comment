@@ -79,6 +79,21 @@ export class CommentInput extends LitElement {
         comment-list-item {
           // margin: 0;
         }
+      }
+      .nickname-wrapper {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: var(--ycc-spacing-s);
+      }
+      .char-counter {
+        font-size: 0.75rem;
+        color: var(--ycc-text-secondary);
+        white-space: nowrap;
+      }
+      .message-counter {
+        text-align: right;
+      }
     `,
   ];
 
@@ -109,19 +124,29 @@ export class CommentInput extends LitElement {
                   .value=${this.message}
                   @input=${this.onInputMessage}
                   placeholder=${t('messagePlaceholder')}
+                  maxlength=${CommentInput.MAX_MESSAGE_LENGTH}
                 ></textarea>
+                <div class="char-counter message-counter">
+                  ${this.message.length}/${CommentInput.MAX_MESSAGE_LENGTH}
+                </div>
               </div>`}
         </div>
 
         <div class="controls-row">
-          <input
-            class="nickname-input"
-            .value=${this.nickname}
-            @input=${this.onInputNickname}
-            type="text"
-            placeholder=${t('nicknamePlaceholder')}
-            ?disabled=${this.isPreview}
-          />
+          <div class="nickname-wrapper">
+            <input
+              class="nickname-input"
+              .value=${this.nickname}
+              @input=${this.onInputNickname}
+              type="text"
+              placeholder=${t('nicknamePlaceholder')}
+              ?disabled=${this.isPreview}
+              maxlength=${CommentInput.MAX_NICKNAME_LENGTH}
+            />
+            <span class="char-counter">
+              ${this.nickname.length}/${CommentInput.MAX_NICKNAME_LENGTH}
+            </span>
+          </div>
           <div class="actions">
             <button
               class="secondary"
@@ -179,9 +204,10 @@ export class CommentInput extends LitElement {
 
   private onInputMessage(e: Event) {
     const target = e.target as HTMLTextAreaElement;
+    this.message = target.value.slice(0, CommentInput.MAX_MESSAGE_LENGTH);
     this.dispatchEvent(
       new CustomEvent('comment-change', {
-        detail: target.value.slice(0, CommentInput.MAX_MESSAGE_LENGTH),
+        detail: this.message,
         bubbles: true,
         composed: true,
       }),
@@ -190,9 +216,10 @@ export class CommentInput extends LitElement {
 
   private onInputNickname(e: Event) {
     const target = e.target as HTMLInputElement;
+    this.nickname = target.value.slice(0, CommentInput.MAX_NICKNAME_LENGTH);
     this.dispatchEvent(
       new CustomEvent('nickname-change', {
-        detail: target.value.slice(0, CommentInput.MAX_NICKNAME_LENGTH),
+        detail: this.nickname,
         bubbles: true,
         composed: true,
       }),
