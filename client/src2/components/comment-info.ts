@@ -59,7 +59,11 @@ export class CommentInfo extends LitElement {
       <div class="info-bar">
         <div class="reference-comment-info">
           ${this.isReply
-            ? html`<span>${t('replyingTo')}<strong>${this.comment.pseudonym}</strong></span>`
+            ? html`<span
+                >${t('replyingTo')}<strong
+                  >${this.comment.pseudonym || t('anonymous')}${' #' + this.comment.id}</strong
+                ></span
+              >`
             : html`<span>${t('editing')}<strong>${this.comment.id}</strong></span>`}
           <button class="text-btn" @click=${this.onCancel}>${t('cancel')}</button>
         </div>
