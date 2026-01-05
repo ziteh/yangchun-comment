@@ -4,6 +4,7 @@ import { yangChunCommentStyles } from './yangchun-comment.styles';
 import './list/comment-list-item';
 import { generatePseudonymAndHash } from '../utils/pseudonym';
 import type { Comment } from '@ziteh/yangchun-comment-shared';
+import { t } from '../utils/i18n';
 
 @customElement('comment-input')
 export class CommentInput extends LitElement {
@@ -91,8 +92,7 @@ export class CommentInput extends LitElement {
                 <textarea
                   .value=${this.message}
                   @input=${this.onInputMessage}
-                  placeholder="Write a comment...
-Markdown syntax is supported"
+                  placeholder=${t('messagePlaceholder')}
                 ></textarea>
               </div>`}
         </div>
@@ -103,7 +103,7 @@ Markdown syntax is supported"
             .value=${this.nickname}
             @input=${this.onInputNickname}
             type="text"
-            placeholder="Nickname (optional), will be converted to pseudonym"
+            placeholder=${t('nicknamePlaceholder')}
             ?disabled=${this.isPreview}
           />
           <div class="actions">
@@ -112,9 +112,11 @@ Markdown syntax is supported"
               @click=${this.togglePreview}
               ?disabled=${!this.isValidComment()}
             >
-              ${this.isPreview ? 'Edit' : 'Preview'}
+              ${this.isPreview ? t('edit') : t('preview')}
             </button>
-            <button @click=${this.onSubmit} ?disabled=${!this.isValidComment()}>Submit</button>
+            <button @click=${this.onSubmit} ?disabled=${!this.isValidComment()}>
+              ${t('submit')}
+            </button>
           </div>
         </div>
       </div>
@@ -127,9 +129,11 @@ Markdown syntax is supported"
     let pseudonym: string;
     if (this.editPseudonym) {
       pseudonym = this.editPseudonym;
-    } else {
+    } else if (this.nickname.trim()) {
       const res = await generatePseudonymAndHash(this.nickname);
       pseudonym = res.pseudonym;
+    } else {
+      pseudonym = t('anonymous');
     }
 
     return {

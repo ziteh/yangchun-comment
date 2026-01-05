@@ -6,6 +6,7 @@ import type { Comment } from '@ziteh/yangchun-comment-shared';
 import { sanitizeHtml } from '../../utils/sanitize';
 import snarkdown from 'snarkdown';
 import { formatRelativeDate, formatAbsoluteDate } from '../../utils/format';
+import { t } from '../../utils/i18n';
 
 @customElement('comment-list-item')
 export class CommentListItem extends LitElement {
@@ -102,24 +103,26 @@ export class CommentListItem extends LitElement {
       <div class=${this.comment.replyTo ? 'reply-comment' : 'root-comment'}>
         <div class="comment-box" id=${this.comment.id}>
           <div class="header">
-            <span class="author">${this.comment.pseudonym ?? '?'}</span>
+            <span class="author">${this.comment.pseudonym || t('anonymous')}</span>
             ${(() => {
               if (this.comment.isAdmin) {
-                return html`<span class="badge">${this.author ? this.author : 'Author'}</span>`;
+                return html`<span class="badge">${t('author')}</span>`;
               } else if (this.canEditCallback(this.comment.id)) {
-                return html`<span class="badge">Me</span>`;
+                return html`<span class="badge">${t('me')}</span>`;
               }
               return null;
             })()}
             ${this.comment.modDate && this.comment.modDate > this.comment.pubDate
               ? html`
                   <span class="date-relative">
-                    edited ${formatRelativeDate(this.comment.modDate)}
+                    ${t('edited') + ' ' + formatRelativeDate(this.comment.modDate, t('bcp47'))}
                   </span>
                   <span class="date-absolute">${formatAbsoluteDate(this.comment.modDate)}</span>
                 `
               : html`
-                  <span class="date-relative">${formatRelativeDate(this.comment.pubDate)}</span>
+                  <span class="date-relative"
+                    >${formatRelativeDate(this.comment.pubDate, t('bcp47'))}</span
+                  >
                   <span class="date-absolute">${formatAbsoluteDate(this.comment.pubDate)}</span>
                 `}
             <span class="comment-id">#${this.comment.id}</span>
@@ -131,16 +134,16 @@ export class CommentListItem extends LitElement {
                 <div class="actions">
                   ${this.canEditCallback(this.comment.id) // TODO: to @state ?
                     ? html`
-                        <button class="text-btn" @click=${this.onDelete}>Delete</button>
-                        <button class="text-btn" @click=${this.onEdit}>Edit</button>
+                        <button class="text-btn" @click=${this.onDelete}>${t('delete')}</button>
+                        <button class="text-btn" @click=${this.onEdit}>${t('edit')}</button>
                       `
                     : null}
                   <button
                     class="text-btn"
                     @click=${this.onReply}
-                    title=${'Reply to #' + this.comment.id}
+                    title=${t('replyTo') + ' #' + this.comment.id}
                   >
-                    Reply
+                    ${t('reply')}
                   </button>
                 </div>
               `}

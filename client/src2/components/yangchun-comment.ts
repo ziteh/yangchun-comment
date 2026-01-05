@@ -10,16 +10,7 @@ import type { ApiService } from '../api/apiService';
 import { createMockApiService } from '../api/apiService.mock';
 import { generatePseudonymAndHash } from '../utils/pseudonym';
 import { setupDOMPurifyHooks } from '../utils/sanitize';
-
-const HelpContent = html`
-  <p>Markdown is supported.</p>
-  <ul>
-    <li>**bold**</li>
-    <li>*italic*</li>
-    <li>[link](url)</li>
-    <li>\`code\`</li>
-  </ul>
-`;
+import { initI18n, zhTW, t } from '../utils/i18n';
 
 @customElement('yangchun-comment')
 export class YangChunComment extends LitElement {
@@ -34,6 +25,16 @@ export class YangChunComment extends LitElement {
         display: flex;
         justify-content: flex-end;
         gap: var(--ycc-spacing-s);
+      }
+      .help-md-sample {
+        pre {
+          background-color: var(--ycc-bg-secondary);
+          padding: var(--ycc-spacing-s);
+          border-radius: var(--ycc-radius);
+          overflow-x: auto;
+          font-family: var(--ycc-font-monospace);
+          line-height: 1.5;
+        }
       }
     `,
   ];
@@ -64,6 +65,34 @@ export class YangChunComment extends LitElement {
   @state() private accessor showConfirmDelete = false; // TODO: combine to deleteCommentId !== '' ?
 
   render() {
+    const HelpContent = html`
+      <p>${t('helpDesc')}</p>
+      <code class="help-md-sample">
+        <pre>
+          [${t('helpMdLink')}](https://www.example.com)
+          ![${t('helpMdImage')}](https://www.example.com/image.jpg)
+          *${t('helpMdItalic')}*
+          **${t('helpMdBold')}**
+          - ${t('helpMdList')}
+          1. ${t('helpMdOrderedList')}
+          \`${t('helpMdInlineCode')}\`
+          \`\`\`
+          ${t('helpMdCodeBlock')}
+          \`\`\`</pre
+        >
+      </code>
+      <p>
+        Powered by${' '}
+        <a href="https://ycc.ziteh.dev/" rel="noopener noreferrer" target="_blank">
+          Yang Chun Comment </a
+        >(<a
+          href="https://github.com/ziteh/yangchun-comment"
+          rel="noopener noreferrer"
+          target="_blank"
+          >GitHub</a
+        >)
+      </p>
+    `;
     return html`
       <div class="root" part="root">
         <!-- <slot></slot> -->
@@ -94,12 +123,12 @@ export class YangChunComment extends LitElement {
         ></comment-list>
 
         <comment-dialog
-          header="Confirm Delete"
+          header=${t('confirmDelete')}
           .open=${this.showConfirmDelete && this.deleteCommentId !== ''}
           @close=${() => (this.showConfirmDelete = false)}
         >
-          <p>Are you sure you want to delete this comment: ${this.deleteCommentId} ?</p>
-          <strong>This action cannot be undone.</strong>
+          <p>${t('confirmDeleteDesc1') + this.deleteCommentId}</p>
+          <strong>${t('confirmDeleteDesc2')}</strong>
           <div class="dialog-actions">
             <button
               class="secondary"
@@ -108,7 +137,7 @@ export class YangChunComment extends LitElement {
                 this.deleteComment();
               }}
             >
-              Delete
+              ${t('delete')}
             </button>
             <button
               @click=${() => {
@@ -116,19 +145,19 @@ export class YangChunComment extends LitElement {
                 this.deleteCommentId = '';
               }}
             >
-              Cancel
+              ${t('cancel')}
             </button>
           </div>
         </comment-dialog>
         <comment-dialog
-          header="Notify"
+          header=${t('notify')}
           .open=${this.showNotify}
           @close=${() => (this.showNotify = false)}
         >
           <p>Notification feature is coming soon!</p>
         </comment-dialog>
         <comment-dialog
-          header="Help"
+          header=${t('help')}
           .open=${this.showHelp}
           @close=${() => (this.showHelp = false)}
         >
@@ -136,6 +165,12 @@ export class YangChunComment extends LitElement {
         </comment-dialog>
       </div>
     `;
+  }
+
+  connectedCallback() {
+    initI18n(zhTW);
+    // initI18n(enUS);
+    super.connectedCallback();
   }
 
   async firstUpdated() {

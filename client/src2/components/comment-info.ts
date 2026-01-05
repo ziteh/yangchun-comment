@@ -2,6 +2,7 @@ import { LitElement, html, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { yangChunCommentStyles } from './yangchun-comment.styles';
 import type { Comment } from '@ziteh/yangchun-comment-shared';
+import { t } from '../utils/i18n';
 
 @customElement('comment-info')
 export class CommentInfo extends LitElement {
@@ -47,8 +48,8 @@ export class CommentInfo extends LitElement {
           <!-- TODO: refactor this -->
           <div></div>
           <div class="actions">
-            <button class="text-btn" @click=${this.onNotify}>Notify</button>
-            <button class="text-btn" @click=${this.onHelp}>Help</button>
+            <button class="text-btn" @click=${this.onNotify}>${t('notify')}</button>
+            <button class="text-btn" @click=${this.onHelp}>${t('help')}</button>
           </div>
         </div>
       `;
@@ -58,13 +59,13 @@ export class CommentInfo extends LitElement {
       <div class="info-bar">
         <div class="reference-comment-info">
           ${this.isReply
-            ? html`<span>Replying to: <strong>${this.comment.pseudonym}</strong></span>`
-            : html`<span>Editing: <strong>${this.comment.id}</strong></span>`}
-          <button class="text-btn" @click=${this.onCancel}>Cancel</button>
+            ? html`<span>${t('replyingTo')}<strong>${this.comment.pseudonym}</strong></span>`
+            : html`<span>${t('editing')}<strong>${this.comment.id}</strong></span>`}
+          <button class="text-btn" @click=${this.onCancel}>${t('cancel')}</button>
         </div>
         <div class="actions">
-          <button class="text-btn" @click=${this.onNotify}>Notify</button>
-          <button class="text-btn" @click=${this.onHelp}>Help</button>
+          <button class="text-btn" @click=${this.onNotify}>${t('notify')}</button>
+          <button class="text-btn" @click=${this.onHelp}>${t('help')}</button>
         </div>
       </div>
     `;
