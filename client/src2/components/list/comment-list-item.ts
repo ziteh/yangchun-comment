@@ -55,11 +55,18 @@ export class CommentListItem extends LitElement {
       .comment-id {
         display: none;
       }
+      .header:hover .comment-id {
+        display: block;
+        opacity: 0.6;
+      }
       .header:hover .date-absolute {
         display: block;
         opacity: 0.6;
       }
-      .header:hover .comment-id {
+      .comment-reply-to {
+        display: none;
+      }
+      .header:hover .comment-reply-to {
         display: block;
         opacity: 0.6;
       }
@@ -192,6 +199,11 @@ export class CommentListItem extends LitElement {
                   <span class="date-absolute">${formatAbsoluteDate(this.comment.pubDate)}</span>
                 `}
             <span class="comment-id">#${this.comment.id}</span>
+            ${this.comment.replyTo
+              ? html`<span class="comment-reply-to"
+                  >${t('replyTo') + ' #' + this.comment.replyTo}</span
+                >`
+              : null}
           </div>
           <div class="content">${this.renderMarkdown(this.comment.msg)}</div>
           ${this.isPreviewComment()
