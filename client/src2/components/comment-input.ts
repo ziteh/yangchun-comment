@@ -58,6 +58,7 @@ export class CommentInput extends LitElement {
         border: 1px solid var(--ycc-border-color);
         border-bottom: none;
         border-radius: var(--ycc-radius) var(--ycc-radius) 0 0;
+        min-height: calc(100px + 2 * var(--ycc-spacing-s));
       }
       .controls-row {
         border: 1px solid var(--ycc-border-color);
