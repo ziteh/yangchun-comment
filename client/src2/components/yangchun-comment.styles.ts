@@ -20,6 +20,9 @@ export const yangChunCommentStyles = css`
 
     --ycc-font-family:
       -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --ycc-font-monospace:
+      ui-monospace, SFMono-Regular, SF Mono, Menlo, Monaco, Consolas, 'Liberation Mono',
+      'Courier New', monospace;
     --ycc-font-size: 14px;
     --ycc-line-height: 1.5;
     --ycc-radius: 6px;

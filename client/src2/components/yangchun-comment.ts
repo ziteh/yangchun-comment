@@ -26,15 +26,40 @@ export class YangChunComment extends LitElement {
         justify-content: flex-end;
         gap: var(--ycc-spacing-s);
       }
+      .help-content {
+        display: flex;
+        flex-direction: column;
+        gap: var(--ycc-spacing-m);
+      }
+      .help-desc p {
+        margin: 0 0 var(--ycc-spacing-s) 0;
+      }
+      .help-desc p:last-child {
+        margin-bottom: 0;
+      }
       .help-md-sample {
-        pre {
-          background-color: var(--ycc-bg-secondary);
-          padding: var(--ycc-spacing-s);
-          border-radius: var(--ycc-radius);
-          overflow-x: auto;
-          font-family: var(--ycc-font-monospace);
-          line-height: 1.5;
-        }
+        background-color: var(--ycc-bg-secondary);
+        padding: var(--ycc-spacing-m);
+        border-radius: var(--ycc-radius);
+        font-family: var(--ycc-font-monospace);
+        font-size: 0.9em;
+        line-height: 1.6;
+        white-space: pre;
+        overflow-x: auto;
+        margin: 0;
+      }
+      .help-footer {
+        font-size: 0.85em;
+        color: var(--ycc-text-secondary);
+        text-align: center;
+        margin-top: var(--ycc-spacing-xs);
+      }
+      .help-footer a {
+        color: var(--ycc-primary-color);
+        text-decoration: none;
+      }
+      .help-footer a:hover {
+        text-decoration: underline;
       }
     `,
   ];
@@ -66,32 +91,37 @@ export class YangChunComment extends LitElement {
 
   render() {
     const HelpContent = html`
-      <p>${t('helpDesc')}</p>
-      <code class="help-md-sample">
-        <pre>
-          [${t('helpMdLink')}](https://www.example.com)
-          ![${t('helpMdImage')}](https://www.example.com/image.jpg)
-          *${t('helpMdItalic')}*
-          **${t('helpMdBold')}**
-          - ${t('helpMdList')}
-          1. ${t('helpMdOrderedList')}
-          \`${t('helpMdInlineCode')}\`
-          \`\`\`
-          ${t('helpMdCodeBlock')}
-          \`\`\`</pre
+      <div class="help-content">
+        <div class="help-desc">
+          ${t('helpDesc')
+            .split('\n')
+            .map((line) => html`<p>${line}</p>`)}
+        </div>
+        <pre class="help-md-sample">
+[${t('helpMdLink')}](https://example.com)
+![${t('helpMdImage')}](https://example.com/img.jpg)
+*${t('helpMdItalic')}*
+**${t('helpMdBold')}**
+- ${t('helpMdList')}
+1. ${t('helpMdOrderedList')}
+\`${t('helpMdInlineCode')}\`
+\`\`\`
+${t('helpMdCodeBlock')}
+\`\`\`</pre
         >
-      </code>
-      <p>
-        Powered by${' '}
-        <a href="https://ycc.ziteh.dev/" rel="noopener noreferrer" target="_blank">
-          Yang Chun Comment </a
-        >(<a
-          href="https://github.com/ziteh/yangchun-comment"
-          rel="noopener noreferrer"
-          target="_blank"
-          >GitHub</a
-        >)
-      </p>
+        <div class="help-footer">
+          Powered by${' '}
+          <a href="https://ycc.ziteh.dev/" rel="noopener noreferrer" target="_blank">
+            Yang Chun Comment
+          </a>
+          (<a
+            href="https://github.com/ziteh/yangchun-comment"
+            rel="noopener noreferrer"
+            target="_blank"
+            >GitHub</a
+          >)
+        </div>
+      </div>
     `;
     return html`
       <div class="root" part="root">
