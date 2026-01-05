@@ -33,6 +33,21 @@ export class CommentInput extends LitElement {
         resize: vertical;
         border: none;
         resize: none;
+        scrollbar-width: thin;
+        scrollbar-color: var(--ycc-border-color) transparent;
+      }
+      textarea::-webkit-scrollbar {
+        width: 6px;
+      }
+      textarea::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      textarea::-webkit-scrollbar-thumb {
+        background-color: var(--ycc-border-color);
+        border-radius: 3px;
+      }
+      textarea::-webkit-scrollbar-thumb:hover {
+        background-color: var(--ycc-text-secondary);
       }
       .actions {
         display: flex;
