@@ -12,6 +12,7 @@ import { createMockApiService } from '../api/apiService.mock';
 import { generatePseudonymAndHash } from '../utils/pseudonym';
 import { setupDOMPurifyHooks } from '../utils/sanitize';
 import { initI18n, enUS, zhTW, t, type I18nStrings } from '../utils/i18n';
+import { solvePrePow, solveFormalPow } from '../utils/pow';
 
 @customElement('yangchun-comment')
 export class YangChunComment extends LitElement {
@@ -291,7 +292,32 @@ ${t('helpMdCodeBlock')}
         : null;
 
     try {
-      const id = await this.apiService.addComment(this.post, pseudonym, pureDraft, replyTo);
+      const prePow = await solvePrePow(1, 'FIXED');
+      if (prePow.nonce < 0) {
+        console.error('Failed to solve pre-PoW');
+        return;
+      }
+
+      const formalChallenge = await this.apiService.getChallenge(prePow.challenge, prePow.nonce);
+      if (!formalChallenge) {
+        console.warn('Failed to get formal PoW challenge');
+        return;
+      }
+
+      const diff = parseInt(formalChallenge.split(':')[2], 10);
+      const fPowNonce = await solveFormalPow(diff, formalChallenge, this.post);
+      if (fPowNonce < 0) {
+        console.error('Failed to solve formal PoW');
+        return;
+      }
+      const id = await this.apiService.addComment(
+        this.post,
+        pseudonym,
+        pureDraft,
+        replyTo,
+        formalChallenge,
+        fPowNonce,
+      );
       console.debug('Added comment ID:', id);
       this.draft = '';
       this.editPseudonym = '';

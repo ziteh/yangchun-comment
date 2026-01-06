@@ -12,12 +12,15 @@ export interface CommentAuthInfo {
 }
 
 export interface ApiService {
+  getChallenge: (challenge: string, nonce: number) => Promise<string | null>;
   getComments: (post: string) => Promise<Comment[]>;
   addComment: (
     post: string,
     pseudonym: string,
     msg: string,
     replyTo: string | null,
+    challenge: string,
+    nonce: number,
   ) => Promise<string | null>;
   updateComment: (
     post: string,

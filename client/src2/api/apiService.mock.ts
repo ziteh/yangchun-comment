@@ -1,5 +1,6 @@
 import type { Comment } from '@ziteh/yangchun-comment-shared';
 import type { ApiService, AuthInfo, CommentAuthInfo } from './apiService';
+import { verifyPrePow, verifyFormalPow, genFormalPowChallenge } from '../utils/pow';
 
 export const createMockApiService = (): ApiService => {
   const date = Date.now(); // test
@@ -74,13 +75,38 @@ export const createMockApiService = (): ApiService => {
     return new Promise((resolve) => setTimeout(resolve, ms));
   };
 
+  const getChallenge: ApiService['getChallenge'] = async (challenge, nonce) => {
+    const prePowPass = await verifyPrePow(1, challenge, nonce);
+    if (!prePowPass) {
+      console.warn('Pre-PoW verification failed');
+      return null;
+    }
+    console.debug('Pre-pow verify OK');
+    const formalChallenge = await genFormalPowChallenge(3);
+    return formalChallenge;
+  };
+
   const getComments: ApiService['getComments'] = async (post) => {
     await simulateNetworkDelay();
     return [...(mockComments.get(post) || [])];
   };
 
-  const addComment: ApiService['addComment'] = async (post, pseudonym, msg, replyTo) => {
+  const addComment: ApiService['addComment'] = async (
+    post,
+    pseudonym,
+    msg,
+    replyTo,
+    challenge,
+    nonce,
+  ) => {
     await simulateNetworkDelay();
+
+    const powPass = await verifyFormalPow(challenge, post, nonce);
+    if (!powPass) {
+      console.warn('Formal-PoW verification failed');
+      return null;
+    }
+    console.debug('formal pow ok');
 
     const now = Date.now();
     const newComment: Comment = {
@@ -184,6 +210,7 @@ export const createMockApiService = (): ApiService => {
   };
 
   return {
+    getChallenge,
     getComments,
     addComment,
     updateComment,
