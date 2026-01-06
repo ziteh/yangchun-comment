@@ -206,7 +206,6 @@ export class CommentInput extends LitElement {
       pseudonym,
       pubDate: Date.now(),
       id: magicString,
-      nameHash: magicString,
     };
   }
 

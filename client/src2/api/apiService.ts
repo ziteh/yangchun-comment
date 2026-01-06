@@ -16,7 +16,6 @@ export interface ApiService {
   addComment: (
     post: string,
     pseudonym: string,
-    nameHash: string,
     msg: string,
     replyTo: string | null,
   ) => Promise<string | null>;
@@ -24,7 +23,6 @@ export interface ApiService {
     post: string,
     commentId: string,
     pseudonym: string,
-    nameHash: string,
     msg: string,
   ) => Promise<boolean>;
   deleteComment: (post: string, commentId: string) => Promise<boolean>;
@@ -32,6 +30,8 @@ export interface ApiService {
   getAuthInfo: (commentId: string) => CommentAuthInfo | null;
   removeAuthInfo: (commentId: string) => void;
   canEditComment: (commentId: string) => boolean;
+  saveMyCommentId: (commentId: string) => void;
+  isMyComment: (commentId: string) => boolean;
 }
 
 // TODO HttpOnly Cookie?
@@ -48,7 +48,6 @@ export const createApiService = (apiUrl: string): ApiService => {
   const addComment = async (
     post: string,
     pseudonym: string,
-    nameHash: string,
     msg: string,
     replyTo: string | null,
   ): Promise<string | null> => {
@@ -65,7 +64,6 @@ export const createApiService = (apiUrl: string): ApiService => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           pseudonym,
-          nameHash,
           msg,
           replyTo,
           website, // Include honeypot field
@@ -75,6 +73,7 @@ export const createApiService = (apiUrl: string): ApiService => {
       if (res.ok) {
         const data = await res.json();
         saveAuthInfo(data.id, data.timestamp, data.token);
+        saveMyCommentId(data.id);
         return data.id;
       }
       return null;
@@ -87,7 +86,6 @@ export const createApiService = (apiUrl: string): ApiService => {
     post: string,
     commentId: string,
     pseudonym: string,
-    nameHash: string,
     msg: string,
   ): Promise<boolean> => {
     const authInfo = getAuthInfo(commentId);
@@ -107,7 +105,6 @@ export const createApiService = (apiUrl: string): ApiService => {
         },
         body: JSON.stringify({
           pseudonym,
-          nameHash,
           msg,
         }),
       });
@@ -170,6 +167,26 @@ export const createApiService = (apiUrl: string): ApiService => {
     return !!getAuthInfo(commentId);
   };
 
+  const saveMyCommentId = (commentId: string): void => {
+    try {
+      const myIds = new Set(JSON.parse(localStorage.getItem('my_comment_ids') || '[]'));
+      myIds.add(commentId);
+      localStorage.setItem('my_comment_ids', JSON.stringify(Array.from(myIds)));
+    } catch (e) {
+      console.warn('Failed to save my comment ID:', e);
+    }
+  };
+
+  const isMyComment = (commentId: string): boolean => {
+    try {
+      const myIds = JSON.parse(localStorage.getItem('my_comment_ids') || '[]');
+      return myIds.includes(commentId);
+    } catch (e) {
+      console.warn('Failed to check if my comment:', e);
+      return false;
+    }
+  };
+
   return {
     getComments,
     addComment,
@@ -179,5 +196,7 @@ export const createApiService = (apiUrl: string): ApiService => {
     getAuthInfo,
     removeAuthInfo,
     canEditComment,
+    saveMyCommentId,
+    isMyComment,
   };
 };

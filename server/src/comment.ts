@@ -39,7 +39,7 @@ app.post(
   '/',
   validateQueryPost,
   validator('json', (value, c) => {
-    const { pseudonym, nameHash, email, msg, replyTo, website } = value;
+    const { pseudonym, email, msg, replyTo, website } = value;
 
     // Honeypot check: if 'website' field is filled, it's likely a bot
     if (website) {
@@ -73,35 +73,17 @@ app.post(
       return c.text('Pseudonym is invalid', 400);
     }
 
-    // Validate nameHash format (should be SHA-256 hash)
-    if (nameHash && (typeof nameHash !== 'string' || !/^[a-f0-9]{64}$/.test(nameHash))) {
-      return c.text('Invalid name hash format', 400);
-    }
-
-    // Validate pseudonym and nameHash combination
-    // Only 3 valid combinations:
-    // 1. Both are undefined
-    // 2. Both are empty strings
-    // 3. Both are non-empty strings
-    const trimmedPseudonym = cleanPseudonym?.trim();
-    const trimmedNameHash = nameHash?.trim();
-    const isPseudonymEmpty = !trimmedPseudonym || trimmedPseudonym === '';
-    const isNameHashEmpty = !trimmedNameHash || trimmedNameHash === '';
-    if (isPseudonymEmpty !== isNameHashEmpty) {
-      return c.text('Pseudonym and nameHash must both be empty or both be non-empty', 400);
-    }
-
     if (replyTo && (typeof replyTo !== 'string' || !/^[0-9A-Z]{12}$/.test(replyTo))) {
       return c.text('Invalid reply ID', 400);
     }
 
     const cleanEmail = email ? sanitize(email) : undefined;
 
-    return { pseudonym: cleanPseudonym, nameHash, email: cleanEmail, msg: cleanMsg, replyTo };
+    return { pseudonym: cleanPseudonym, email: cleanEmail, msg: cleanMsg, replyTo };
   }),
   async (c) => {
     const { post } = c.req.valid('query');
-    const { pseudonym, nameHash, msg, replyTo } = c.req.valid('json');
+    const { pseudonym, msg, replyTo } = c.req.valid('json');
 
     const key = getCommentKey(post);
     const rawComments = await c.env.COMMENTS.get(key);
@@ -123,7 +105,6 @@ app.post(
     const comment: Comment = {
       id,
       pseudonym,
-      nameHash,
       email: undefined, // Currently not storing email
       msg,
       replyTo,
@@ -145,7 +126,7 @@ app.post(
 // Update a comment
 app.put('/', validateQueryPost, async (c) => {
   const { post } = c.req.valid('query');
-  const { pseudonym, nameHash, msg } = await c.req.json();
+  const { pseudonym, msg } = await c.req.json();
   const id = c.req.header('X-Comment-ID') || '';
   const token = c.req.header('X-Comment-Token') || '';
   const timestamp = parseInt(c.req.header('X-Comment-Timestamp') || '0');
@@ -175,23 +156,6 @@ app.put('/', validateQueryPost, async (c) => {
   if (pseudonym && cleanPseudonym !== undefined && cleanPseudonym.length === 0) {
     return c.text('Pseudonym is invalid', 400);
   }
-  // Validate nameHash format (should be SHA-256 hash)
-  if (nameHash && (typeof nameHash !== 'string' || !/^[a-f0-9]{64}$/.test(nameHash))) {
-    return c.text('Invalid name hash format', 400);
-  }
-
-  // Validate pseudonym and nameHash combination
-  // Only 3 valid combinations:
-  // 1. Both are undefined
-  // 2. Both are empty strings (after trimming)
-  // 3. Both are non-empty strings (after trimming)
-  const trimmedPseudonym = cleanPseudonym?.trim();
-  const trimmedNameHash = nameHash?.trim();
-  const isPseudonymEmpty = !trimmedPseudonym || trimmedPseudonym === '';
-  const isNameHashEmpty = !trimmedNameHash || trimmedNameHash === '';
-  if (isPseudonymEmpty !== isNameHashEmpty) {
-    return c.text('Pseudonym and nameHash must both be empty or both be non-empty', 400);
-  }
 
   const hmacOk = await verifyHmac(c.env.HMAC_SECRET_KEY, id, timestamp, token);
   if (!hmacOk) {
@@ -210,7 +174,7 @@ app.put('/', validateQueryPost, async (c) => {
 
   comments[index] = {
     ...comments[index],
-    // Keep original pseudonym and nameHash when editing (don't allow changes)
+    // Keep original pseudonym when editing (don't allow changes)
     // pseudonym: cleanPseudonym,
     // nameHash,
     email: undefined, // Currently not storing email
@@ -252,7 +216,6 @@ app.delete('/', validateQueryPost, async (c) => {
     ...comments[index],
     pseudonym: CONSTANTS.deletedMarker,
     msg: CONSTANTS.deletedMarker,
-    nameHash: undefined,
     email: undefined, // Currently not storing email
     modDate: Date.now(), // Update modification date
   };

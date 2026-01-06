@@ -165,6 +165,8 @@ export class CommentListItem extends LitElement {
   @property({ type: String }) accessor author = '';
   @property({ type: Function }) accessor canEditCallback: (commentId: string) => boolean = () =>
     false; // TODO: rename
+  @property({ type: Function }) accessor isMyCommentCallback: (commentId: string) => boolean = () =>
+    false;
 
   render() {
     return html`
@@ -184,7 +186,7 @@ export class CommentListItem extends LitElement {
             ${(() => {
               if (this.comment.isAdmin) {
                 return html`<span class="badge">${t('author')}</span>`;
-              } else if (this.canEditCallback(this.comment.id)) {
+              } else if (this.isMyCommentCallback(this.comment.id)) {
                 return html`<span class="badge">${t('me')}</span>`;
               }
               return null;
@@ -258,6 +260,7 @@ export class CommentListItem extends LitElement {
                 .comment=${cmt}
                 .author=${this.author}
                 .canEditCallback=${this.canEditCallback}
+                .isMyCommentCallback=${this.isMyCommentCallback}
               ></comment-list-item>
             `,
           )}
@@ -268,7 +271,7 @@ export class CommentListItem extends LitElement {
 
   private isPreviewComment(): boolean {
     const magicString = '_PREVIEW';
-    return this.comment.id === magicString && this.comment.nameHash === magicString;
+    return this.comment.id === magicString;
   }
 
   private onDelete() {

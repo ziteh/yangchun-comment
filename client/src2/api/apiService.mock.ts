@@ -79,14 +79,13 @@ export const createMockApiService = (): ApiService => {
     return [...(mockComments.get(post) || [])];
   };
 
-  const addComment: ApiService['addComment'] = async (post, pseudonym, nameHash, msg, replyTo) => {
+  const addComment: ApiService['addComment'] = async (post, pseudonym, msg, replyTo) => {
     await simulateNetworkDelay();
 
     const now = Date.now();
     const newComment: Comment = {
       id: `mock-${commentIdCounter++}`,
       pseudonym,
-      nameHash,
       msg,
       replyTo: replyTo ?? undefined,
       pubDate: now,
@@ -101,17 +100,12 @@ export const createMockApiService = (): ApiService => {
     const timestamp = Date.now();
     const token = `mock-token-${newComment.id}`;
     saveAuthInfo(newComment.id, timestamp, token);
+    saveMyCommentId(newComment.id);
 
     return newComment.id;
   };
 
-  const updateComment: ApiService['updateComment'] = async (
-    post,
-    commentId,
-    pseudonym,
-    nameHash,
-    msg,
-  ) => {
+  const updateComment: ApiService['updateComment'] = async (post, commentId, pseudonym, msg) => {
     const authInfo = getAuthInfo(commentId);
     if (!authInfo) return false;
 
@@ -126,7 +120,6 @@ export const createMockApiService = (): ApiService => {
     postComments[commentIndex] = {
       ...postComments[commentIndex],
       pseudonym,
-      nameHash,
       msg,
       modDate: Date.now(),
     };
@@ -170,6 +163,26 @@ export const createMockApiService = (): ApiService => {
     return !!getAuthInfo(commentId);
   };
 
+  const saveMyCommentId = (commentId: string): void => {
+    try {
+      const myIds = new Set(JSON.parse(localStorage.getItem('my_comment_ids') || '[]'));
+      myIds.add(commentId);
+      localStorage.setItem('my_comment_ids', JSON.stringify(Array.from(myIds)));
+    } catch (e) {
+      console.warn('Failed to save my comment ID:', e);
+    }
+  };
+
+  const isMyComment = (commentId: string): boolean => {
+    try {
+      const myIds = JSON.parse(localStorage.getItem('my_comment_ids') || '[]');
+      return myIds.includes(commentId);
+    } catch (e) {
+      console.warn('Failed to check if my comment:', e);
+      return false;
+    }
+  };
+
   return {
     getComments,
     addComment,
@@ -179,5 +192,7 @@ export const createMockApiService = (): ApiService => {
     getAuthInfo,
     removeAuthInfo,
     canEditComment,
+    saveMyCommentId,
+    isMyComment,
   };
 };

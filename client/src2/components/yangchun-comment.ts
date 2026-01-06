@@ -151,6 +151,7 @@ ${t('helpMdCodeBlock')}
           .comments=${this.comments}
           .author=${this.authorName}
           .canEditCallback=${this.apiService.canEditComment}
+          .isMyCommentCallback=${this.apiService.isMyComment}
           @comment-reply=${this.onReplyToComment}
           @comment-edit=${this.onEditComment}
           @comment-delete=${(e: CustomEvent<string>) => {
@@ -259,7 +260,6 @@ ${t('helpMdCodeBlock')}
         this.post,
         this.referenceComment.id,
         this.referenceComment.pseudonym || '',
-        this.referenceComment.nameHash || '',
         pureDraft,
       );
 
@@ -284,14 +284,14 @@ ${t('helpMdCodeBlock')}
     const pureDraft = this.draft.trim();
     if (!pureDraft) return;
 
-    const { pseudonym, hash } = await generatePseudonymAndHash(this.nickname);
+    const { pseudonym } = await generatePseudonymAndHash(this.nickname);
     const replyTo =
       this.referenceComment && this.referenceComment.id && this.isReply
         ? this.referenceComment.id
         : null;
 
     try {
-      const id = await this.apiService.addComment(this.post, pseudonym, hash, pureDraft, replyTo);
+      const id = await this.apiService.addComment(this.post, pseudonym, pureDraft, replyTo);
       console.debug('Added comment ID:', id);
       this.draft = '';
       this.editPseudonym = '';

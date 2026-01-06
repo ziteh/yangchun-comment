@@ -30,6 +30,8 @@ export class CommentList extends LitElement {
   @property({ type: String }) accessor author = '';
   @property({ type: Function }) accessor canEditCallback: (commentId: string) => boolean = () =>
     false;
+  @property({ type: Function }) accessor isMyCommentCallback: (commentId: string) => boolean = () =>
+    false;
 
   render() {
     if (this.comments.length === 0) {
@@ -45,6 +47,7 @@ export class CommentList extends LitElement {
               .comment=${comment}
               .author=${this.author}
               .canEditCallback=${this.canEditCallback}
+              .isMyCommentCallback=${this.isMyCommentCallback}
               .replyComments=${sortCommentsByDate(
                 findReplyComments(this.comments, comment.id),
                 false,
