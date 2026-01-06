@@ -39,10 +39,10 @@ app.post(
   '/',
   validateQueryPost,
   validator('json', (value, c) => {
-    const { pseudonym, email, msg, replyTo, website } = value;
+    const { pseudonym, msg, replyTo, email } = value;
 
-    // Honeypot check: if 'website' field is filled, it's likely a bot
-    if (website) {
+    // Honeypot check: if 'email' field is filled, it's likely a bot
+    if (email) {
       const ip = c.req.header('CF-Connecting-IP') || 'unknown';
       console.warn(`Honeypot triggered from IP: ${ip}`);
 
@@ -77,9 +77,7 @@ app.post(
       return c.text('Invalid reply ID', 400);
     }
 
-    const cleanEmail = email ? sanitize(email) : undefined;
-
-    return { pseudonym: cleanPseudonym, email: cleanEmail, msg: cleanMsg, replyTo };
+    return { pseudonym: cleanPseudonym, msg: cleanMsg, replyTo };
   }),
   async (c) => {
     const { post } = c.req.valid('query');
@@ -105,7 +103,6 @@ app.post(
     const comment: Comment = {
       id,
       pseudonym,
-      email: undefined, // Currently not storing email
       msg,
       replyTo,
       pubDate: timestamp,
@@ -176,8 +173,6 @@ app.put('/', validateQueryPost, async (c) => {
     ...comments[index],
     // Keep original pseudonym when editing (don't allow changes)
     // pseudonym: cleanPseudonym,
-    // nameHash,
-    email: undefined, // Currently not storing email
     msg: cleanMsg,
     modDate: Date.now(), // Update modification date
   };
@@ -216,7 +211,6 @@ app.delete('/', validateQueryPost, async (c) => {
     ...comments[index],
     pseudonym: CONSTANTS.deletedMarker,
     msg: CONSTANTS.deletedMarker,
-    email: undefined, // Currently not storing email
     modDate: Date.now(), // Update modification date
   };
 

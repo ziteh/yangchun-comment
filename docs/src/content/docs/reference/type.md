@@ -10,12 +10,6 @@ export interface Comment {
   /** Pseudonym of the author */
   pseudonym?: string;
 
-  /** Hash of the original name */
-  nameHash?: string;
-
-  /** Email address of the author, currently not in use */
-  email?: string;
-
   /** Content of the comment */
   msg: string;
 
