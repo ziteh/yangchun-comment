@@ -15,6 +15,7 @@ export interface I18nStrings {
   notify: string;
   help: string;
   cancel: string;
+  close: string;
   author: string;
   me: string;
 
@@ -53,6 +54,7 @@ export const enUS: I18nStrings = {
   notify: 'Notify',
   help: 'Help',
   cancel: 'Cancel',
+  close: 'Close',
   author: 'Author',
   me: 'Me',
   messagePlaceholder: 'Write a comment...\nSupports Markdown',
@@ -87,6 +89,7 @@ export const zhTW: I18nStrings = {
   replyingTo: '正在回覆：',
   notify: '通知',
   cancel: '取消',
+  close: '關閉',
   help: '幫助',
   author: '作者',
   me: '我',

@@ -37,10 +37,11 @@ export class CommentList extends LitElement {
     }
 
     return html`
-      <div class="reply-comments-container">
+      <div class="reply-comments-container" role="list">
         ${sortCommentsByDate(filterRootComments(this.comments), true).map(
           (comment) => html`
             <comment-list-item
+              role="listitem"
               .comment=${comment}
               .author=${this.author}
               .canEditCallback=${this.canEditCallback}

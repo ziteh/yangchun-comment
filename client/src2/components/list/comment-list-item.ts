@@ -169,9 +169,14 @@ export class CommentListItem extends LitElement {
   render() {
     return html`
       <div class=${this.comment.replyTo ? 'reply-comment' : 'root-comment'}>
-        <div class="comment-box" id=${this.comment.id}>
+        <div
+          class="comment-box"
+          id=${this.comment.id}
+          role="article"
+          aria-labelledby="author-${this.comment.id}"
+        >
           <div class="header">
-            <span class="author"
+            <span class="author" id="author-${this.comment.id}"
               >${this.comment.isAdmin && this.author
                 ? this.author
                 : this.comment.pseudonym || t('anonymous')}</span
@@ -186,18 +191,36 @@ export class CommentListItem extends LitElement {
             })()}
             ${this.comment.modDate && this.comment.modDate > this.comment.pubDate
               ? html`
-                  <span class="date-relative">
+                  <time
+                    class="date-relative"
+                    datetime=${new Date(this.comment.modDate).toISOString()}
+                    aria-label="${t('edited')} ${formatRelativeDate(
+                      this.comment.modDate,
+                      t('bcp47'),
+                    )} (${formatAbsoluteDate(this.comment.modDate)})"
+                  >
                     ${t('edited') + ' ' + formatRelativeDate(this.comment.modDate, t('bcp47'))}
-                  </span>
-                  <span class="date-absolute">${formatAbsoluteDate(this.comment.modDate)}</span>
+                  </time>
+                  <span class="date-absolute" aria-hidden="true"
+                    >${formatAbsoluteDate(this.comment.modDate)}</span
+                  >
                 `
               : html`
-                  <span class="date-relative"
-                    >${formatRelativeDate(this.comment.pubDate, t('bcp47'))}</span
+                  <time
+                    class="date-relative"
+                    datetime=${new Date(this.comment.pubDate).toISOString()}
+                    aria-label="${formatRelativeDate(
+                      this.comment.pubDate,
+                      t('bcp47'),
+                    )} (${formatAbsoluteDate(this.comment.pubDate)})"
                   >
-                  <span class="date-absolute">${formatAbsoluteDate(this.comment.pubDate)}</span>
+                    ${formatRelativeDate(this.comment.pubDate, t('bcp47'))}
+                  </time>
+                  <span class="date-absolute" aria-hidden="true"
+                    >${formatAbsoluteDate(this.comment.pubDate)}</span
+                  >
                 `}
-            <span class="comment-id">#${this.comment.id}</span>
+            <span class="comment-id" aria-hidden="true">#${this.comment.id}</span>
             ${this.comment.replyTo
               ? html`<span class="comment-reply-to"
                   >${t('replyTo') + ' #' + this.comment.replyTo}</span
@@ -219,6 +242,7 @@ export class CommentListItem extends LitElement {
                     class="text-btn"
                     @click=${this.onReply}
                     title=${t('replyTo') + ' #' + this.comment.id}
+                    aria-label=${t('replyTo') + ' ' + (this.comment.pseudonym || t('anonymous'))}
                   >
                     ${t('reply')}
                   </button>
@@ -226,10 +250,11 @@ export class CommentListItem extends LitElement {
               `}
         </div>
 
-        <div class="reply-comments">
+        <div class="reply-comments" role="list">
           ${this.replyComments.map(
             (cmt) => html`
               <comment-list-item
+                role="listitem"
                 .comment=${cmt}
                 .author=${this.author}
                 .canEditCallback=${this.canEditCallback}

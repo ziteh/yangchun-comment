@@ -1,8 +1,9 @@
 import { LitElement, css, html, type PropertyValues } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { customElement, property, state, query } from 'lit/decorators.js';
 import { yangChunCommentStyles } from './yangchun-comment.styles';
 import type { Comment } from '@ziteh/yangchun-comment-shared';
 import './comment-input';
+import { CommentInput } from './comment-input';
 import './comment-info';
 import './comment-dialog';
 import './list/comment-list';
@@ -84,6 +85,8 @@ export class YangChunComment extends LitElement {
   @state() private accessor showHelp = false;
   @state() private accessor showNotify = false;
   @state() private accessor showConfirmDelete = false; // TODO: combine to deleteCommentId !== '' ?
+
+  @query('comment-input') private accessor commentInput!: CommentInput;
 
   render() {
     const HelpContent = html`
@@ -225,12 +228,14 @@ ${t('helpMdCodeBlock')}
     this.comments = [...newComments];
   }
 
-  private onCommentInfoCancel(e: CustomEvent<string>) {
+  private async onCommentInfoCancel(e: CustomEvent<string>) {
     const commentId = e.detail;
     console.debug('Cancel reply to comment ID:', commentId);
     if (this.referenceComment?.id === commentId) {
       this.referenceComment = null;
       this.isReply = true;
+      await this.updateComplete;
+      this.commentInput?.focus();
     }
   }
 
@@ -299,7 +304,7 @@ ${t('helpMdCodeBlock')}
     }
   }
 
-  private onReplyToComment(e: CustomEvent<string>) {
+  private async onReplyToComment(e: CustomEvent<string>) {
     const commentId = e.detail;
     console.debug('Reply to comment ID:', commentId);
 
@@ -313,9 +318,11 @@ ${t('helpMdCodeBlock')}
     }
     this.referenceComment = refComment;
     this.isReply = true;
+    await this.updateComplete;
+    this.commentInput?.focus();
   }
 
-  private onEditComment(e: CustomEvent<string>) {
+  private async onEditComment(e: CustomEvent<string>) {
     const commentId = e.detail;
     console.debug('Edit comment ID:', commentId);
 
@@ -328,6 +335,8 @@ ${t('helpMdCodeBlock')}
     this.isReply = false;
     this.draft = refComment.msg || '';
     this.editPseudonym = refComment.pseudonym || '';
+    await this.updateComplete;
+    this.commentInput?.focus();
   }
 
   private async deleteComment() {

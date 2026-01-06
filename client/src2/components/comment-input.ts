@@ -8,6 +8,11 @@ import { t } from '../utils/i18n';
 
 @customElement('comment-input')
 export class CommentInput extends LitElement {
+  static shadowRootOptions = {
+    ...LitElement.shadowRootOptions,
+    delegatesFocus: true,
+  };
+
   static styles = [
     yangChunCommentStyles,
     css`
@@ -129,9 +134,11 @@ export class CommentInput extends LitElement {
                   .value=${this.message}
                   @input=${this.onInputMessage}
                   placeholder=${t('messagePlaceholder')}
+                  aria-label=${t('messagePlaceholder')}
+                  aria-describedby="message-counter"
                   maxlength=${CommentInput.MAX_MESSAGE_LENGTH}
                 ></textarea>
-                <div class="char-counter message-counter">
+                <div class="char-counter message-counter" id="message-counter" aria-live="polite">
                   ${this.message.length}/${CommentInput.MAX_MESSAGE_LENGTH}
                 </div>
                 <input
@@ -141,6 +148,7 @@ export class CommentInput extends LitElement {
                   .value=${this.honeypot}
                   @input=${this.onHoneypotInput}
                   tabindex="-1"
+                  aria-hidden="true"
                   autocomplete="off"
                 />
               </div>`}
@@ -154,10 +162,12 @@ export class CommentInput extends LitElement {
               @input=${this.onInputNickname}
               type="text"
               placeholder=${t('nicknamePlaceholder')}
+              aria-label=${t('nicknamePlaceholder')}
+              aria-describedby="nickname-counter"
               ?disabled=${this.isPreview}
               maxlength=${CommentInput.MAX_NICKNAME_LENGTH}
             />
-            <span class="char-counter">
+            <span class="char-counter" id="nickname-counter" aria-live="polite">
               ${this.nickname.length}/${CommentInput.MAX_NICKNAME_LENGTH}
             </span>
           </div>
