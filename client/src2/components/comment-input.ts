@@ -1,5 +1,5 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 import { yangChunCommentStyles } from './yangchun-comment.styles';
 import './list/comment-list-item';
 import { generatePseudonymAndHash } from '../utils/pseudonym';
@@ -108,14 +108,9 @@ export class CommentInput extends LitElement {
 
   static readonly MAX_NICKNAME_LENGTH: number = 25;
   static readonly MAX_MESSAGE_LENGTH: number = 1000;
-  static properties = {
-    message: { type: String },
-    nickname: { type: String },
-    editPseudonym: { type: String },
-  };
-  message = '';
-  nickname = '';
-  editPseudonym = '';
+  @property({ type: String }) accessor message = '';
+  @property({ type: String }) accessor nickname = '';
+  @property({ type: String }) accessor editPseudonym = '';
 
   @state() private accessor isPreview = false;
   @state() private accessor previewComment: Comment | null = null;

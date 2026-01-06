@@ -1,5 +1,5 @@
 import { LitElement, html, css } from 'lit';
-import { customElement } from 'lit/decorators.js';
+import { customElement, property } from 'lit/decorators.js';
 import { yangChunCommentStyles } from './yangchun-comment.styles';
 import type { Comment } from '@ziteh/yangchun-comment-shared';
 import { t } from '../utils/i18n';
@@ -34,12 +34,8 @@ export class CommentInfo extends LitElement {
     `,
   ];
 
-  static properties = {
-    comment: { type: Object },
-    isReply: { type: Boolean },
-  };
-  comment: Comment | null = null;
-  isReply = true; // true: reply, false: edit
+  @property({ type: Object }) accessor comment: Comment | null = null;
+  @property({ type: Boolean }) accessor isReply = true; // true: reply, false: edit
 
   render() {
     if (!this.comment) {

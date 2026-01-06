@@ -1,5 +1,5 @@
 import { LitElement, css, html, type PropertyValues } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 import { yangChunCommentStyles } from './yangchun-comment.styles';
 import type { Comment } from '@ziteh/yangchun-comment-shared';
 import './comment-input';
@@ -64,18 +64,11 @@ export class YangChunComment extends LitElement {
     `,
   ];
 
-  static properties = {
-    post: { type: String },
-    apiUrl: { type: String },
-    authorName: { type: String },
-    lang: { type: String },
-    customMessages: { type: Object, attribute: false },
-  };
-  post = '';
-  apiUrl = '';
-  authorName = '';
-  lang = 'en-US';
-  customMessages?: I18nStrings;
+  @property({ type: String }) accessor post = '';
+  @property({ type: String }) accessor apiUrl = '';
+  @property({ type: String }) accessor authorName = '';
+  @property({ type: String }) accessor lang = 'en-US';
+  @property({ type: Object, attribute: false }) accessor customMessages: I18nStrings | undefined;
 
   @state() private accessor apiService: ApiService = createMockApiService();
 

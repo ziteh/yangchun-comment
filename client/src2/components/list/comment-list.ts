@@ -1,5 +1,5 @@
 import { LitElement, html, css } from 'lit';
-import { customElement } from 'lit/decorators.js';
+import { customElement, property } from 'lit/decorators.js';
 import type { Comment } from '@ziteh/yangchun-comment-shared';
 import './comment-list-item';
 import { sortCommentsByDate, filterRootComments, findReplyComments } from '../../utils/comment';
@@ -26,14 +26,10 @@ export class CommentList extends LitElement {
     `,
   ];
 
-  static properties = {
-    comments: { type: Array },
-    canEditCallback: { type: Function },
-    author: { type: String },
-  };
-  comments: Comment[] = [];
-  author = '';
-  canEditCallback: (commentId: string) => boolean = () => false;
+  @property({ type: Array }) accessor comments: Comment[] = [];
+  @property({ type: String }) accessor author = '';
+  @property({ type: Function }) accessor canEditCallback: (commentId: string) => boolean = () =>
+    false;
 
   render() {
     if (this.comments.length === 0) {

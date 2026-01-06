@@ -1,5 +1,5 @@
 import { LitElement, html, css } from 'lit';
-import { customElement } from 'lit/decorators.js';
+import { customElement, property } from 'lit/decorators.js';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { yangChunCommentStyles } from '../yangchun-comment.styles';
 import type { Comment } from '@ziteh/yangchun-comment-shared';
@@ -156,20 +156,15 @@ export class CommentListItem extends LitElement {
     `,
   ];
 
-  static properties = {
-    comment: { type: Object },
-    replyComments: { type: Array },
-    author: { type: String },
-    canEditCallback: { type: Function }, // TODO: rename refactor
-  };
-  comment: Comment = {
+  @property({ type: Object }) accessor comment: Comment = {
     id: '',
     msg: '',
     pubDate: 0,
   };
-  replyComments: Comment[] = [];
-  author = '';
-  canEditCallback: (commentId: string) => boolean = () => false;
+  @property({ type: Array }) accessor replyComments: Comment[] = [];
+  @property({ type: String }) accessor author = '';
+  @property({ type: Function }) accessor canEditCallback: (commentId: string) => boolean = () =>
+    false; // TODO: rename
 
   render() {
     return html`
