@@ -11,6 +11,7 @@ import {
 } from './utils';
 import { DEF, CONSTANTS } from './const';
 import type { Comment } from '@ziteh/yangchun-comment-shared';
+import { verifyFormalPow } from './pow';
 
 const app = new Hono<{
   Bindings: {
@@ -38,8 +39,20 @@ app.get('/', validateQueryPost, async (c) => {
 app.post(
   '/',
   validateQueryPost,
-  validator('json', (value, c) => {
+  validator('json', async (value, c) => {
     const { pseudonym, msg, replyTo, email } = value;
+    const { challenge, nonce, post } = c.req.query(); // TODO: post
+    if (typeof challenge !== 'string' || typeof nonce !== 'string') {
+      return c.text('Missing challenge or nonce', 400);
+    }
+
+    const nonceNum = parseInt(nonce, 10);
+    const powPass = await verifyFormalPow(challenge, post, nonceNum, 'FORMAL_FIXED_SECRET'); // TODO
+    if (!powPass) {
+      console.warn('Formal-PoW verification failed');
+      return c.text('Formal-PoW verification failed', 400);
+    }
+    console.debug('Formal-PoW verify OK');
 
     // Honeypot check: if 'email' field is filled, it's likely a bot
     if (email) {
@@ -112,6 +125,13 @@ app.post(
     const comments = rawComments ? JSON.parse(rawComments) : [];
     comments.push(comment);
     await c.env.COMMENTS.put(key, JSON.stringify(comments));
+
+    // Debug: Check if HMAC_SECRET_KEY exists
+    if (!c.env.HMAC_SECRET_KEY) {
+      console.error('HMAC_SECRET_KEY is not set in environment variables!');
+      return c.text('Server configuration error', 500);
+    }
+    console.debug('HMAC_SECRET_KEY length:', c.env.HMAC_SECRET_KEY.length);
 
     const token = await genHmac(c.env.HMAC_SECRET_KEY, id, timestamp);
 
