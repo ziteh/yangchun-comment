@@ -1,4 +1,5 @@
 import type { Comment } from '@ziteh/yangchun-comment-shared';
+// import { solvePrePow, solveFormalPow } from '../utils/pow';
 
 export interface AuthInfo {
   timestamp: number;
@@ -41,6 +42,25 @@ export interface ApiService {
 export const createApiService = (apiUrl: string): ApiService => {
   const commentAuthMap = new Map<string, AuthInfo>();
 
+  const getChallenge = async (challenge: string, nonce: number): Promise<string | null> => {
+    try {
+      const url = new URL('/api/pow/formal-challenge', apiUrl);
+      url.searchParams.append('challenge', challenge);
+      url.searchParams.append('nonce', nonce.toString());
+
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        return data.challenge;
+      }
+      console.error('Failed to get formal challenge:', res.status, res.statusText);
+      return null;
+    } catch (err) {
+      console.error('Error getting formal challenge:', err);
+      return null;
+    }
+  };
+
   const getComments = async (post: string): Promise<Comment[]> => {
     const url = new URL('/api/comments', apiUrl);
     url.searchParams.append('post', post);
@@ -53,12 +73,17 @@ export const createApiService = (apiUrl: string): ApiService => {
     pseudonym: string,
     msg: string,
     replyTo: string | null,
+    challenge: string,
+    nonce: number,
   ): Promise<string | null> => {
     try {
       const url = new URL('/api/comments', apiUrl);
-      url.searchParams.append('post', post); // Get honeypot field if present
+      url.searchParams.append('post', post);
+      url.searchParams.append('challenge', challenge);
+      url.searchParams.append('nonce', nonce.toString());
+
+      // Get honeypot field if present
       const websiteField = document.querySelector('input[name="website"]') as HTMLInputElement;
-      // const websiteField = document.querySelector('input[name="website"]') as HTMLInputElement;
       // FIXME: directly from global DOM may break encapsulation
       const website = websiteField ? websiteField.value : '';
 
@@ -79,8 +104,10 @@ export const createApiService = (apiUrl: string): ApiService => {
         saveMyCommentId(data.id);
         return data.id;
       }
+      console.error('Failed to add comment:', res.status, res.statusText);
       return null;
-    } catch {
+    } catch (err) {
+      console.error('Error adding comment:', err);
       return null;
     }
   };
@@ -191,6 +218,7 @@ export const createApiService = (apiUrl: string): ApiService => {
   };
 
   return {
+    getChallenge,
     getComments,
     addComment,
     updateComment,

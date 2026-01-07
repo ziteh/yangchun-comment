@@ -8,7 +8,7 @@ import './comment-info';
 import './comment-dialog';
 import './list/comment-list';
 import type { ApiService } from '../api/apiService';
-import { createMockApiService } from '../api/apiService.mock';
+import { createApiService } from '../api/apiService';
 import { generatePseudonymAndHash } from '../utils/pseudonym';
 import { setupDOMPurifyHooks } from '../utils/sanitize';
 import { initI18n, enUS, zhTW, t, type I18nStrings } from '../utils/i18n';
@@ -67,12 +67,12 @@ export class YangChunComment extends LitElement {
   ];
 
   @property({ type: String }) accessor post = '';
-  @property({ type: String }) accessor apiUrl = '';
+  @property({ type: String }) accessor apiUrl = 'http://localhost:8787';
   @property({ type: String }) accessor authorName = '';
   @property({ type: String }) accessor lang = 'en-US';
   @property({ type: Object, attribute: false }) accessor customMessages: I18nStrings | undefined;
 
-  @state() private accessor apiService: ApiService = createMockApiService();
+  @state() private accessor apiService: ApiService = createApiService('http://localhost:8787');
 
   @state() private accessor draft = '';
   @state() private accessor nickname = '';
@@ -216,11 +216,18 @@ ${t('helpMdCodeBlock')}
         initI18n(selectedLang);
       }
     }
+
+    // Initialize apiService when apiUrl changes
+    if (changedProperties.has('apiUrl') && this.apiUrl) {
+      console.debug('Initializing API service with URL:', this.apiUrl);
+      this.apiService = createApiService(this.apiUrl);
+    }
+
     super.willUpdate(changedProperties);
   }
 
   async firstUpdated() {
-    console.debug('firstUpdated');
+    console.debug('firstUpdated', 'apiUrl:', this.apiUrl);
     setupDOMPurifyHooks(); // TODO: notice the order of initialization, connectedCallback?
     await this.updatedComments();
   }
@@ -283,7 +290,8 @@ ${t('helpMdCodeBlock')}
 
   private async onDraftSubmit() {
     if (this.referenceComment && !this.isReply) {
-      this.editedSubmit();
+      await this.editedSubmit();
+      await this.updatedComments();
       return;
     }
 
@@ -297,12 +305,14 @@ ${t('helpMdCodeBlock')}
         : null;
 
     try {
-      const prePow = await solvePrePow(1);
+      console.debug('Solving Pre-PoW with difficulty 2...');
+      const prePow = await solvePrePow(2);
       if (prePow.nonce < 0) {
         console.error('Failed to solve pre-PoW');
         alert('Failed to solve proof-of-work. Please try again.'); // FIXME: alert
         return;
       }
+      console.debug('Pre-PoW solved:', prePow);
 
       const formalChallenge = await this.apiService.getChallenge(prePow.challenge, prePow.nonce);
       if (!formalChallenge) {
@@ -310,8 +320,10 @@ ${t('helpMdCodeBlock')}
         alert('Failed to get challenge from server. Please try again.'); // FIXME: alert
         return;
       }
+      console.debug('Formal challenge received:', formalChallenge);
 
       const diff = parseInt(formalChallenge.split(':')[2], 10);
+      console.debug('Solving formal PoW with difficulty:', diff);
       const fPowNonce = await solveFormalPow(diff, formalChallenge, this.post);
       if (fPowNonce < 0) {
         console.error('Failed to solve formal PoW');
