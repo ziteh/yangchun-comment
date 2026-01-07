@@ -331,7 +331,42 @@ ${t('helpMdCodeBlock')}
         alert('Challenge not ready. Please refresh and try again.'); // FIXME: alert
         return;
       }
-      console.debug('Using formal challenge from GET /comments:', this.formalChallenge);
+
+      // Check if formalChallenge is expired
+      const parts = this.formalChallenge.split(':');
+      if (parts.length >= 4) {
+        const expiry = parseInt(parts[1], 10) - 10;
+        const now = Math.floor(Date.now() / 1000);
+        if (now >= expiry) {
+          console.warn('Formal challenge expired, getting new challenge...');
+          // Solve prePoW and get new formalChallenge
+          const prePow = await solvePrePow(2);
+          if (prePow.nonce < 0) {
+            console.error('Failed to solve pre-PoW');
+            alert('Failed to solve proof-of-work. Please try again.'); // FIXME: alert
+            return;
+          }
+          console.debug('Pre-PoW solved:', prePow);
+
+          const newFormalChallenge = await this.apiService.getChallenge(
+            prePow.challenge,
+            prePow.nonce,
+          );
+          if (!newFormalChallenge) {
+            console.warn('Failed to get new formal PoW challenge');
+            alert('Failed to get challenge from server. Please try again.'); // FIXME: alert
+            return;
+          }
+          this.formalChallenge = newFormalChallenge;
+          console.debug('New formal challenge received:', this.formalChallenge);
+        }
+      } else {
+        console.error('Invalid formal challenge format');
+        alert('Invalid challenge format. Please refresh and try again.'); // FIXME: alert
+        return;
+      }
+
+      console.debug('Using formal challenge:', this.formalChallenge);
 
       const diff = parseInt(this.formalChallenge.split(':')[2], 10);
       console.debug('Solving formal PoW with difficulty:', diff);
