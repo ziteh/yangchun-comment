@@ -7,5 +7,5 @@
     "declarationDir": "./dist",
     "outDir": "./dist"
   },
-  "include": ["src/**/*", "src2/**/*"]
+  "include": ["src/**/*"]
 }
