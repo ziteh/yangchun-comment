@@ -21,6 +21,7 @@ const app = new Hono<{
     MAX_MSG_LENGTH: number;
     POST_REGEX?: string;
     POST_BASE_URL: string;
+    FORMAL_POW_SECRET_KEY: string;
   };
 }>();
 
@@ -47,7 +48,7 @@ app.post(
     }
 
     const nonceNum = parseInt(nonce, 10);
-    const powPass = await verifyFormalPow(challenge, post, nonceNum, 'FORMAL_FIXED_SECRET'); // TODO
+    const powPass = await verifyFormalPow(challenge, post, nonceNum, c.env.FORMAL_POW_SECRET_KEY); // TODO
     if (!powPass) {
       console.warn('Formal-PoW verification failed');
       return c.text('Formal-PoW verification failed', 400);

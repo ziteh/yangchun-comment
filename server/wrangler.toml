@@ -36,8 +36,15 @@ MAX_MSG_LENGTH = 1000            # The max length of the comment message in char
 MAX_PSEUDONYM_LENGTH = 80        # The max length of the pseudonym in characters
 MAX_ALL_SITE_RSS_COMMENTS = 25   # The max number of comments in the all-site RSS feed
 # POST_REGEX = "${POST_REGEX}"
+PRE_POW_DIFFICULTY = 2        # The difficulty for the pre-proof-of-work
+PRE_POW_TIME_WINDOW = 60      # The time window (in seconds) for the pre-proof-of-work
+PRE_POW_MAGIC_WORD = "FIXED" # The magic word for the pre-proof-of-work
+FORMAL_POW_DIFFICULTY = 4 # The difficulty for the formal proof-of-work
+FORMAL_POW_EXPIRATION = 300  # The expiration time (in seconds) for the formal proof-of-work challenges
+
 
 # Secrets
 # HMAC_SECRET_KEY = "${HMAC_SECRET_KEY}"   # HMAC secret key for signing
 # ADMIN_SECRET_KEY = "${ADMIN_SECRET_KEY}" # JWT secret key for admin
 # ADMIN_PASSWORD = "${ADMIN_PASSWORD}"     # Admin password
+# FORMAL_POW_SECRET_KEY= "${FORMAL_POW_SECRET_KEY}" # Secret key for formal PoW

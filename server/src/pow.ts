@@ -1,23 +1,26 @@
 import { Hono } from 'hono';
 
-// TODO: move to env
-const PRE_POW_TIME_WINDOW = 60; // seconds
-const FORMAL_POW_EXPIRY = 300; // seconds
-const PRE_POW_PAYLOAD = 'FIXED';
-const FORMAL_SECRET = 'FORMAL_FIXED_SECRET';
-
-const app = new Hono();
+const app = new Hono<{
+  Bindings: {
+    PRE_POW_DIFFICULTY: number;
+    PRE_POW_TIME_WINDOW: number;
+    PRE_POW_MAGIC_WORD: string;
+    FORMAL_POW_DIFFICULTY: number;
+    FORMAL_POW_EXPIRATION: number;
+    FORMAL_POW_SECRET_KEY: string;
+  };
+}>();
 
 app.get('/formal-challenge', async (c) => {
   const { challenge, nonce } = c.req.query();
   if (typeof challenge === 'string' && typeof nonce === 'string') {
     const nonceNum = parseInt(nonce, 10);
     const prePowPass = await verifyPrePow(
-      2,
+      c.env.PRE_POW_DIFFICULTY,
       challenge,
       nonceNum,
-      PRE_POW_PAYLOAD,
-      PRE_POW_TIME_WINDOW,
+      c.env.PRE_POW_MAGIC_WORD,
+      c.env.PRE_POW_TIME_WINDOW,
     );
     if (!prePowPass) {
       console.warn('Pre-PoW verification failed');
@@ -28,9 +31,9 @@ app.get('/formal-challenge', async (c) => {
     return c.text('Missing challenge or nonce', 400);
   }
 
-  const difficulty = 3;
-  const secret = FORMAL_SECRET;
-  const expirySec = FORMAL_POW_EXPIRY;
+  const difficulty = c.env.FORMAL_POW_DIFFICULTY;
+  const secret = c.env.FORMAL_POW_SECRET_KEY;
+  const expirySec = c.env.FORMAL_POW_EXPIRATION;
 
   if (!secret) {
     console.error('FORMAL_POW_SECRET_KEY is not set');
