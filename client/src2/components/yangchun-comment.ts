@@ -12,7 +12,7 @@ import { createMockApiService } from '../api/apiService.mock';
 import { generatePseudonymAndHash } from '../utils/pseudonym';
 import { setupDOMPurifyHooks } from '../utils/sanitize';
 import { initI18n, enUS, zhTW, t, type I18nStrings } from '../utils/i18n';
-import { solvePrePow, solveFormalPow } from '../utils/pow';
+import { solvePrePow, solveFormalPow, cleanupPowWorker } from '../utils/pow';
 
 @customElement('yangchun-comment')
 export class YangChunComment extends LitElement {
@@ -223,6 +223,11 @@ ${t('helpMdCodeBlock')}
     console.debug('firstUpdated');
     setupDOMPurifyHooks(); // TODO: notice the order of initialization, connectedCallback?
     await this.updatedComments();
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    cleanupPowWorker();
   }
 
   private async updatedComments() {

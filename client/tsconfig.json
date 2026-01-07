@@ -1,11 +1,11 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable", "WebWorker"],
     "useDefineForClassFields": false,
     "declaration": true,
     "declarationDir": "./dist",
     "outDir": "./dist"
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*", "src2/**/*"]
 }

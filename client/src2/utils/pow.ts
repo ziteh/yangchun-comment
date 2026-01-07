@@ -9,20 +9,37 @@ async function sha256(input: string): Promise<string> {
   return hashHex;
 }
 
-async function solvePow(difficulty: number, challenge: string): Promise<number> {
-  let nonce = 0;
-  const targetPrefix = '0'.repeat(difficulty);
+let powWorker: Worker | null = null;
 
-  let retries = 0;
-  while (retries++ < SOLVE_POW_MAX_RETRIES) {
-    const hash = await sha256(`${challenge}:${nonce}`);
-    if (hash.startsWith(targetPrefix)) {
-      return nonce;
-    }
-    nonce++;
+function getPowWorker(): Worker {
+  if (!powWorker) {
+    powWorker = new Worker(new URL('./pow.worker.ts', import.meta.url), { type: 'module' });
   }
-  console.warn('Failed to solve PoW within max retries');
-  return -1; // Indicate failure to solve PoW
+  return powWorker;
+}
+
+async function solvePow(difficulty: number, challenge: string): Promise<number> {
+  return new Promise((resolve) => {
+    const worker = getPowWorker();
+
+    const handleMessage = (e: MessageEvent) => {
+      worker.removeEventListener('message', handleMessage);
+      if (e.data.type === 'success') {
+        resolve(e.data.nonce);
+      } else {
+        console.warn('Failed to solve PoW within max retries');
+        resolve(-1);
+      }
+    };
+
+    worker.addEventListener('message', handleMessage);
+    worker.postMessage({
+      type: 'solve',
+      difficulty,
+      challenge,
+      maxRetries: SOLVE_POW_MAX_RETRIES,
+    });
+  });
 }
 
 export async function solvePrePow(
@@ -104,4 +121,11 @@ export async function verifyFormalPow(
   }
 
   return ok;
+}
+
+export function cleanupPowWorker(): void {
+  if (powWorker) {
+    powWorker.terminate();
+    powWorker = null;
+  }
 }
