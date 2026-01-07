@@ -12,7 +12,7 @@ import { createApiService } from '../api/apiService';
 import { generatePseudonymAndHash } from '../utils/pseudonym';
 import { setupDOMPurifyHooks } from '../utils/sanitize';
 import { initI18n, enUS, zhTW, t, type I18nStrings } from '../utils/i18n';
-import { solvePrePow, solveFormalPow, cleanupPowWorker } from '../utils/pow';
+import { cleanupPowWorker } from '../utils/pow';
 
 @customElement('yangchun-comment')
 export class YangChunComment extends LitElement {
@@ -79,7 +79,6 @@ export class YangChunComment extends LitElement {
   @state() private accessor comments: Comment[] = [];
   @state() private accessor editPseudonym = ''; // for editing comment the pseudonym does not change
   @state() private accessor deleteCommentId = '';
-  @state() private accessor formalChallenge: string | null = null;
 
   @state() private accessor referenceComment: Comment | null = null;
   @state() private accessor isReply = true; // true: reply, false: edit
@@ -240,26 +239,9 @@ ${t('helpMdCodeBlock')}
 
   private async updatedComments() {
     try {
-      console.debug('Solving Pre-PoW with difficulty 2...');
-      const prePow = await solvePrePow(2);
-      if (prePow.nonce < 0) {
-        console.warn('Failed to solve pre-PoW, falling back to get comments without challenge');
-        const response = await this.apiService.getComments(this.post);
-        this.comments = response.comments;
-        this.formalChallenge = null;
-        return;
-      }
-      console.debug('Pre-PoW solved:', prePow);
-
-      const response = await this.apiService.getComments(this.post, prePow.challenge, prePow.nonce);
-      this.comments = response.comments;
-      this.formalChallenge = response.challenge;
-      if (response.challenge) {
-        console.debug('Formal challenge received from GET /comments:', response.challenge);
-      }
+      this.comments = await this.apiService.getComments(this.post);
     } catch (err) {
       console.error('Error updating comments:', err);
-      this.formalChallenge = null;
     }
   }
 
@@ -326,64 +308,7 @@ ${t('helpMdCodeBlock')}
         : null;
 
     try {
-      if (!this.formalChallenge) {
-        console.warn('No formal challenge available');
-        alert('Challenge not ready. Please refresh and try again.'); // FIXME: alert
-        return;
-      }
-
-      // Check if formalChallenge is expired
-      const parts = this.formalChallenge.split(':');
-      if (parts.length >= 4) {
-        const expiry = parseInt(parts[1], 10) - 10;
-        const now = Math.floor(Date.now() / 1000);
-        if (now >= expiry) {
-          console.warn('Formal challenge expired, getting new challenge...');
-          // Solve prePoW and get new formalChallenge
-          const prePow = await solvePrePow(2);
-          if (prePow.nonce < 0) {
-            console.error('Failed to solve pre-PoW');
-            alert('Failed to solve proof-of-work. Please try again.'); // FIXME: alert
-            return;
-          }
-          console.debug('Pre-PoW solved:', prePow);
-
-          const newFormalChallenge = await this.apiService.getChallenge(
-            prePow.challenge,
-            prePow.nonce,
-          );
-          if (!newFormalChallenge) {
-            console.warn('Failed to get new formal PoW challenge');
-            alert('Failed to get challenge from server. Please try again.'); // FIXME: alert
-            return;
-          }
-          this.formalChallenge = newFormalChallenge;
-          console.debug('New formal challenge received:', this.formalChallenge);
-        }
-      } else {
-        console.error('Invalid formal challenge format');
-        alert('Invalid challenge format. Please refresh and try again.'); // FIXME: alert
-        return;
-      }
-
-      console.debug('Using formal challenge:', this.formalChallenge);
-
-      const diff = parseInt(this.formalChallenge.split(':')[2], 10);
-      console.debug('Solving formal PoW with difficulty:', diff);
-      const fPowNonce = await solveFormalPow(diff, this.formalChallenge, this.post);
-      if (fPowNonce < 0) {
-        console.error('Failed to solve formal PoW');
-        alert('Failed to solve proof-of-work. Please try again.'); // FIXME: alert
-        return;
-      }
-      const id = await this.apiService.addComment(
-        this.post,
-        pseudonym,
-        pureDraft,
-        replyTo,
-        this.formalChallenge,
-        fPowNonce,
-      );
+      const id = await this.apiService.addComment(this.post, pseudonym, pureDraft, replyTo);
       console.debug('Added comment ID:', id);
       this.draft = '';
       this.editPseudonym = '';
@@ -392,6 +317,7 @@ ${t('helpMdCodeBlock')}
       await this.updatedComments();
     } catch (err) {
       console.error('Failed to add comment:', err);
+      alert((err as Error).message || 'Failed to add comment. Please try again.'); // FIXME: alert
       return;
     }
   }

@@ -1,4 +1,4 @@
-const SOLVE_POW_MAX_RETRIES = 100000;
+const SOLVE_POW_MAX_RETRIES = 1000000;
 const PRE_POW_TIME_WINDOW = 60; // seconds
 const FORMAL_POW_EXPIRY = 300; // seconds
 const PRE_POW_PAYLOAD = 'FIXED';
