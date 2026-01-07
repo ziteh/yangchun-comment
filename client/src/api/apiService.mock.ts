@@ -86,9 +86,19 @@ export const createMockApiService = (): ApiService => {
     return formalChallenge;
   };
 
-  const getComments: ApiService['getComments'] = async (post) => {
+  const getComments: ApiService['getComments'] = async (post, challenge, nonce) => {
     await simulateNetworkDelay();
-    return [...(mockComments.get(post) || [])];
+    let formalChallenge: string | null = null;
+    if (typeof challenge === 'string' && typeof nonce === 'number') {
+      const prePowPass = await verifyPrePow(2, challenge, nonce);
+      if (prePowPass) {
+        formalChallenge = await genFormalPowChallenge(3);
+      }
+    }
+    return {
+      comments: [...(mockComments.get(post) || [])],
+      challenge: formalChallenge,
+    };
   };
 
   const addComment: ApiService['addComment'] = async (

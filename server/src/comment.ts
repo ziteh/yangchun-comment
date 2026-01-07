@@ -11,7 +11,7 @@ import {
 } from './utils';
 import { DEF, CONSTANTS } from './const';
 import type { Comment } from '@ziteh/yangchun-comment-shared';
-import { verifyFormalPow } from './pow';
+import { verifyFormalPow, genFormalPowChallenge, verifyPrePow } from './pow';
 
 const app = new Hono<{
   Bindings: {
@@ -22,18 +22,65 @@ const app = new Hono<{
     POST_REGEX?: string;
     POST_BASE_URL: string;
     FORMAL_POW_SECRET_KEY: string;
+    PRE_POW_DIFFICULTY: number;
+    PRE_POW_MAGIC_WORD: string;
+    PRE_POW_TIME_WINDOW: number;
+    FORMAL_POW_DIFFICULTY: number;
+    FORMAL_POW_EXPIRATION: number;
   };
 }>();
 
 // Get comments for a post
 app.get('/', validateQueryPost, async (c) => {
-  const { post } = c.req.valid('query');
+  const { post, challenge, nonce } = c.req.query();
+
+  if (typeof challenge !== 'string' || typeof nonce !== 'string') {
+    return c.text('Missing PoW challenge or nonce', 400);
+  }
+
+  try {
+    const nonceNum = parseInt(nonce, 10);
+    const prePowPass = await verifyPrePow(
+      c.env.PRE_POW_DIFFICULTY || DEF.prePowDifficulty,
+      challenge,
+      nonceNum,
+      c.env.PRE_POW_MAGIC_WORD || DEF.prePowMagicWord,
+      c.env.PRE_POW_TIME_WINDOW || DEF.prePowTimeWindow,
+    );
+    if (!prePowPass) {
+      console.warn('Pre-PoW verification failed in GET /comments');
+      return c.text('Pre-PoW verification failed', 400);
+    }
+    console.debug('Pre-pow verify OK in GET /comments');
+  } catch (err) {
+    console.error('Error verifying Pre-PoW in GET /comments:', err);
+    return c.text('Invalid challenge or nonce', 400);
+  }
+
   const key = getCommentKey(post);
   const raw = await c.env.COMMENTS.get(key);
   const comments = raw ? JSON.parse(raw) : [];
 
   console.debug(`Fetched ${comments.length} comments for post: ${post}`);
-  return c.json(comments, 200); // 200 OK
+
+  let formalChallenge: string | null = null;
+  const difficulty = c.env.FORMAL_POW_DIFFICULTY || DEF.formalPowDifficulty;
+  const secret = c.env.FORMAL_POW_SECRET_KEY;
+  const expirySec = c.env.FORMAL_POW_EXPIRATION || DEF.formalPowExpiration;
+
+  if (secret) {
+    try {
+      formalChallenge = await genFormalPowChallenge(difficulty, secret, expirySec);
+    } catch (err) {
+      console.error('Error generating formal PoW challenge in GET /comments:', err);
+      return c.text('Server error', 500);
+    }
+  } else {
+    console.error('FORMAL_POW_SECRET_KEY is not set');
+    return c.text('Server configuration error', 500);
+  }
+
+  return c.json({ comments, challenge: formalChallenge }, 200); // 200 OK
 });
 
 // Create a new comment

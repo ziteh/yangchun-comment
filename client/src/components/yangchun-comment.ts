@@ -79,6 +79,7 @@ export class YangChunComment extends LitElement {
   @state() private accessor comments: Comment[] = [];
   @state() private accessor editPseudonym = ''; // for editing comment the pseudonym does not change
   @state() private accessor deleteCommentId = '';
+  @state() private accessor formalChallenge: string | null = null;
 
   @state() private accessor referenceComment: Comment | null = null;
   @state() private accessor isReply = true; // true: reply, false: edit
@@ -238,8 +239,28 @@ ${t('helpMdCodeBlock')}
   }
 
   private async updatedComments() {
-    const newComments = await this.apiService.getComments(this.post);
-    this.comments = [...newComments];
+    try {
+      console.debug('Solving Pre-PoW with difficulty 2...');
+      const prePow = await solvePrePow(2);
+      if (prePow.nonce < 0) {
+        console.warn('Failed to solve pre-PoW, falling back to get comments without challenge');
+        const response = await this.apiService.getComments(this.post);
+        this.comments = response.comments;
+        this.formalChallenge = null;
+        return;
+      }
+      console.debug('Pre-PoW solved:', prePow);
+
+      const response = await this.apiService.getComments(this.post, prePow.challenge, prePow.nonce);
+      this.comments = response.comments;
+      this.formalChallenge = response.challenge;
+      if (response.challenge) {
+        console.debug('Formal challenge received from GET /comments:', response.challenge);
+      }
+    } catch (err) {
+      console.error('Error updating comments:', err);
+      this.formalChallenge = null;
+    }
   }
 
   private async onCommentInfoCancel(e: CustomEvent<string>) {
@@ -305,26 +326,16 @@ ${t('helpMdCodeBlock')}
         : null;
 
     try {
-      console.debug('Solving Pre-PoW with difficulty 2...');
-      const prePow = await solvePrePow(2);
-      if (prePow.nonce < 0) {
-        console.error('Failed to solve pre-PoW');
-        alert('Failed to solve proof-of-work. Please try again.'); // FIXME: alert
+      if (!this.formalChallenge) {
+        console.warn('No formal challenge available');
+        alert('Challenge not ready. Please refresh and try again.'); // FIXME: alert
         return;
       }
-      console.debug('Pre-PoW solved:', prePow);
+      console.debug('Using formal challenge from GET /comments:', this.formalChallenge);
 
-      const formalChallenge = await this.apiService.getChallenge(prePow.challenge, prePow.nonce);
-      if (!formalChallenge) {
-        console.warn('Failed to get formal PoW challenge');
-        alert('Failed to get challenge from server. Please try again.'); // FIXME: alert
-        return;
-      }
-      console.debug('Formal challenge received:', formalChallenge);
-
-      const diff = parseInt(formalChallenge.split(':')[2], 10);
+      const diff = parseInt(this.formalChallenge.split(':')[2], 10);
       console.debug('Solving formal PoW with difficulty:', diff);
-      const fPowNonce = await solveFormalPow(diff, formalChallenge, this.post);
+      const fPowNonce = await solveFormalPow(diff, this.formalChallenge, this.post);
       if (fPowNonce < 0) {
         console.error('Failed to solve formal PoW');
         alert('Failed to solve proof-of-work. Please try again.'); // FIXME: alert
@@ -335,7 +346,7 @@ ${t('helpMdCodeBlock')}
         pseudonym,
         pureDraft,
         replyTo,
-        formalChallenge,
+        this.formalChallenge,
         fPowNonce,
       );
       console.debug('Added comment ID:', id);

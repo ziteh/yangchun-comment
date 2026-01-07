@@ -12,6 +12,12 @@ export const DEF = {
 
   adminUsername: 'admin',
   adminPassword: 'admin',
+
+  prePowDifficulty: 2,
+  prePowMagicWord: 'yangchun',
+  prePowTimeWindow: 300,
+  formalPowDifficulty: 4,
+  formalPowExpiration: 300,
 };
 
 export const CONSTANTS = {

@@ -12,9 +12,14 @@ export interface CommentAuthInfo {
   token: string;
 }
 
+export interface CommentsResponse {
+  comments: Comment[];
+  challenge: string | null;
+}
+
 export interface ApiService {
   getChallenge: (challenge: string, nonce: number) => Promise<string | null>;
-  getComments: (post: string) => Promise<Comment[]>;
+  getComments: (post: string, challenge?: string, nonce?: number) => Promise<CommentsResponse>;
   addComment: (
     post: string,
     pseudonym: string,
@@ -61,11 +66,20 @@ export const createApiService = (apiUrl: string): ApiService => {
     }
   };
 
-  const getComments = async (post: string): Promise<Comment[]> => {
+  const getComments = async (
+    post: string,
+    challenge?: string,
+    nonce?: number,
+  ): Promise<CommentsResponse> => {
     const url = new URL('/api/comments', apiUrl);
     url.searchParams.append('post', post);
+    if (typeof challenge === 'string' && typeof nonce === 'number') {
+      url.searchParams.append('challenge', challenge);
+      url.searchParams.append('nonce', nonce.toString());
+    }
     const res = await fetch(url);
-    return await res.json();
+    const data = await res.json();
+    return data as CommentsResponse;
   };
 
   const addComment = async (
