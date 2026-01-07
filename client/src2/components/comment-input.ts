@@ -189,7 +189,7 @@ export class CommentInput extends LitElement {
   }
 
   private async createPreviewComment() {
-    const magicString = '_PREVIEW';
+    const magicString = 'preview_';
 
     let pseudonym: string;
     if (this.editPseudonym) {

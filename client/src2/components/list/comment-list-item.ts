@@ -270,7 +270,7 @@ export class CommentListItem extends LitElement {
   }
 
   private isPreviewComment(): boolean {
-    const magicString = '_PREVIEW';
+    const magicString = 'preview_';
     return this.comment.id === magicString;
   }
 
