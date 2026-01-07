@@ -297,15 +297,17 @@ ${t('helpMdCodeBlock')}
         : null;
 
     try {
-      const prePow = await solvePrePow(1, 'FIXED');
+      const prePow = await solvePrePow(1);
       if (prePow.nonce < 0) {
         console.error('Failed to solve pre-PoW');
+        alert('Failed to solve proof-of-work. Please try again.'); // FIXME: alert
         return;
       }
 
       const formalChallenge = await this.apiService.getChallenge(prePow.challenge, prePow.nonce);
       if (!formalChallenge) {
         console.warn('Failed to get formal PoW challenge');
+        alert('Failed to get challenge from server. Please try again.'); // FIXME: alert
         return;
       }
 
@@ -313,6 +315,7 @@ ${t('helpMdCodeBlock')}
       const fPowNonce = await solveFormalPow(diff, formalChallenge, this.post);
       if (fPowNonce < 0) {
         console.error('Failed to solve formal PoW');
+        alert('Failed to solve proof-of-work. Please try again.'); // FIXME: alert
         return;
       }
       const id = await this.apiService.addComment(

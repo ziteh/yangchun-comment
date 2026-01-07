@@ -1,4 +1,8 @@
 const SOLVE_POW_MAX_RETRIES = 100000;
+const PRE_POW_TIME_WINDOW = 60; // seconds
+const FORMAL_POW_EXPIRY = 300; // seconds
+const PRE_POW_PAYLOAD = 'FIXED';
+const FORMAL_SECRET = 'FORMAL_FIXED_SECRET'; // TODO: move to env
 
 async function sha256(input: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -10,10 +14,36 @@ async function sha256(input: string): Promise<string> {
 }
 
 let powWorker: Worker | null = null;
+let requestIdCounter = 0;
+const pendingRequests = new Map<number, (nonce: number) => void>();
 
 function getPowWorker(): Worker {
   if (!powWorker) {
     powWorker = new Worker(new URL('./pow.worker.ts', import.meta.url), { type: 'module' });
+
+    powWorker.addEventListener('message', (e: MessageEvent) => {
+      const { requestId, success, nonce, error } = e.data;
+      const resolver = pendingRequests.get(requestId);
+
+      if (resolver) {
+        pendingRequests.delete(requestId);
+        if (error) {
+          console.error('PoW Worker error:', error);
+          resolver(-1);
+        } else if (success) {
+          resolver(nonce);
+        } else {
+          console.warn('Failed to solve PoW within max retries');
+          resolver(-1);
+        }
+      }
+    });
+
+    powWorker.addEventListener('error', (e) => {
+      console.error('PoW Worker error:', e.message);
+      pendingRequests.forEach((resolver) => resolver(-1));
+      pendingRequests.clear();
+    });
   }
   return powWorker;
 }
@@ -21,19 +51,12 @@ function getPowWorker(): Worker {
 async function solvePow(difficulty: number, challenge: string): Promise<number> {
   return new Promise((resolve) => {
     const worker = getPowWorker();
+    const requestId = requestIdCounter++;
 
-    const handleMessage = (e: MessageEvent) => {
-      worker.removeEventListener('message', handleMessage);
-      if (e.data.type === 'success') {
-        resolve(e.data.nonce);
-      } else {
-        console.warn('Failed to solve PoW within max retries');
-        resolve(-1);
-      }
-    };
+    pendingRequests.set(requestId, resolve);
 
-    worker.addEventListener('message', handleMessage);
     worker.postMessage({
+      requestId,
       type: 'solve',
       difficulty,
       challenge,
@@ -44,7 +67,7 @@ async function solvePow(difficulty: number, challenge: string): Promise<number> 
 
 export async function solvePrePow(
   difficulty: number,
-  payload: string,
+  payload: string = PRE_POW_PAYLOAD,
 ): Promise<{ challenge: string; nonce: number }> {
   const challenge = `${Math.floor(Date.now() / 1000)}:${payload}`;
   const nonce = await solvePow(difficulty, challenge);
@@ -72,9 +95,9 @@ async function verifyPow(difficulty: number, challenge: string, nonce: number): 
 
 export async function genFormalPowChallenge(difficulty: number): Promise<string> {
   const random = crypto.getRandomValues(new Uint32Array(2)).join('');
-  const expiry = Math.floor(Date.now() / 1000) + 300;
+  const expiry = Math.floor(Date.now() / 1000) + FORMAL_POW_EXPIRY;
   const payload = `${random}:${expiry}:${difficulty}`;
-  const signature = await sha256(payload + ':FORMAL_FIXED_SECRET');
+  const signature = await sha256(payload + ':' + FORMAL_SECRET);
   return `${payload}:${signature}`;
 }
 
@@ -88,8 +111,8 @@ export async function verifyPrePow(
 
   const timestamp = parseInt(parts[0], 10);
   const diffTimestamp = Math.floor(Date.now() / 1000) - timestamp;
-  if (isNaN(timestamp) || diffTimestamp > 60 || diffTimestamp < 0) return false;
-  if (parts[1] !== 'FIXED') return false;
+  if (isNaN(timestamp) || diffTimestamp > PRE_POW_TIME_WINDOW || diffTimestamp < 0) return false;
+  if (parts[1] !== PRE_POW_PAYLOAD) return false;
 
   // TODO: check in redis if already used
 
@@ -108,7 +131,7 @@ export async function verifyFormalPow(
   const difficulty = parseInt(parts[2], 10);
   const signature = parts[3];
 
-  const verifySign = await sha256(`${random}:${expiry}:${difficulty}:FORMAL_FIXED_SECRET`);
+  const verifySign = await sha256(`${random}:${expiry}:${difficulty}:${FORMAL_SECRET}`);
   if (signature !== verifySign) return false;
   // TODO: signature in redis
 
@@ -125,6 +148,9 @@ export async function verifyFormalPow(
 
 export function cleanupPowWorker(): void {
   if (powWorker) {
+    pendingRequests.forEach((resolver) => resolver(-1));
+    pendingRequests.clear();
+
     powWorker.terminate();
     powWorker = null;
   }

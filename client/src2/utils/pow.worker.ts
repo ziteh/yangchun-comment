@@ -1,4 +1,5 @@
 interface PowRequest {
+  requestId: number;
   type: 'solve';
   difficulty: number;
   challenge: string;
@@ -6,8 +7,10 @@ interface PowRequest {
 }
 
 interface PowResponse {
-  type: 'success' | 'failure';
+  requestId: number;
+  success: boolean;
   nonce: number;
+  error?: string;
 }
 
 async function sha256(input: string): Promise<string> {
@@ -39,14 +42,25 @@ async function solvePow(
 }
 
 self.onmessage = async (e: MessageEvent<PowRequest>) => {
-  const { type, difficulty, challenge, maxRetries } = e.data;
+  const { requestId, type, difficulty, challenge, maxRetries } = e.data;
 
   if (type === 'solve') {
-    const nonce = await solvePow(difficulty, challenge, maxRetries);
-    const response: PowResponse = {
-      type: nonce >= 0 ? 'success' : 'failure',
-      nonce,
-    };
-    self.postMessage(response);
+    try {
+      const nonce = await solvePow(difficulty, challenge, maxRetries);
+      const response: PowResponse = {
+        requestId,
+        success: nonce >= 0,
+        nonce,
+      };
+      self.postMessage(response);
+    } catch (error) {
+      const response: PowResponse = {
+        requestId,
+        success: false,
+        nonce: -1,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+      self.postMessage(response);
+    }
   }
 };
