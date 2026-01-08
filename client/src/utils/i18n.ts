@@ -36,6 +36,8 @@ export interface I18nStrings {
   helpMdInlineCode: string;
   helpMdCodeBlock: string;
 
+  notifyDesc: string;
+
   noComments: string;
 }
 
@@ -72,6 +74,7 @@ export const enUS: I18nStrings = {
   helpMdOrderedList: 'Ordered list item',
   helpMdInlineCode: 'Inline code',
   helpMdCodeBlock: 'Code block',
+  notifyDesc: 'You can subscribe to the comments RSS feed for this post: ',
   noComments: 'No comments yet',
 };
 
@@ -108,6 +111,7 @@ export const zhTW: I18nStrings = {
   helpMdOrderedList: '有序清單項目',
   helpMdInlineCode: '行內程式碼',
   helpMdCodeBlock: '程式碼區塊',
+  notifyDesc: '你可以訂閱此文章的留言 RSS Feed：',
   noComments: '目前還沒有留言',
 };
 

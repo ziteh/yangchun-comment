@@ -87,6 +87,8 @@ export class YangChunComment extends LitElement {
   @state() private accessor showNotify = false;
   @state() private accessor showConfirmDelete = false; // TODO: combine to deleteCommentId !== '' ?
 
+  @state() private accessor rssFeedUrl = '';
+
   @query('comment-input') private accessor commentInput!: CommentInput;
 
   render() {
@@ -193,7 +195,8 @@ ${t('helpMdCodeBlock')}
           .open=${this.showNotify}
           @close=${() => (this.showNotify = false)}
         >
-          <p>Notification feature is coming soon!</p>
+          <p>${t('notifyDesc')}</p>
+          <a href="${this.rssFeedUrl}" target="_blank" rel="noopener noreferrer">RSS feed</a>
         </comment-dialog>
         <comment-dialog
           header=${t('help')}
@@ -221,6 +224,10 @@ ${t('helpMdCodeBlock')}
     if (changedProperties.has('apiUrl') && this.apiUrl) {
       console.debug('Initializing API service with URL:', this.apiUrl);
       this.apiService = createApiService(this.apiUrl);
+
+      const rssUrl = new URL('/rss/thread', this.apiUrl);
+      rssUrl.searchParams.append('post', this.post);
+      this.rssFeedUrl = rssUrl.href;
     }
 
     super.willUpdate(changedProperties);
