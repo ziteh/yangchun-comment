@@ -178,6 +178,7 @@ export class CommentAdmin extends LitElement {
         this.username = '';
         this.password = '';
         this.isLoggedIn = true;
+        this.handleAuthStatusChange();
       } else {
         this.errorMessage = 'Login failed';
       }
@@ -196,6 +197,9 @@ export class CommentAdmin extends LitElement {
 
     try {
       this.isLoggedIn = await this.apiService.checkAdminAuth();
+      if (this.isLoggedIn) {
+        this.handleAuthStatusChange();
+      }
     } catch (error) {
       console.error('Failed to check auth status:', error);
       this.isLoggedIn = false;
@@ -220,6 +224,7 @@ export class CommentAdmin extends LitElement {
       if (success) {
         this.successMessage = 'Logged out successfully';
         this.isLoggedIn = false;
+        this.handleAuthStatusChange();
       } else {
         this.errorMessage = 'Logout failed';
       }
@@ -238,5 +243,15 @@ export class CommentAdmin extends LitElement {
   private handlePasswordChange = (e: Event) => {
     const target = e.target as HTMLInputElement;
     this.password = target.value;
+  };
+
+  private handleAuthStatusChange = () => {
+    this.dispatchEvent(
+      new CustomEvent('auth-status-change', {
+        detail: this.isLoggedIn,
+        bubbles: true,
+        composed: true,
+      }),
+    );
   };
 }

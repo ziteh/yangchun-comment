@@ -89,6 +89,7 @@ export class YangChunComment extends LitElement {
   @state() private accessor showNotify = false;
   @state() private accessor showConfirmDelete = false; // TODO: combine to deleteCommentId !== '' ?
 
+  @state() private accessor isAdmin = false;
   @state() private accessor rssFeedUrl = '';
 
   @query('comment-input') private accessor commentInput!: CommentInput;
@@ -141,6 +142,8 @@ ${t('helpMdCodeBlock')}
           .message=${this.draft}
           .nickname=${this.nickname}
           .editPseudonym=${this.editPseudonym}
+          .authorName=${this.authorName}
+          .isAdmin=${this.isAdmin}
           @comment-change=${this.onDraftChange}
           @nickname-change=${this.onNicknameChange}
           @comment-submit=${this.onDraftSubmit}
@@ -198,7 +201,10 @@ ${t('helpMdCodeBlock')}
           .open=${this.showAdmin}
           @close=${() => (this.showAdmin = false)}
         >
-          <comment-admin .apiService=${this.apiService}></comment-admin>
+          <comment-admin
+            .apiService=${this.apiService}
+            @auth-status-change=${this.onAuthStatusChange}
+          ></comment-admin>
         </comment-dialog>
         <comment-dialog
           header=${t('notify')}
@@ -373,6 +379,10 @@ ${t('helpMdCodeBlock')}
     await this.updateComplete;
     this.commentInput?.focus();
   }
+
+  private onAuthStatusChange = (e: CustomEvent<boolean>) => {
+    this.isAdmin = e.detail;
+  };
 
   private async deleteComment() {
     if (!this.deleteCommentId) return;

@@ -116,6 +116,8 @@ export class CommentInput extends LitElement {
   @property({ type: String }) accessor message = '';
   @property({ type: String }) accessor nickname = '';
   @property({ type: String }) accessor editPseudonym = '';
+  @property({ type: String }) accessor authorName = '';
+  @property({ type: Boolean }) accessor isAdmin = false;
 
   @state() private accessor isPreview = false;
   @state() private accessor previewComment: Comment | null = null;
@@ -127,7 +129,10 @@ export class CommentInput extends LitElement {
         <div class="message-row">
           ${this.isPreview && this.previewComment
             ? html`<div class="preview-container">
-                <comment-list-item .comment=${this.previewComment}></comment-list-item>
+                <comment-list-item
+                  .comment=${this.previewComment}
+                  .author=${this.authorName}
+                ></comment-list-item>
               </div>`
             : html`<div class="draft-container">
                 <textarea
@@ -158,13 +163,13 @@ export class CommentInput extends LitElement {
           <div class="nickname-wrapper">
             <input
               class="nickname-input"
-              .value=${this.nickname}
+              .value=${this.isAdmin ? 'Admin' : this.nickname}
               @input=${this.onInputNickname}
               type="text"
               placeholder=${t('nicknamePlaceholder')}
               aria-label=${t('nicknamePlaceholder')}
               aria-describedby="nickname-counter"
-              ?disabled=${this.isPreview}
+              ?disabled=${this.isPreview || this.isAdmin}
               maxlength=${CommentInput.MAX_NICKNAME_LENGTH}
             />
             <span class="char-counter" id="nickname-counter" aria-live="polite">
@@ -206,6 +211,7 @@ export class CommentInput extends LitElement {
       pseudonym,
       pubDate: Date.now(),
       id: magicString,
+      isAdmin: this.isAdmin,
     };
   }
 
