@@ -8,6 +8,7 @@ import {
   genHmac,
   verifyHmac,
   validatePostUrl,
+  verifyAdminToken,
 } from './utils';
 import { DEF, CONSTANTS } from './const';
 import type { Comment } from '@ziteh/yangchun-comment-shared';
@@ -27,6 +28,7 @@ const app = new Hono<{
     PRE_POW_TIME_WINDOW: number;
     FORMAL_POW_DIFFICULTY: number;
     FORMAL_POW_EXPIRATION: number;
+    ADMIN_SECRET_KEY: string;
   };
 }>();
 
@@ -120,12 +122,18 @@ app.post(
     }
     const id = genId();
     const timestamp = Date.now();
+
+    // Check if the request is from an admin
+    const cookieHeader = c.req.header('Cookie');
+    const isAdmin = await verifyAdminToken(cookieHeader, c.env.ADMIN_SECRET_KEY);
+
     const comment: Comment = {
       id,
       pseudonym,
       msg,
       replyTo,
       pubDate: timestamp,
+      ...(isAdmin && { isAdmin: true }),
     };
 
     // Save to KV

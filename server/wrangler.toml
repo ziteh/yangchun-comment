@@ -17,7 +17,7 @@ preview_id = "<KV_COMMENTS_PREVIEW_ID>"
 
 [vars]
 FRONTEND_URL = "https://your-frontend-url.com" # Frontend URL
-CORS_ORIGIN = "*" # CORS origin, use "*" to allow all origins
+CORS_ORIGIN = "http://localhost:5173" # CORS origin, use "*" to allow all origins
 RSS_SITE_PATH = "site"   # The path for the all-site RSS feed
 ADMIN_USERNAME = "admin" # Admin username
 MAX_MSG_LENGTH = 1000            # The max length of the comment message in characters

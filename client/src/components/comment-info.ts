@@ -31,6 +31,13 @@ export class CommentInfo extends LitElement {
         display: flex;
         gap: var(--ycc-spacing-s);
       }
+      .admin-btn {
+        opacity: 0;
+        transition: opacity 0.2s;
+      }
+      .admin-btn:hover {
+        opacity: 1;
+      }
     `,
   ];
 
@@ -44,6 +51,7 @@ export class CommentInfo extends LitElement {
           <!-- TODO: refactor this -->
           <div></div>
           <div class="actions">
+            <button class="text-btn admin-btn" @click=${this.onAdmin}>Admin</button>
             <button class="text-btn" @click=${this.onNotify}>${t('notify')}</button>
             <button class="text-btn" @click=${this.onHelp}>${t('help')}</button>
           </div>
@@ -64,11 +72,21 @@ export class CommentInfo extends LitElement {
           <button class="text-btn" @click=${this.onCancel}>${t('cancel')}</button>
         </div>
         <div class="actions">
+          <button class="text-btn admin-btn" @click=${this.onAdmin}>Admin</button>
           <button class="text-btn" @click=${this.onNotify}>${t('notify')}</button>
           <button class="text-btn" @click=${this.onHelp}>${t('help')}</button>
         </div>
       </div>
     `;
+  }
+
+  private onAdmin() {
+    this.dispatchEvent(
+      new CustomEvent('admin-request', {
+        bubbles: true,
+        composed: true,
+      }),
+    );
   }
 
   private onHelp() {

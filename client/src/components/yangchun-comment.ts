@@ -7,6 +7,7 @@ import { CommentInput } from './comment-input';
 import './comment-info';
 import './comment-dialog';
 import './list/comment-list';
+import './comment-admin';
 import type { ApiService } from '../api/apiService';
 import { createApiService } from '../api/apiService';
 import { generatePseudonymAndHash } from '../utils/pseudonym';
@@ -83,6 +84,7 @@ export class YangChunComment extends LitElement {
   @state() private accessor referenceComment: Comment | null = null;
   @state() private accessor isReply = true; // true: reply, false: edit
 
+  @state() private accessor showAdmin = false;
   @state() private accessor showHelp = false;
   @state() private accessor showNotify = false;
   @state() private accessor showConfirmDelete = false; // TODO: combine to deleteCommentId !== '' ?
@@ -149,6 +151,7 @@ ${t('helpMdCodeBlock')}
           @reference-comment-cancel=${this.onCommentInfoCancel}
           @notify-request=${() => (this.showNotify = true)}
           @help-request=${() => (this.showHelp = true)}
+          @admin-request=${() => (this.showAdmin = true)}
         ></comment-info>
         <comment-list
           .comments=${this.comments}
@@ -189,6 +192,13 @@ ${t('helpMdCodeBlock')}
               ${t('cancel')}
             </button>
           </div>
+        </comment-dialog>
+        <comment-dialog
+          header="Admin"
+          .open=${this.showAdmin}
+          @close=${() => (this.showAdmin = false)}
+        >
+          <comment-admin .apiService=${this.apiService}></comment-admin>
         </comment-dialog>
         <comment-dialog
           header=${t('notify')}

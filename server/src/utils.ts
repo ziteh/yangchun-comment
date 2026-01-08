@@ -2,6 +2,7 @@ import { validator } from 'hono/validator';
 import { customAlphabet } from 'nanoid';
 import { CONSTANTS } from './const';
 import sanitizeHtml from 'sanitize-html';
+import { verify } from 'hono/jwt';
 
 export function sanitize(raw: unknown): string {
   if (typeof raw !== 'string') return '';
@@ -131,6 +132,24 @@ export async function validatePostUrl(url: string, timeout: number): Promise<boo
     return res.ok;
   } catch (err) {
     console.warn(`Blog post validation failed for ${url}:`, err);
+    return false;
+  }
+}
+
+export async function verifyAdminToken(
+  cookieHeader: string | undefined,
+  secretKey: string,
+): Promise<boolean> {
+  try {
+    if (!cookieHeader) return false;
+
+    const match = cookieHeader.match(/admin_token=([^;]+)/);
+    if (!match) return false;
+
+    const token = match[1];
+    await verify(token, secretKey);
+    return true;
+  } catch {
     return false;
   }
 }

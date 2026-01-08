@@ -17,6 +17,11 @@ export interface CommentsResponse {
   challenge: string | null;
 }
 
+export interface AdminLoginResponse {
+  success: boolean;
+  message: string;
+}
+
 export interface ApiService {
   ensureValidChallenge: () => Promise<boolean>;
   precomputeFormalPow: (post: string) => Promise<boolean>;
@@ -40,6 +45,9 @@ export interface ApiService {
   canEditComment: (commentId: string) => boolean;
   saveMyCommentId: (commentId: string) => void;
   isMyComment: (commentId: string) => boolean;
+  adminLogin: (username: string, password: string) => Promise<AdminLoginResponse | null>;
+  checkAdminAuth: () => Promise<boolean>;
+  adminLogout: () => Promise<boolean>;
 }
 
 // TODO HttpOnly Cookie?
@@ -167,6 +175,7 @@ export const createApiService = (apiUrl: string): ApiService => {
       const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // Admin HttpOnly cookies
         body: JSON.stringify({
           pseudonym,
           msg,
@@ -294,6 +303,59 @@ export const createApiService = (apiUrl: string): ApiService => {
     }
   };
 
+  const adminLogin = async (
+    username: string,
+    password: string,
+  ): Promise<AdminLoginResponse | null> => {
+    try {
+      const url = new URL('/admin/login', apiUrl);
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+        credentials: 'include', // Include cookies in request
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        return data as AdminLoginResponse;
+      }
+      console.error('Admin login failed:', res.status, res.statusText);
+      return null;
+    } catch (err) {
+      console.error('Error during admin login:', err);
+      return null;
+    }
+  };
+
+  const checkAdminAuth = async (): Promise<boolean> => {
+    try {
+      const url = new URL('/admin/check', apiUrl);
+      const res = await fetch(url, {
+        method: 'GET',
+        credentials: 'include', // Include cookies in request
+      });
+      return res.ok;
+    } catch (err) {
+      console.error('Error checking admin auth:', err);
+      return false;
+    }
+  };
+
+  const adminLogout = async (): Promise<boolean> => {
+    try {
+      const url = new URL('/admin/logout', apiUrl);
+      const res = await fetch(url, {
+        method: 'POST',
+        credentials: 'include', // Include cookies in request
+      });
+      return res.ok;
+    } catch (err) {
+      console.error('Error during admin logout:', err);
+      return false;
+    }
+  };
+
   return {
     ensureValidChallenge,
     precomputeFormalPow,
@@ -307,5 +369,8 @@ export const createApiService = (apiUrl: string): ApiService => {
     canEditComment,
     saveMyCommentId,
     isMyComment,
+    adminLogin,
+    checkAdminAuth,
+    adminLogout,
   };
 };
