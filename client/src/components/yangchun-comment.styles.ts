@@ -74,12 +74,12 @@ export const yangChunCommentStyles = css`
     border: none;
     color: var(--ycc-text-secondary);
     padding: 0;
-    text-decoration: underline;
     font-size: 0.9em;
   }
   button.text-btn:hover {
     color: var(--ycc-primary-color);
     background: none;
+    text-decoration: underline;
   }
 
   input[type='text'],

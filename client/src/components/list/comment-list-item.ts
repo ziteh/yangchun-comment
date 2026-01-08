@@ -48,12 +48,15 @@ export class CommentListItem extends LitElement {
         font-size: 0.8em;
       }
       .date-relative {
+        font-size: 0.9em;
       }
       .date-absolute {
         display: none;
+        font-size: 0.9em;
       }
       .comment-id {
         display: none;
+        font-size: 0.9em;
       }
       .header:hover .comment-id {
         display: block;
@@ -65,6 +68,7 @@ export class CommentListItem extends LitElement {
       }
       .comment-reply-to {
         display: none;
+        font-size: 0.9em;
       }
       .header:hover .comment-reply-to {
         display: block;
@@ -145,7 +149,9 @@ export class CommentListItem extends LitElement {
       .actions {
         gap: var(--ycc-spacing-s);
         display: flex;
-        justify-content: flex-end;
+        margin-top: var(--ycc-spacing-s);
+        // justify-content: flex-end;
+        opacity: 0.7;
       }
       .reply-comments {
         margin-left: var(--ycc-spacing-l);
@@ -234,12 +240,6 @@ export class CommentListItem extends LitElement {
             ? null
             : html`
                 <div class="actions">
-                  ${this.canEditCallback(this.comment.id) // TODO: to @state ?
-                    ? html`
-                        <button class="text-btn" @click=${this.onDelete}>${t('delete')}</button>
-                        <button class="text-btn" @click=${this.onEdit}>${t('edit')}</button>
-                      `
-                    : null}
                   <button
                     class="text-btn"
                     @click=${this.onReply}
@@ -248,6 +248,12 @@ export class CommentListItem extends LitElement {
                   >
                     ${t('reply')}
                   </button>
+                  ${this.canEditCallback(this.comment.id) // TODO: to @state ?
+                    ? html`
+                        <button class="text-btn" @click=${this.onEdit}>${t('edit')}</button>
+                        <button class="text-btn" @click=${this.onDelete}>${t('delete')}</button>
+                      `
+                    : null}
                 </div>
               `}
         </div>
