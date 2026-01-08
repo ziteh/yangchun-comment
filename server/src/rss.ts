@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
-// import { validateQueryPost, getCommentKey } from './utils';
-import { DEF, CONSTANTS } from './const';
+import { validateQueryPost, getCommentKey } from './utils';
+import { CONSTANTS } from './const';
 import type { Comment } from '@ziteh/yangchun-comment-shared';
 
 interface CommentWithPost extends Comment {
@@ -13,19 +13,62 @@ const app = new Hono<{
     RSS_SITE_PATH: string;
     FRONTEND_URL: string;
     MAX_ALL_SITE_RSS_COMMENTS: number;
+    MAX_THREAD_RSS_COMMENTS: number;
   };
 }>();
 
+app.get('/thread', validateQueryPost, async (c) => {
+  const { post } = c.req.valid('query');
+  const key = getCommentKey(post);
+  const raw = await c.env.COMMENTS.get(key);
+  const comments: Comment[] = raw ? JSON.parse(raw) : [];
+
+  const siteUrl = c.env.FRONTEND_URL;
+  const pageTitle = `Comments of ${post}`;
+  const postUrl = new URL(post, siteUrl).href;
+
+  let rss = `<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+<channel>
+  <title>${pageTitle}</title>
+  <link>${postUrl}</link>
+  <description>Latest comments</description>
+  <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
+  `;
+
+  // Fetch the latest N comments
+  comments
+    .sort((a, b) => b.pubDate - a.pubDate)
+    .slice(0, c.env.MAX_THREAD_RSS_COMMENTS)
+    .forEach((comment) => {
+      rss += `
+  <item>
+    <title>${comment.pseudonym || 'Anonymous'}'s Comment</title>
+    <description><![CDATA[${comment.msg}]]></description>
+    <pubDate>${new Date(comment.pubDate).toUTCString()}</pubDate>
+    <guid>${postUrl}#comment-${comment.id}</guid>
+  </item>`;
+    });
+
+  rss += `
+</channel>
+</rss>`;
+
+  return c.body(rss, 200, {
+    'Content-Type': 'application/xml; charset=utf-8',
+    'X-Content-Type-Options': 'nosniff',
+  });
+});
+
 // RSS feed for all site comments
-app.get('/:site', async (c) => {
+app.get('/site/:site', async (c) => {
   const site = c.req.param('site');
-  const expectedSite = c.env.RSS_SITE_PATH || DEF.rssSitePath;
-  if (site !== expectedSite) {
+  if (site !== c.env.RSS_SITE_PATH) {
     return c.notFound();
   }
 
-  const siteUrl = c.env.FRONTEND_URL || DEF.frontendUrl;
-  const maxComments = c.env.MAX_ALL_SITE_RSS_COMMENTS || DEF.maxAllSiteRssComments;
+  const siteUrl = c.env.FRONTEND_URL;
+  const maxComments = c.env.MAX_ALL_SITE_RSS_COMMENTS;
 
   // Get all comment keys from KV
   const listResult = await c.env.COMMENTS.list({ prefix: CONSTANTS.commentsKeyPrefix });
@@ -85,47 +128,5 @@ app.get('/:site', async (c) => {
     'X-Content-Type-Options': 'nosniff',
   });
 });
-
-// app.get('/thread', validateQueryPost, async (c) => {
-//   const { post } = c.req.valid('query');
-//   const key = getCommentKey(post);
-//   const raw = await c.env.COMMENTS.get(key);
-//   const comments: Comment[] = raw ? JSON.parse(raw) : [];
-
-//   const siteUrl = 'https://example.com';
-//   const pageTitle = `Comments: ${post}`;
-
-//   let rss = `<?xml version="1.0" encoding="UTF-8" ?>
-// <rss version="2.0">
-// <channel>
-//   <title>${pageTitle}</title>
-//   <link>${siteUrl}${post}</link>
-//   <description>Latest comments</description>
-//   <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
-//   `;
-
-//   // Fetch the latest 20 comments
-//   comments
-//     .sort((a, b) => b.pubDate - a.pubDate)
-//     .slice(0, 20)
-//     .forEach((comment) => {
-//       rss += `
-//   <item>
-//     <title>${comment.pseudonym || 'Anonymous'}'s Comment</title>
-//     <description><![CDATA[${comment.msg}]]></description>
-//     <pubDate>${new Date(comment.pubDate).toUTCString()}</pubDate>
-//     <guid>${siteUrl}${post}#comment-${comment.id}</guid>
-//   </item>`;
-//     });
-
-//   rss += `
-// </channel>
-// </rss>`;
-
-//   return c.body(rss, 200, {
-//     'Content-Type': 'application/xml; charset=utf-8',
-//     'X-Content-Type-Options': 'nosniff',
-//   });
-// });
 
 export default app;
