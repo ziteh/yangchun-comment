@@ -18,7 +18,6 @@ export interface CommentsResponse {
 }
 
 export interface ApiService {
-  initChallenge: (post: string) => Promise<void>;
   ensureValidChallenge: () => Promise<boolean>;
   precomputeFormalPow: (post: string) => Promise<boolean>;
   getComments: (post: string) => Promise<Comment[]>;
@@ -47,7 +46,6 @@ export interface ApiService {
 export const createApiService = (apiUrl: string): ApiService => {
   const commentAuthMap = new Map<string, AuthInfo>();
   let formalChallenge: string | null = null;
-  let precomputedNonce: { challenge: string; post: string; nonce: number } | null = null;
   const PRE_POW_DIFFICULTY = 2;
 
   const getFormalChallenge = async (challenge: string, nonce: number): Promise<string | null> => {
@@ -69,70 +67,21 @@ export const createApiService = (apiUrl: string): ApiService => {
     }
   };
 
-  const initChallenge = async (post: string): Promise<void> => {
-    console.debug('Initializing formal challenge...', post); // TODO: post?
-    try {
-      console.debug('Solving Pre-PoW with difficulty', PRE_POW_DIFFICULTY, '...');
-      const prePow = await solvePrePow(PRE_POW_DIFFICULTY);
-
-      if (prePow.nonce < 0) {
-        console.warn('Failed to solve pre-PoW, will try again when needed');
-        formalChallenge = null;
-        return;
-      }
-
-      console.debug('Pre-PoW solved:', prePow);
-      const challenge = await getFormalChallenge(prePow.challenge, prePow.nonce);
-
-      if (challenge) {
-        formalChallenge = challenge;
-        console.debug('Formal challenge received:', challenge);
-      } else {
-        formalChallenge = null;
-      }
-    } catch (err) {
-      console.error('Error initializing challenge:', err);
-      formalChallenge = null;
-    }
-  };
-
   const ensureValidChallenge = async (): Promise<boolean> => {
-    if (!formalChallenge) {
-      console.warn('No formal challenge available');
+    const prePow = await solvePrePow(PRE_POW_DIFFICULTY);
+    if (prePow.nonce < 0) {
+      console.error('Failed to solve pre-PoW');
+      return false;
+    }
+    console.debug('Pre-PoW solved:', prePow);
+
+    const newChallenge = await getFormalChallenge(prePow.challenge, prePow.nonce);
+    if (!newChallenge) {
+      console.error('Failed to get formal challenge');
       return false;
     }
 
-    // Check if challenge is expired
-    const parts = formalChallenge.split(':');
-    if (parts.length >= 4) {
-      const expiry = parseInt(parts[1], 10) - 10;
-      const now = Math.floor(Date.now() / 1000);
-
-      if (now >= expiry) {
-        console.debug('Formal challenge expired, getting new challenge...');
-
-        const prePow = await solvePrePow(PRE_POW_DIFFICULTY);
-        if (prePow.nonce < 0) {
-          console.error('Failed to solve pre-PoW');
-          return false;
-        }
-
-        console.debug('Pre-PoW solved:', prePow);
-        const newChallenge = await getFormalChallenge(prePow.challenge, prePow.nonce);
-
-        if (!newChallenge) {
-          console.error('Failed to get new formal challenge');
-          return false;
-        }
-
-        formalChallenge = newChallenge;
-        console.debug('New formal challenge received:', formalChallenge);
-      }
-    } else {
-      console.error('Invalid formal challenge format');
-      return false;
-    }
-
+    formalChallenge = newChallenge;
     return true;
   };
 
@@ -153,11 +102,6 @@ export const createApiService = (apiUrl: string): ApiService => {
         return false;
       }
 
-      precomputedNonce = {
-        challenge: formalChallenge,
-        post,
-        nonce,
-      };
       console.debug('Formal PoW precomputed successfully, nonce:', nonce);
       return true;
     } catch (err) {
@@ -168,29 +112,10 @@ export const createApiService = (apiUrl: string): ApiService => {
 
   const getComments = async (post: string): Promise<Comment[]> => {
     try {
-      console.debug('Solving Pre-PoW for getComments...');
-      const prePow = await solvePrePow(PRE_POW_DIFFICULTY);
-
       const url = new URL('/api/comments', apiUrl);
       url.searchParams.append('post', post);
-
-      if (prePow.nonce >= 0) {
-        url.searchParams.append('challenge', prePow.challenge);
-        url.searchParams.append('nonce', prePow.nonce.toString());
-      } else {
-        console.warn('Failed to solve pre-PoW, fetching comments without challenge');
-      }
-
       const res = await fetch(url);
-      const data = await res.json();
-
-      // Update formal challenge if provided
-      if (data.challenge) {
-        formalChallenge = data.challenge;
-        console.debug('Formal challenge updated from getComments:', formalChallenge);
-      }
-
-      return data.comments || [];
+      return await res.json();
     } catch (err) {
       console.error('Error getting comments:', err);
       return [];
@@ -204,42 +129,34 @@ export const createApiService = (apiUrl: string): ApiService => {
     replyTo: string | null,
   ): Promise<string | null> => {
     try {
-      // Ensure we have a valid challenge
-      const isValid = await ensureValidChallenge();
-      if (!isValid || !formalChallenge) {
-        console.error('No valid challenge available');
-        throw new Error('Challenge not ready. Please try again.');
+      const prePow = await solvePrePow(PRE_POW_DIFFICULTY);
+      if (prePow.nonce < 0) {
+        console.error('Failed to solve pre-PoW');
+        return null;
       }
+      console.debug('Pre-PoW solved:', prePow);
 
-      console.debug('Using formal challenge:', formalChallenge);
+      const fChallenge = await getFormalChallenge(prePow.challenge, prePow.nonce);
+      if (!fChallenge) {
+        console.error('Failed to get formal challenge');
+        return null;
+      }
+      console.debug('Using formal challenge:', fChallenge);
+      formalChallenge = fChallenge;
 
-      let fPowNonce: number;
+      const difficulty = parseInt(fChallenge.split(':')[2], 10);
+      console.debug('Solving formal PoW with difficulty:', difficulty);
 
-      // Check if we have a valid precomputed nonce
-      if (
-        precomputedNonce &&
-        precomputedNonce.challenge === formalChallenge &&
-        precomputedNonce.post === post
-      ) {
-        console.debug('Using precomputed formal PoW nonce:', precomputedNonce.nonce);
-        fPowNonce = precomputedNonce.nonce;
-        precomputedNonce = null; // Clear after use
-      } else {
-        // Solve formal PoW on demand
-        const difficulty = parseInt(formalChallenge.split(':')[2], 10);
-        console.debug('Solving formal PoW with difficulty:', difficulty);
-
-        fPowNonce = await solveFormalPow(difficulty, formalChallenge, post);
-        if (fPowNonce < 0) {
-          console.error('Failed to solve formal PoW');
-          throw new Error('Failed to solve proof-of-work. Please try again.');
-        }
+      const fPowNonce = await solveFormalPow(difficulty, fChallenge, post);
+      if (fPowNonce < 0) {
+        console.error('Failed to solve formal PoW');
+        throw new Error('Failed to solve proof-of-work. Please try again.');
       }
       console.debug('Formal PoW solved, nonce:', fPowNonce);
 
       const url = new URL('/api/comments', apiUrl);
       url.searchParams.append('post', post);
-      url.searchParams.append('challenge', formalChallenge);
+      url.searchParams.append('challenge', fChallenge);
       url.searchParams.append('nonce', fPowNonce.toString());
 
       // Get honeypot field if present
@@ -378,7 +295,6 @@ export const createApiService = (apiUrl: string): ApiService => {
   };
 
   return {
-    initChallenge,
     ensureValidChallenge,
     precomputeFormalPow,
     getComments,
