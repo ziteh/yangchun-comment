@@ -15,18 +15,6 @@ binding = "COMMENTS"
 id = "<KV_COMMENTS_ID>"
 preview_id = "<KV_COMMENTS_PREVIEW_ID>"
 
-[[unsafe.bindings]]
-name = "RATE_LIMITER_POST"
-type = "ratelimit"
-namespace_id = "1000"
-simple = { limit = 2, period = 10 } # 2 requests per minute
-
-[[unsafe.bindings]]
-name = "RATE_LIMITER_GET"
-type = "ratelimit"
-namespace_id = "1001"
-simple = { limit = 20, period = 10 } # 20 requests every 10 seconds
-
 [vars]
 FRONTEND_URL = "https://your-frontend-url.com" # Frontend URL
 CORS_ORIGIN = "*" # CORS origin, use "*" to allow all origins

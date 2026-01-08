@@ -101,13 +101,13 @@ export async function verifyHmac(
   return crypto.subtle.verify('HMAC', key, signature, dataData);
 }
 
-export function hashFnv1a(ip: string): string {
+export function hashFnv1a(input: string): string {
   const FNV_OFFSET_BASIS = 0x811c9dc5;
   const FNV_PRIME = 0x01000193;
 
   let hash = FNV_OFFSET_BASIS;
-  for (let i = 0; i < ip.length; i++) {
-    hash ^= ip.charCodeAt(i);
+  for (let i = 0; i < input.length; i++) {
+    hash ^= input.charCodeAt(i);
     hash = Math.imul(hash, FNV_PRIME);
   }
 
