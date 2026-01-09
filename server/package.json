@@ -12,6 +12,7 @@
     "cf-typegen": "wrangler types"
   },
   "dependencies": {
+    "@hono/standard-validator": "^0.2.1",
     "@ziteh/yangchun-comment-shared": "workspace:*",
     "hono": "^4.9.6",
     "nanoid": "^5.1.5",
