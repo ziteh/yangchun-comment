@@ -1,7 +1,8 @@
 import { Hono } from 'hono';
-import { validateQueryPost, getCommentKey } from './utils';
-import { CONSTANTS } from './const';
+import { getCommentKey } from '../utils/helpers';
+import { CONSTANTS } from '../const';
 import type { Comment } from '@ziteh/yangchun-comment-shared';
+import { validateQueryPost } from '../utils/validators';
 
 interface CommentWithPost extends Comment {
   post: string;

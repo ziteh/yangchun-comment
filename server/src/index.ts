@@ -1,9 +1,9 @@
 import { Hono } from 'hono';
-import middleware from './middleware';
-import comments from './comment';
-import rss from './rss';
-import admin from './admin';
-import pow from './pow';
+import middleware from './routes/middleware';
+import comments from './routes/comment';
+import rss from './routes/rss';
+import admin from './routes/admin';
+import pow from './routes/pow';
 
 const app = new Hono();
 

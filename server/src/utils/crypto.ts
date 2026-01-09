@@ -1,57 +1,82 @@
-import { Hono } from 'hono';
-import { sValidator } from '@hono/standard-validator';
-import {
-  FormalChallengeQuerySchema,
-  FormalChallengeResponseSchema,
-} from '@ziteh/yangchun-comment-shared';
+import { verify } from 'hono/jwt';
 
-const app = new Hono<{
-  Bindings: {
-    PRE_POW_DIFFICULTY: number;
-    PRE_POW_TIME_WINDOW: number;
-    PRE_POW_MAGIC_WORD: string;
-    FORMAL_POW_DIFFICULTY: number;
-    FORMAL_POW_EXPIRATION: number;
-    FORMAL_POW_SECRET_KEY: string;
-  };
-}>();
+export async function genHmac(secretKey: string, commentId: string, timestamp: number) {
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(secretKey);
+  const dataData = encoder.encode(`${commentId}-${timestamp}`);
 
-app.get('/formal-challenge', sValidator('query', FormalChallengeQuerySchema), async (c) => {
-  const { challenge, nonce } = c.req.valid('query');
-  const nonceNum = parseInt(nonce, 10);
-  const prePowPass = await verifyPrePow(
-    c.env.PRE_POW_DIFFICULTY,
-    challenge,
-    nonceNum,
-    c.env.PRE_POW_MAGIC_WORD,
-    c.env.PRE_POW_TIME_WINDOW,
+  const key = await crypto.subtle.importKey(
+    'raw',
+    keyData,
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
   );
-  if (!prePowPass) {
-    console.warn('Pre-PoW verification failed');
-    return c.text('Pre-PoW verification failed', 400);
+
+  const signature = await crypto.subtle.sign('HMAC', key, dataData);
+  const base64Signature = Buffer.from(signature).toString('base64');
+  return base64Signature;
+}
+
+export async function verifyHmac(
+  secretKey: string,
+  commentId: string,
+  timestamp: number,
+  hmac: string,
+) {
+  const expiry = 2 * 60 * 1000; // 2 minutes in milliseconds
+  const now = Date.now();
+  if (now - timestamp > expiry || timestamp > now) {
+    return false; // timestamp is too old or in the future, reject it
   }
-  console.debug('Pre-pow verify OK');
 
-  const difficulty = c.env.FORMAL_POW_DIFFICULTY;
-  const secret = c.env.FORMAL_POW_SECRET_KEY;
-  const expirySec = c.env.FORMAL_POW_EXPIRATION;
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(secretKey);
+  const dataData = encoder.encode(`${commentId}-${timestamp}`);
 
-  if (!secret) {
-    console.error('FORMAL_POW_SECRET_KEY is not set');
-    return c.text('Server misconfiguration', 500);
+  const key = await crypto.subtle.importKey(
+    'raw',
+    keyData,
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['verify'],
+  );
+
+  const signature = Buffer.from(hmac, 'base64');
+  return crypto.subtle.verify('HMAC', key, signature, dataData);
+}
+
+export function hashFnv1a(input: string): string {
+  const FNV_OFFSET_BASIS = 0x811c9dc5;
+  const FNV_PRIME = 0x01000193;
+
+  let hash = FNV_OFFSET_BASIS;
+  for (let i = 0; i < input.length; i++) {
+    hash ^= input.charCodeAt(i);
+    hash = Math.imul(hash, FNV_PRIME);
   }
 
+  // Convert to unsigned 32-bit and then to base36
+  return (hash >>> 0).toString(36);
+}
+
+export async function verifyAdminToken(
+  cookieHeader: string | undefined,
+  secretKey: string,
+): Promise<boolean> {
   try {
-    const formalChallenge = await genFormalPowChallenge(difficulty, secret, expirySec);
-    const response = FormalChallengeResponseSchema.parse({ challenge: formalChallenge });
-    return c.json(response, 200);
-  } catch (err) {
-    console.error('Error generating formal PoW challenge:', err);
-    return c.text('Internal Server Error', 500);
-  }
-});
+    if (!cookieHeader) return false;
 
-export default app;
+    const match = cookieHeader.match(/admin_token=([^;]+)/);
+    if (!match) return false;
+
+    const token = match[1];
+    await verify(token, secretKey);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 async function sha256(input: string): Promise<string> {
   const encoder = new TextEncoder();

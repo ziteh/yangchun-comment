@@ -1,13 +1,13 @@
 import { Hono } from 'hono';
 import { sValidator } from '@hono/standard-validator';
 import { sign } from 'hono/jwt';
-import { verifyAdminToken } from './utils';
 import {
   AdminLoginRequestSchema,
   AdminLoginResponseSchema,
   AdminLogoutResponseSchema,
   AdminCheckResponseSchema,
 } from '@ziteh/yangchun-comment-shared';
+import { verifyAdminToken } from '../utils/crypto';
 
 const app = new Hono<{
   Bindings: {

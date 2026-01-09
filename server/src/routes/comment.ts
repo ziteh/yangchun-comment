@@ -1,16 +1,7 @@
 import { Hono } from 'hono';
 import { sValidator } from '@hono/standard-validator';
-import {
-  sanitize,
-  genId,
-  getCommentKey,
-  validateQueryPost,
-  genHmac,
-  verifyHmac,
-  validatePostUrl,
-  verifyAdminToken,
-} from './utils';
-import { DEF, CONSTANTS } from './const';
+import { genId, getCommentKey } from '../utils/helpers';
+import { DEF, CONSTANTS } from '../const';
 import {
   type Comment,
   CreateCommentRequestSchema,
@@ -18,7 +9,9 @@ import {
   GetCommentsResponseSchema,
   CreateCommentResponseSchema,
 } from '@ziteh/yangchun-comment-shared';
-import { verifyFormalPow } from './pow';
+import { genHmac, verifyAdminToken, verifyFormalPow, verifyHmac } from '../utils/crypto';
+import { validatePostUrl, validateQueryPost } from '../utils/validators';
+import { sanitize } from '../utils/sanitize';
 
 const app = new Hono<{
   Bindings: {
