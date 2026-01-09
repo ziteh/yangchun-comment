@@ -84,3 +84,46 @@ export const CommentQuerySchema = z.object({
   post: z.string(),
 });
 export type CommentQuery = z.infer<typeof CommentQuerySchema>;
+
+/**
+ * POST /admin/login request body schema
+ */
+export const AdminLoginRequestSchema = z.object({
+  username: z.string(),
+  password: z.string(),
+});
+export type AdminLoginRequest = z.infer<typeof AdminLoginRequestSchema>;
+
+/**
+ * POST /admin/logout response schema
+ */
+export const AdminLogoutResponseSchema = z.object({
+  success: z.boolean(),
+  message: z.string(),
+});
+export type AdminLogoutResponse = z.infer<typeof AdminLogoutResponseSchema>;
+
+/**
+ * GET /admin/check response schema
+ */
+export const AdminCheckResponseSchema = z.object({
+  authenticated: z.boolean(),
+});
+export type AdminCheckResponse = z.infer<typeof AdminCheckResponseSchema>;
+
+/**
+ * GET /api/pow/formal-challenge query parameters schema
+ */
+export const FormalChallengeQuerySchema = z.object({
+  challenge: z.string(),
+  nonce: z.string(),
+});
+export type FormalChallengeQuery = z.infer<typeof FormalChallengeQuerySchema>;
+
+/**
+ * GET /api/pow/formal-challenge response schema
+ */
+export const FormalChallengeResponseSchema = z.object({
+  challenge: z.string(),
+});
+export type FormalChallengeResponse = z.infer<typeof FormalChallengeResponseSchema>;

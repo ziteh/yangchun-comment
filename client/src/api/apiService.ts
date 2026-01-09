@@ -2,6 +2,9 @@ import {
   GetCommentsResponseSchema,
   CreateCommentResponseSchema,
   AdminLoginResponseSchema,
+  FormalChallengeResponseSchema,
+  AdminCheckResponseSchema,
+  AdminLogoutResponseSchema,
   type GetCommentsResponse,
   type AdminLoginResponse,
 } from '@ziteh/yangchun-comment-shared';
@@ -61,7 +64,8 @@ export const createApiService = (apiUrl: string): ApiService => {
       const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
-        return data.challenge;
+        const validated = FormalChallengeResponseSchema.parse(data);
+        return validated.challenge;
       }
       console.error('Failed to get formal challenge:', res.status, res.statusText);
       return null;
@@ -337,7 +341,12 @@ export const createApiService = (apiUrl: string): ApiService => {
         method: 'GET',
         credentials: 'include', // Include cookies in request
       });
-      return res.ok;
+      if (res.ok) {
+        const data = await res.json();
+        const validated = AdminCheckResponseSchema.parse(data);
+        return validated.authenticated;
+      }
+      return false;
     } catch (err) {
       console.error('Error checking admin auth:', err);
       return false;
@@ -351,7 +360,12 @@ export const createApiService = (apiUrl: string): ApiService => {
         method: 'POST',
         credentials: 'include', // Include cookies in request
       });
-      return res.ok;
+      if (res.ok) {
+        const data = await res.json();
+        const validated = AdminLogoutResponseSchema.parse(data);
+        return validated.success;
+      }
+      return false;
     } catch (err) {
       console.error('Error during admin logout:', err);
       return false;
