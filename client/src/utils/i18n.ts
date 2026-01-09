@@ -66,8 +66,10 @@ export const enUS: I18nStrings = {
   confirmDelete: 'Confirm delete',
   confirmDeleteDesc1: 'Are you sure you want to delete this comment? Comment ID: ',
   confirmDeleteDesc2: 'This action cannot be undone!',
-  helpDesc:
-    'This is a simple comment system — you can post comments and reply to others. You may preview your content before posting.\nYou can fill in a nickname which will be converted to a pseudonym for privacy, or leave it blank to remain anonymous.\nAfter posting, you can edit or delete your own comment within two minutes without leaving or refreshing the page.\nComment content supports basic Markdown and does not support HTML.',
+  helpDesc: `This is a simple comment system — you can post comments and reply to others. You may preview your content before posting.
+  You can fill in a nickname which will be converted to a pseudonym for privacy, or leave it blank to remain anonymous.
+  After posting, you can edit or delete your own comment within two minutes without leaving or refreshing the page.
+  Comment content supports basic Markdown and does not support HTML.`,
   helpMdLink: 'Link',
   helpMdImage: 'Image',
   helpMdItalic: 'Italic',
@@ -105,8 +107,10 @@ export const zhTW: I18nStrings = {
   confirmDelete: '確認刪除',
   confirmDeleteDesc1: '確定要刪除此留言嗎？留言 ID: ',
   confirmDeleteDesc2: '此操作無法復原！',
-  helpDesc:
-    '這是一個簡單的留言板，你可以發表留言、回覆他人的留言，發表前可以先預覽內容。\n留言時可以填寫暱稱，系統會將其轉換為假名以保護你的隱私，或留空保持匿名。\n發表留言後，在不離開或重新整理頁面的情況下，可以編輯或刪除自己兩分鐘內的留言。\n留言內容支援基本 Markdown 語法，不支援 HTML。',
+  helpDesc: `這是一個簡單的留言板，你可以發表留言、回覆他人的留言，發表前可以先預覽內容。
+留言時可以填寫暱稱，系統會將其轉換為假名以保護你的隱私，或留空保持匿名。
+發表留言後，在不離開或重新整理頁面的情況下，可以編輯或刪除自己兩分鐘內的留言。
+留言內容支援基本 Markdown 語法，不支援 HTML。`,
   helpMdLink: '連結',
   helpMdImage: '圖片',
   helpMdItalic: '斜體',
