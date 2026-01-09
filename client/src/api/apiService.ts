@@ -1,4 +1,10 @@
-import type { GetCommentsResponse, AdminLoginResponse } from '@ziteh/yangchun-comment-shared';
+import {
+  GetCommentsResponseSchema,
+  CreateCommentResponseSchema,
+  AdminLoginResponseSchema,
+  type GetCommentsResponse,
+  type AdminLoginResponse,
+} from '@ziteh/yangchun-comment-shared';
 import { solvePrePow, solveFormalPow } from '../utils/pow';
 
 export interface AuthInfo {
@@ -116,7 +122,8 @@ export const createApiService = (apiUrl: string): ApiService => {
         credentials: 'include', // Include cookies to check admin status
       });
       const data = await res.json();
-      return { comments: data.comments || [], isAdmin: data.isAdmin || false };
+      const validated = GetCommentsResponseSchema.parse(data);
+      return validated;
     } catch (err) {
       console.error('Error getting comments:', err);
       return { comments: [], isAdmin: false };
@@ -179,9 +186,10 @@ export const createApiService = (apiUrl: string): ApiService => {
 
       if (res.ok) {
         const data = await res.json();
-        saveAuthInfo(data.id, data.timestamp, data.token);
-        saveMyCommentId(data.id);
-        return data.id;
+        const validated = CreateCommentResponseSchema.parse(data);
+        saveAuthInfo(validated.id, validated.timestamp, validated.token);
+        saveMyCommentId(validated.id);
+        return validated.id;
       }
       console.error('Failed to add comment:', res.status, res.statusText);
       return null;
@@ -311,7 +319,8 @@ export const createApiService = (apiUrl: string): ApiService => {
 
       if (res.ok) {
         const data = await res.json();
-        return data as AdminLoginResponse;
+        const validated = AdminLoginResponseSchema.parse(data);
+        return validated;
       }
       console.error('Admin login failed:', res.status, res.statusText);
       return null;

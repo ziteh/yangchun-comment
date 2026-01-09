@@ -15,6 +15,8 @@ import {
   type Comment,
   CreateCommentRequestSchema,
   UpdateCommentRequestSchema,
+  GetCommentsResponseSchema,
+  CreateCommentResponseSchema,
 } from '@ziteh/yangchun-comment-shared';
 import { verifyFormalPow } from './pow';
 
@@ -49,7 +51,9 @@ app.get('/', validateQueryPost, async (c) => {
   const isAdmin = await verifyAdminToken(cookie, c.env.ADMIN_SECRET_KEY);
 
   console.debug(`Fetched ${comments.length} comments for post: ${post}, admin: ${isAdmin}`);
-  return c.json({ comments, isAdmin }, 200); // 200 OK
+
+  const res = GetCommentsResponseSchema.parse({ comments, isAdmin });
+  return c.json(res, 200); // 200 OK
 });
 
 // Create a new comment
@@ -150,7 +154,9 @@ app.post('/', validateQueryPost, sValidator('json', CreateCommentRequestSchema),
   const token = await genHmac(c.env.HMAC_SECRET_KEY, id, timestamp);
 
   console.log(`Comment created with ID: ${id} for post: ${post}`);
-  return c.json({ id, timestamp, token }, 201); // 201 Created
+
+  const res = CreateCommentResponseSchema.parse({ id, timestamp, token });
+  return c.json(res, 201); // 201 Created
 });
 
 // Update a comment
