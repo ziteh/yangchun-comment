@@ -79,6 +79,37 @@ export class CommentListItem extends LitElement {
         line-height: 1.6;
         white-space: pre-wrap;
         word-break: break-word;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out;
+      }
+      .content.collapsed {
+        max-height: 10em;
+        position: relative;
+      }
+      .content.collapsed::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 3em;
+        background: linear-gradient(transparent, var(--ycc-bg-color));
+        pointer-events: none;
+      }
+      .show-more-btn {
+        margin-top: var(--ycc-spacing-xs);
+        color: var(--ycc-primary-color);
+        font-weight: 500;
+        cursor: pointer;
+        padding: 2px 0;
+        font-size: 0.9em;
+        background: none;
+        border: none;
+      }
+      .show-more-btn:hover {
+        color: var(--ycc-primary-hover);
+        text-decoration: underline;
+        background: none;
       }
       .content p {
         margin: 0.5em 0;
@@ -174,7 +205,17 @@ export class CommentListItem extends LitElement {
   @property({ type: Function }) accessor isMyCommentCallback: (commentId: string) => boolean = () =>
     false;
 
+  private isContentExpanded = false;
+  private readonly MAX_LINES = 10;
+
   render() {
+    const commentContent = html`
+      <!-- prettier-ignore -->
+      <div
+        class="content ${!this.isContentExpanded && this.shouldShowExpandBtn() ? 'collapsed' : ''}"
+      >${this.renderMarkdown(this.comment.msg)}</div>
+    `;
+
     return html`
       <div class=${this.comment.replyTo ? 'reply-comment' : 'root-comment'}>
         <div
@@ -235,7 +276,12 @@ export class CommentListItem extends LitElement {
                 >`
               : null}
           </div>
-          <div class="content">${this.renderMarkdown(this.comment.msg)}</div>
+          ${commentContent}
+          ${this.shouldShowExpandBtn()
+            ? html`<button class="show-more-btn" @click=${this.toggleExpand}>
+                ${this.isContentExpanded ? t('showLess') : t('showMore')}
+              </button>`
+            : null}
           ${this.isPreviewComment()
             ? null
             : html`
@@ -315,5 +361,15 @@ export class CommentListItem extends LitElement {
 
   private renderMarkdown(raw: string | undefined | null): ReturnType<typeof unsafeHTML> {
     return unsafeHTML(sanitizeHtml(snarkdown(raw || '')));
+  }
+
+  private shouldShowExpandBtn(): boolean {
+    const lines = (this.comment.msg || '').split('\n');
+    return lines.length > this.MAX_LINES;
+  }
+
+  private toggleExpand(): void {
+    this.isContentExpanded = !this.isContentExpanded;
+    this.requestUpdate();
   }
 }

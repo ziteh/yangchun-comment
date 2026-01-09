@@ -39,6 +39,8 @@ export interface I18nStrings {
   notifyDesc: string;
 
   noComments: string;
+  showMore: string;
+  showLess: string;
 }
 
 export const enUS: I18nStrings = {
@@ -76,6 +78,8 @@ export const enUS: I18nStrings = {
   helpMdCodeBlock: 'Code block',
   notifyDesc: 'You can subscribe to the comments RSS feed for this post: ',
   noComments: 'No comments yet',
+  showMore: 'Show more',
+  showLess: 'Show less',
 };
 
 export const zhTW: I18nStrings = {
@@ -113,6 +117,8 @@ export const zhTW: I18nStrings = {
   helpMdCodeBlock: '程式碼區塊',
   notifyDesc: '你可以訂閱此文章的留言 RSS Feed：',
   noComments: '目前還沒有留言',
+  showMore: '顯示全部',
+  showLess: '折疊',
 };
 
 let currentLanguage: I18nStrings = enUS;
