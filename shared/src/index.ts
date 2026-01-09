@@ -1,2 +1,3 @@
-export * from './types';
-export * from './schemas';
+export * from './schemas/comment';
+export * from './schemas/admin';
+export * from './schemas/pow';
