@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { sValidator } from '@hono/standard-validator';
 import { genId, getCommentKey } from '../utils/helpers';
-import { DEF, CONSTANTS } from '../const';
+import { CONSTANTS } from '../const';
 import {
   type Comment,
   CreateCommentRequestSchema,
@@ -78,7 +78,7 @@ app.post('/', validateQueryPost, sValidator('json', CreateCommentRequestSchema),
     return c.text('Missing or invalid msg field', 400);
   }
 
-  const maxMsgLength = c.env.MAX_MSG_LENGTH || DEF.maxMsgLength;
+  const maxMsgLength = c.env.MAX_MSG_LENGTH;
   if (msg.length > maxMsgLength) {
     return c.text(`Message is too long (maximum ${maxMsgLength} characters)`, 400);
   }
@@ -88,7 +88,7 @@ app.post('/', validateQueryPost, sValidator('json', CreateCommentRequestSchema),
     return c.text('Message is invalid', 400);
   }
 
-  const maxPseudonymLength = c.env.MAX_PSEUDONYM_LENGTH || DEF.maxPseudonymLength;
+  const maxPseudonymLength = c.env.MAX_PSEUDONYM_LENGTH;
   if (pseudonym && typeof pseudonym === 'string' && pseudonym.length > maxPseudonymLength) {
     return c.text(`Pseudonym is too long (maximum ${maxPseudonymLength} characters)`, 400);
   }
@@ -105,7 +105,7 @@ app.post('/', validateQueryPost, sValidator('json', CreateCommentRequestSchema),
   const rawComments = await c.env.COMMENTS.get(key);
   if (!rawComments) {
     // No comments yet for this post
-    const baseUrl = c.env.POST_BASE_URL || DEF.postBaseUrl;
+    const baseUrl = c.env.POST_BASE_URL;
     if (baseUrl) {
       // Validate the post URL if POST_BASE_URL is set
       const fullUrl = `${baseUrl}${post}`;
@@ -165,7 +165,7 @@ app.put('/', validateQueryPost, sValidator('json', UpdateCommentRequestSchema), 
     return c.text('Missing fields', 400); // 400 Bad Request
   }
 
-  const maxMsgLength = c.env.MAX_MSG_LENGTH || DEF.maxMsgLength;
+  const maxMsgLength = c.env.MAX_MSG_LENGTH;
   if (msg.length > maxMsgLength) {
     console.warn('Message too long for update:', msg.length);
     return c.text(`Message is too long (maximum ${maxMsgLength} characters)`, 400);
@@ -176,7 +176,7 @@ app.put('/', validateQueryPost, sValidator('json', UpdateCommentRequestSchema), 
     return c.text('Message is invalid', 400);
   }
 
-  const maxPseudonymLength = c.env.MAX_PSEUDONYM_LENGTH || DEF.maxPseudonymLength;
+  const maxPseudonymLength = c.env.MAX_PSEUDONYM_LENGTH;
   if (pseudonym && typeof pseudonym === 'string' && pseudonym.length > maxPseudonymLength) {
     console.warn('Pseudonym too long for update:', pseudonym.length);
     return c.text(`Pseudonym is too long (maximum ${maxPseudonymLength} characters)`, 400);
