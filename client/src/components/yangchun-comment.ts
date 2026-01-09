@@ -8,6 +8,7 @@ import './comment-info';
 import './comment-dialog';
 import './list/comment-list';
 import './comment-admin';
+import type { CommentAdmin } from './comment-admin';
 import type { ApiService } from '../api/apiService';
 import { createApiService } from '../api/apiService';
 import { generatePseudonymAndHash } from '../utils/pseudonym';
@@ -93,6 +94,7 @@ export class YangChunComment extends LitElement {
   @state() private accessor rssFeedUrl = '';
 
   @query('comment-input') private accessor commentInput!: CommentInput;
+  @query('comment-admin') private accessor commentAdmin!: CommentAdmin;
 
   render() {
     const HelpContent = html`
@@ -262,7 +264,12 @@ ${t('helpMdCodeBlock')}
 
   private async updatedComments() {
     try {
-      this.comments = await this.apiService.getComments(this.post);
+      const response = await this.apiService.getComments(this.post);
+      this.comments = response.comments;
+      // Update comment-admin component with admin status if available
+      if (response.isAdmin !== undefined && this.commentAdmin) {
+        this.commentAdmin.updateAuthStatus(response.isAdmin);
+      }
     } catch (err) {
       console.error('Error updating comments:', err);
     }

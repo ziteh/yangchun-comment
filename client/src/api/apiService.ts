@@ -14,7 +14,7 @@ export interface CommentAuthInfo {
 
 export interface CommentsResponse {
   comments: Comment[];
-  challenge: string | null;
+  isAdmin?: boolean;
 }
 
 export interface AdminLoginResponse {
@@ -25,7 +25,7 @@ export interface AdminLoginResponse {
 export interface ApiService {
   ensureValidChallenge: () => Promise<boolean>;
   precomputeFormalPow: (post: string) => Promise<boolean>;
-  getComments: (post: string) => Promise<Comment[]>;
+  getComments: (post: string) => Promise<CommentsResponse>;
   addComment: (
     post: string,
     pseudonym: string,
@@ -118,15 +118,18 @@ export const createApiService = (apiUrl: string): ApiService => {
     }
   };
 
-  const getComments = async (post: string): Promise<Comment[]> => {
+  const getComments = async (post: string): Promise<CommentsResponse> => {
     try {
       const url = new URL('/api/comments', apiUrl);
       url.searchParams.append('post', post);
-      const res = await fetch(url);
-      return await res.json();
+      const res = await fetch(url, {
+        credentials: 'include', // Include cookies to check admin status
+      });
+      const data = await res.json();
+      return { comments: data.comments || [], isAdmin: data.isAdmin };
     } catch (err) {
       console.error('Error getting comments:', err);
-      return [];
+      return { comments: [] };
     }
   };
 

@@ -82,6 +82,7 @@ export class CommentAdmin extends LitElement {
   @state() private accessor isLoading = false;
   @state() private accessor isLoggedIn = false;
   @state() private accessor isCheckingAuth = true;
+  @state() private accessor hasCheckedAuthFromComments = false;
 
   render() {
     if (this.isCheckingAuth) {
@@ -96,8 +97,44 @@ export class CommentAdmin extends LitElement {
 
   async connectedCallback() {
     super.connectedCallback();
-    await this.checkAuthStatus();
+    // Listen for admin status updates from parent component
+    this.addEventListener('admin-status-updated', this.handleAdminStatusUpdated);
+    // Fallback: if we don't receive admin status from comments API within 2 seconds, check directly
+    setTimeout(() => {
+      if (!this.hasCheckedAuthFromComments) {
+        this.checkAuthStatus();
+      }
+    }, 2000);
   }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this.removeEventListener('admin-status-updated', this.handleAdminStatusUpdated);
+  }
+
+  // Public method to be called from parent component
+  public updateAuthStatus(isAdmin: boolean) {
+    if (!this.hasCheckedAuthFromComments) {
+      this.hasCheckedAuthFromComments = true;
+      this.isLoggedIn = isAdmin;
+      this.isCheckingAuth = false;
+      if (this.isLoggedIn) {
+        this.handleAuthStatusChange();
+      }
+    }
+  }
+
+  private handleAdminStatusUpdated = (e: Event) => {
+    const customEvent = e as CustomEvent<boolean>;
+    if (!this.hasCheckedAuthFromComments) {
+      this.hasCheckedAuthFromComments = true;
+      this.isLoggedIn = customEvent.detail;
+      this.isCheckingAuth = false;
+      if (this.isLoggedIn) {
+        this.handleAuthStatusChange();
+      }
+    }
+  };
 
   private renderLoginForm() {
     return html`

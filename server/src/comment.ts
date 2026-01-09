@@ -40,8 +40,12 @@ app.get('/', validateQueryPost, async (c) => {
   const raw = await c.env.COMMENTS.get(key);
   const comments = raw ? JSON.parse(raw) : [];
 
-  console.debug(`Fetched ${comments.length} comments for post: ${post}`);
-  return c.json(comments, 200); // 200 OK
+  // Check admin auth status
+  const cookie = c.req.header('Cookie');
+  const isAdmin = await verifyAdminToken(cookie, c.env.ADMIN_SECRET_KEY);
+
+  console.debug(`Fetched ${comments.length} comments for post: ${post}, admin: ${isAdmin}`);
+  return c.json({ comments, isAdmin }, 200); // 200 OK
 });
 
 // Create a new comment

@@ -1,6 +1,5 @@
 import type { Comment } from '@ziteh/yangchun-comment-shared';
 import type { ApiService, AuthInfo, CommentAuthInfo } from './apiService';
-import { verifyPrePow, verifyFormalPow, genFormalPowChallenge } from '../utils/pow';
 
 export const createMockApiService = (): ApiService => {
   const date = Date.now(); // test
@@ -70,53 +69,28 @@ export const createMockApiService = (): ApiService => {
   ]);
   const commentAuthMap = new Map<string, AuthInfo>();
   let commentIdCounter = 1;
+  let mockIsAdmin = false;
 
   const simulateNetworkDelay = (ms = 100) => {
     return new Promise((resolve) => setTimeout(resolve, ms));
   };
 
-  const getChallenge: ApiService['getChallenge'] = async (challenge, nonce) => {
-    const prePowPass = await verifyPrePow(1, challenge, nonce);
-    if (!prePowPass) {
-      console.warn('Pre-PoW verification failed');
-      return null;
-    }
-    console.debug('Pre-pow verify OK');
-    const formalChallenge = await genFormalPowChallenge(3);
-    return formalChallenge;
-  };
-
-  const getComments: ApiService['getComments'] = async (post, challenge, nonce) => {
+  const getComments = async (post: string) => {
     await simulateNetworkDelay();
-    let formalChallenge: string | null = null;
-    if (typeof challenge === 'string' && typeof nonce === 'number') {
-      const prePowPass = await verifyPrePow(2, challenge, nonce);
-      if (prePowPass) {
-        formalChallenge = await genFormalPowChallenge(3);
-      }
-    }
     return {
       comments: [...(mockComments.get(post) || [])],
-      challenge: formalChallenge,
+      challenge: null,
+      isAdmin: mockIsAdmin,
     };
   };
 
-  const addComment: ApiService['addComment'] = async (
-    post,
-    pseudonym,
-    msg,
-    replyTo,
-    challenge,
-    nonce,
+  const addComment = async (
+    post: string,
+    pseudonym: string,
+    msg: string,
+    replyTo: string | null,
   ) => {
     await simulateNetworkDelay();
-
-    const powPass = await verifyFormalPow(challenge, post, nonce);
-    if (!powPass) {
-      console.warn('Formal-PoW verification failed');
-      return null;
-    }
-    console.debug('formal pow ok');
 
     const now = Date.now();
     const newComment: Comment = {
@@ -220,7 +194,8 @@ export const createMockApiService = (): ApiService => {
   };
 
   return {
-    getChallenge,
+    ensureValidChallenge: async () => true,
+    precomputeFormalPow: async () => true,
     getComments,
     addComment,
     updateComment,
@@ -231,5 +206,14 @@ export const createMockApiService = (): ApiService => {
     canEditComment,
     saveMyCommentId,
     isMyComment,
+    adminLogin: async () => {
+      mockIsAdmin = true;
+      return { success: true, message: 'Login successful (mock)' };
+    },
+    checkAdminAuth: async () => mockIsAdmin,
+    adminLogout: async () => {
+      mockIsAdmin = false;
+      return true;
+    },
   };
 };
