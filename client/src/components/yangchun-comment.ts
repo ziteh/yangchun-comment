@@ -335,7 +335,7 @@ ${t('helpMdCodeBlock')}
     const replyTo =
       this.referenceComment && this.referenceComment.id && this.isReply
         ? this.referenceComment.id
-        : null;
+        : undefined;
 
     try {
       const id = await this.apiService.addComment(this.post, pseudonym, pureDraft, replyTo);

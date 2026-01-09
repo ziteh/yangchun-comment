@@ -39,6 +39,17 @@ export const GetCommentsResponseSchema = z.object({
 export type GetCommentsResponse = z.infer<typeof GetCommentsResponseSchema>;
 
 /**
+ * POST /api/comment request body schema
+ */
+export const CreateCommentRequestSchema = z.object({
+  pseudonym: z.string().optional(),
+  msg: z.string(),
+  replyTo: z.string().optional(),
+  email: z.string().optional(), // Honeypot field
+});
+export type CreateCommentRequest = z.infer<typeof CreateCommentRequestSchema>;
+
+/**
  * POST /api/comment response schema
  */
 export const CreateCommentResponseSchema = z.object({
@@ -47,3 +58,21 @@ export const CreateCommentResponseSchema = z.object({
   token: z.string(),
 });
 export type CreateCommentResponse = z.infer<typeof CreateCommentResponseSchema>;
+
+/**
+ * PUT /api/comment request body schema
+ */
+export const UpdateCommentRequestSchema = z.object({
+  pseudonym: z.string().optional(),
+  msg: z.string(),
+});
+export type UpdateCommentRequest = z.infer<typeof UpdateCommentRequestSchema>;
+
+/**
+ * POST /admin/login response schema
+ */
+export const AdminLoginResponseSchema = z.object({
+  success: z.boolean(),
+  message: z.string(),
+});
+export type AdminLoginResponse = z.infer<typeof AdminLoginResponseSchema>;

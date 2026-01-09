@@ -1,4 +1,4 @@
-import type { Comment } from '@ziteh/yangchun-comment-shared';
+import type { GetCommentsResponse, AdminLoginResponse } from '@ziteh/yangchun-comment-shared';
 import { solvePrePow, solveFormalPow } from '../utils/pow';
 
 export interface AuthInfo {
@@ -12,25 +12,15 @@ export interface CommentAuthInfo {
   token: string;
 }
 
-export interface CommentsResponse {
-  comments: Comment[];
-  isAdmin?: boolean;
-}
-
-export interface AdminLoginResponse {
-  success: boolean;
-  message: string;
-}
-
 export interface ApiService {
   ensureValidChallenge: () => Promise<boolean>;
   precomputeFormalPow: (post: string) => Promise<boolean>;
-  getComments: (post: string) => Promise<CommentsResponse>;
+  getComments: (post: string) => Promise<GetCommentsResponse>;
   addComment: (
     post: string,
     pseudonym: string,
     msg: string,
-    replyTo: string | null,
+    replyTo?: string,
   ) => Promise<string | null>;
   updateComment: (
     post: string,
@@ -118,7 +108,7 @@ export const createApiService = (apiUrl: string): ApiService => {
     }
   };
 
-  const getComments = async (post: string): Promise<CommentsResponse> => {
+  const getComments = async (post: string): Promise<GetCommentsResponse> => {
     try {
       const url = new URL('/api/comments', apiUrl);
       url.searchParams.append('post', post);
@@ -126,10 +116,10 @@ export const createApiService = (apiUrl: string): ApiService => {
         credentials: 'include', // Include cookies to check admin status
       });
       const data = await res.json();
-      return { comments: data.comments || [], isAdmin: data.isAdmin };
+      return { comments: data.comments || [], isAdmin: data.isAdmin || false };
     } catch (err) {
       console.error('Error getting comments:', err);
-      return { comments: [] };
+      return { comments: [], isAdmin: false };
     }
   };
 
@@ -137,7 +127,7 @@ export const createApiService = (apiUrl: string): ApiService => {
     post: string,
     pseudonym: string,
     msg: string,
-    replyTo: string | null,
+    replyTo?: string,
   ): Promise<string | null> => {
     try {
       const prePow = await solvePrePow(PRE_POW_DIFFICULTY);
@@ -171,9 +161,9 @@ export const createApiService = (apiUrl: string): ApiService => {
       url.searchParams.append('nonce', fPowNonce.toString());
 
       // Get honeypot field if present
-      const websiteField = document.querySelector('input[name="website"]') as HTMLInputElement;
+      const emailField = document.querySelector('input[name="email"]') as HTMLInputElement;
       // FIXME: directly from global DOM may break encapsulation
-      const website = websiteField ? websiteField.value : '';
+      const email = emailField ? emailField.value : '';
 
       const res = await fetch(url, {
         method: 'POST',
@@ -183,7 +173,7 @@ export const createApiService = (apiUrl: string): ApiService => {
           pseudonym,
           msg,
           replyTo,
-          website, // Include honeypot field
+          email, // Include honeypot field
         }),
       });
 

@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { validator } from 'hono/validator';
+import { sValidator } from '@hono/standard-validator';
 import {
   sanitize,
   genId,
@@ -11,7 +11,11 @@ import {
   verifyAdminToken,
 } from './utils';
 import { DEF, CONSTANTS } from './const';
-import type { Comment } from '@ziteh/yangchun-comment-shared';
+import {
+  type Comment,
+  CreateCommentRequestSchema,
+  UpdateCommentRequestSchema,
+} from '@ziteh/yangchun-comment-shared';
 import { verifyFormalPow } from './pow';
 
 const app = new Hono<{
@@ -49,120 +53,110 @@ app.get('/', validateQueryPost, async (c) => {
 });
 
 // Create a new comment
-app.post(
-  '/',
-  validateQueryPost,
-  validator('json', async (value, c) => {
-    const { pseudonym, msg, replyTo, email } = value;
-    const { challenge, nonce, post } = c.req.query(); // TODO: post
-    if (typeof challenge !== 'string' || typeof nonce !== 'string') {
-      return c.text('Missing challenge or nonce', 400);
-    }
+app.post('/', validateQueryPost, sValidator('json', CreateCommentRequestSchema), async (c) => {
+  const { pseudonym, msg, replyTo, email } = c.req.valid('json');
+  const { challenge, nonce, post } = c.req.query();
+  if (typeof challenge !== 'string' || typeof nonce !== 'string') {
+    return c.text('Missing challenge or nonce', 400);
+  }
 
-    const nonceNum = parseInt(nonce, 10);
-    const powPass = await verifyFormalPow(challenge, post, nonceNum, c.env.FORMAL_POW_SECRET_KEY); // TODO
-    if (!powPass) {
-      console.warn('Formal-PoW verification failed');
-      return c.text('Formal-PoW verification failed', 400);
-    }
-    console.debug('Formal-PoW verify OK');
+  const nonceNum = parseInt(nonce, 10);
+  const powPass = await verifyFormalPow(challenge, post, nonceNum, c.env.FORMAL_POW_SECRET_KEY);
+  if (!powPass) {
+    console.warn('Formal-PoW verification failed');
+    return c.text('Formal-PoW verification failed', 400);
+  }
+  console.debug('Formal-PoW verify OK');
 
-    // Honeypot check: if 'email' field is filled, it's likely a bot
-    if (email) {
-      const ip = c.req.header('CF-Connecting-IP') || 'unknown';
-      console.warn(`Honeypot triggered from IP: ${ip}`);
+  // Honeypot check: if 'email' field is filled, it's likely a bot
+  if (email) {
+    const ip = c.req.header('CF-Connecting-IP') || 'unknown';
+    console.warn(`Honeypot triggered from IP: ${ip}`);
 
-      // Return 200 OK to fool bots, but don't actually process the comment
-      return c.text('Comment received', 200);
-    }
+    // Return 200 OK to fool bots, but don't actually process the comment
+    return c.text('Comment received', 200);
+  }
 
-    if (!msg || typeof msg !== 'string') {
-      return c.text('Missing or invalid msg field', 400);
-    }
+  if (!msg || typeof msg !== 'string') {
+    return c.text('Missing or invalid msg field', 400);
+  }
 
-    const maxMsgLength = c.env.MAX_MSG_LENGTH || DEF.maxMsgLength;
-    if (msg.length > maxMsgLength) {
-      return c.text(`Message is too long (maximum ${maxMsgLength} characters)`, 400);
-    }
+  const maxMsgLength = c.env.MAX_MSG_LENGTH || DEF.maxMsgLength;
+  if (msg.length > maxMsgLength) {
+    return c.text(`Message is too long (maximum ${maxMsgLength} characters)`, 400);
+  }
 
-    const cleanMsg = sanitize(msg);
-    if (cleanMsg.length === 0) {
-      return c.text('Message is invalid', 400);
-    }
+  const cleanMsg = sanitize(msg);
+  if (cleanMsg.length === 0) {
+    return c.text('Message is invalid', 400);
+  }
 
-    const maxPseudonymLength = c.env.MAX_PSEUDONYM_LENGTH || DEF.maxPseudonymLength;
-    if (pseudonym && typeof pseudonym === 'string' && pseudonym.length > maxPseudonymLength) {
-      return c.text(`Pseudonym is too long (maximum ${maxPseudonymLength} characters)`, 400);
-    }
-    const cleanPseudonym = pseudonym ? sanitize(pseudonym) : undefined;
-    if (pseudonym && cleanPseudonym !== undefined && cleanPseudonym.length === 0) {
-      return c.text('Pseudonym is invalid', 400);
-    }
+  const maxPseudonymLength = c.env.MAX_PSEUDONYM_LENGTH || DEF.maxPseudonymLength;
+  if (pseudonym && typeof pseudonym === 'string' && pseudonym.length > maxPseudonymLength) {
+    return c.text(`Pseudonym is too long (maximum ${maxPseudonymLength} characters)`, 400);
+  }
+  const cleanPseudonym = pseudonym ? sanitize(pseudonym) : undefined;
+  if (pseudonym && cleanPseudonym !== undefined && cleanPseudonym.length === 0) {
+    return c.text('Pseudonym is invalid', 400);
+  }
 
-    if (replyTo && (typeof replyTo !== 'string' || !/^[0-9A-Z]{12}$/.test(replyTo))) {
-      return c.text('Invalid reply ID', 400);
-    }
+  if (replyTo && (typeof replyTo !== 'string' || !/^[0-9A-Z]{12}$/.test(replyTo))) {
+    return c.text('Invalid reply ID', 400);
+  }
 
-    return { pseudonym: cleanPseudonym, msg: cleanMsg, replyTo };
-  }),
-  async (c) => {
-    const { post } = c.req.valid('query');
-    const { pseudonym, msg, replyTo } = c.req.valid('json');
-
-    const key = getCommentKey(post);
-    const rawComments = await c.env.COMMENTS.get(key);
-    if (!rawComments) {
-      // No comments yet for this post
-      const baseUrl = c.env.POST_BASE_URL || DEF.postBaseUrl;
-      if (baseUrl) {
-        // Validate the post URL if POST_BASE_URL is set
-        const fullUrl = `${baseUrl}${post}`;
-        const isValidPost = await validatePostUrl(fullUrl, 5000);
-        if (!isValidPost) {
-          console.warn(`No comments found for post: ${post}, invalid post`);
-          return c.text('Invalid post', 400); // 400 Bad Request
-        }
+  const key = getCommentKey(post);
+  const rawComments = await c.env.COMMENTS.get(key);
+  if (!rawComments) {
+    // No comments yet for this post
+    const baseUrl = c.env.POST_BASE_URL || DEF.postBaseUrl;
+    if (baseUrl) {
+      // Validate the post URL if POST_BASE_URL is set
+      const fullUrl = `${baseUrl}${post}`;
+      const isValidPost = await validatePostUrl(fullUrl, 5000);
+      if (!isValidPost) {
+        console.warn(`No comments found for post: ${post}, invalid post`);
+        return c.text('Invalid post', 400); // 400 Bad Request
       }
     }
-    const id = genId();
-    const timestamp = Date.now();
+  }
+  const id = genId();
+  const timestamp = Date.now();
 
-    // Check if the request is from an admin
-    const cookieHeader = c.req.header('Cookie');
-    const isAdmin = await verifyAdminToken(cookieHeader, c.env.ADMIN_SECRET_KEY);
+  // Check if the request is from an admin
+  const cookieHeader = c.req.header('Cookie');
+  const isAdmin = await verifyAdminToken(cookieHeader, c.env.ADMIN_SECRET_KEY);
 
-    const comment: Comment = {
-      id,
-      pseudonym,
-      msg,
-      replyTo,
-      pubDate: timestamp,
-      ...(isAdmin && { isAdmin: true }),
-    };
+  const comment: Comment = {
+    id,
+    pseudonym,
+    msg,
+    replyTo,
+    pubDate: timestamp,
+    ...(isAdmin && { isAdmin: true }),
+  };
 
-    // Save to KV
-    const comments = rawComments ? JSON.parse(rawComments) : [];
-    comments.push(comment);
-    await c.env.COMMENTS.put(key, JSON.stringify(comments));
+  // Save to KV
+  const comments = rawComments ? JSON.parse(rawComments) : [];
+  comments.push(comment);
+  await c.env.COMMENTS.put(key, JSON.stringify(comments));
 
-    // Debug: Check if HMAC_SECRET_KEY exists
-    if (!c.env.HMAC_SECRET_KEY) {
-      console.error('HMAC_SECRET_KEY is not set in environment variables!');
-      return c.text('Server configuration error', 500);
-    }
-    console.debug('HMAC_SECRET_KEY length:', c.env.HMAC_SECRET_KEY.length);
+  // Debug: Check if HMAC_SECRET_KEY exists
+  if (!c.env.HMAC_SECRET_KEY) {
+    console.error('HMAC_SECRET_KEY is not set in environment variables!');
+    return c.text('Server configuration error', 500);
+  }
+  console.debug('HMAC_SECRET_KEY length:', c.env.HMAC_SECRET_KEY.length);
 
-    const token = await genHmac(c.env.HMAC_SECRET_KEY, id, timestamp);
+  const token = await genHmac(c.env.HMAC_SECRET_KEY, id, timestamp);
 
-    console.log(`Comment created with ID: ${id} for post: ${post}`);
-    return c.json({ id, timestamp, token }, 201); // 201 Created
-  },
-);
+  console.log(`Comment created with ID: ${id} for post: ${post}`);
+  return c.json({ id, timestamp, token }, 201); // 201 Created
+});
 
 // Update a comment
-app.put('/', validateQueryPost, async (c) => {
+app.put('/', validateQueryPost, sValidator('json', UpdateCommentRequestSchema), async (c) => {
   const { post } = c.req.valid('query');
-  const { pseudonym, msg } = await c.req.json();
+  const { pseudonym, msg } = c.req.valid('json');
   const id = c.req.header('X-Comment-ID') || '';
   const token = c.req.header('X-Comment-Token') || '';
   const timestamp = parseInt(c.req.header('X-Comment-Timestamp') || '0');
