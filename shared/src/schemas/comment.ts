@@ -1,25 +1,25 @@
 import { z } from 'zod';
 
 export const CommentSchema = z.object({
-  /** Unique identifier for the comment */
+  /** Unique comment identifier */
   id: z.string(),
 
-  /** Pseudonym of the author */
+  /** Author's display name; anonymous if omitted */
   pseudonym: z.string().optional(),
 
-  /** Content of the comment */
+  /** The comment body text */
   msg: z.string(),
 
   /** Publish timestamp */
   pubDate: z.number(),
 
-  /** Last modification timestamp */
+  /** Last modified timestamp, if edited or deleted */
   modDate: z.number().optional(),
 
-  /** ID of the comment being replied to */
+  /** Parent comment ID, if this comment is a reply */
   replyTo: z.string().optional(),
 
-  /** Indicates whether the comment was made by an admin */
+  /** Flags if the author is an admin */
   isAdmin: z.boolean().optional(),
 });
 export type Comment = z.infer<typeof CommentSchema>;
