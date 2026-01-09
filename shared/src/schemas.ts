@@ -76,3 +76,11 @@ export const AdminLoginResponseSchema = z.object({
   message: z.string(),
 });
 export type AdminLoginResponse = z.infer<typeof AdminLoginResponseSchema>;
+
+/**
+ * Query parameters schema for comment endpoints
+ */
+export const CommentQuerySchema = z.object({
+  post: z.string(),
+});
+export type CommentQuery = z.infer<typeof CommentQuerySchema>;

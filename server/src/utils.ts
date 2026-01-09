@@ -1,8 +1,9 @@
-import { validator } from 'hono/validator';
+import { sValidator } from '@hono/standard-validator';
 import { customAlphabet } from 'nanoid';
 import { CONSTANTS } from './const';
 import sanitizeHtml from 'sanitize-html';
 import { verify } from 'hono/jwt';
+import { CommentQuerySchema } from '@ziteh/yangchun-comment-shared';
 
 export function sanitize(raw: unknown): string {
   if (typeof raw !== 'string') return '';
@@ -37,24 +38,7 @@ export function getCommentKey(post: string) {
   return `${CONSTANTS.commentsKeyPrefix}${post}`;
 }
 
-export const validateQueryPost = validator('query', (value, c) => {
-  const post = value['post'];
-  if (!post || typeof post !== 'string') {
-    console.warn('Invalid post query parameter:', post);
-    return c.text('Invalid post', 400); // 400 Bad Request
-  }
-
-  // Regex validation
-  // const postRegex = new RegExp(c.env.POST_REGEX || '^.{1,200}$');
-  // if (!postRegex.test(post)) {
-  //   console.warn('Post query parameter does not match regex:', post);
-  //   return c.text('Invalid post', 400); // 400 Bad Request
-  // }
-
-  return {
-    post,
-  };
-});
+export const validateQueryPost = sValidator('query', CommentQuerySchema);
 
 export async function genHmac(secretKey: string, commentId: string, timestamp: number) {
   const encoder = new TextEncoder();
