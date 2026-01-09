@@ -1,8 +1,3 @@
-import { CommentQuerySchema } from '@ziteh/yangchun-comment-shared';
-import { sValidator } from '@hono/standard-validator';
-
-export const validateQueryPost = sValidator('query', CommentQuerySchema);
-
 /**
  * Verify the post exists.
  * @param url the URL of the post to validate.

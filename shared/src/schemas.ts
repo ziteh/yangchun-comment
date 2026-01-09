@@ -86,6 +86,26 @@ export const CommentQuerySchema = z.object({
 export type CommentQuery = z.infer<typeof CommentQuerySchema>;
 
 /**
+ * Query parameters schema for creating comment (includes PoW params)
+ */
+export const CreateCommentQuerySchema = z.object({
+  post: z.string(),
+  challenge: z.string(),
+  nonce: z.string(),
+});
+export type CreateCommentQuery = z.infer<typeof CreateCommentQuerySchema>;
+
+/**
+ * Headers schema for comment authentication (UPDATE/DELETE)
+ */
+export const CommentAuthHeadersSchema = z.object({
+  'x-comment-id': z.string(),
+  'x-comment-token': z.string(),
+  'x-comment-timestamp': z.string(),
+});
+export type CommentAuthHeaders = z.infer<typeof CommentAuthHeadersSchema>;
+
+/**
  * POST /admin/login request body schema
  */
 export const AdminLoginRequestSchema = z.object({

@@ -1,8 +1,8 @@
 import { Hono } from 'hono';
 import { getCommentKey } from '../utils/helpers';
 import { CONSTANTS } from '../const';
-import type { Comment } from '@ziteh/yangchun-comment-shared';
-import { validateQueryPost } from '../utils/validators';
+import { CommentQuerySchema, type Comment } from '@ziteh/yangchun-comment-shared';
+import { sValidator } from '@hono/standard-validator';
 
 interface CommentWithPost extends Comment {
   post: string;
@@ -18,7 +18,7 @@ const app = new Hono<{
   };
 }>();
 
-app.get('/thread', validateQueryPost, async (c) => {
+app.get('/thread', sValidator('query', CommentQuerySchema), async (c) => {
   const { post } = c.req.valid('query');
   const key = getCommentKey(post);
   const raw = await c.env.COMMENTS.get(key);
