@@ -21,3 +21,11 @@ CREATE INDEX IF NOT EXISTS idx_comments_pub_date ON comments(pub_date DESC);
 
 -- Index for reply_to lookups
 CREATE INDEX IF NOT EXISTS idx_comments_reply_to ON comments(reply_to);
+
+-- Login fail count tracking table
+CREATE TABLE IF NOT EXISTS login_fail_count (
+  ip_hash TEXT PRIMARY KEY,
+  fail_count INTEGER NOT NULL DEFAULT 1,
+  created_at INTEGER NOT NULL,
+  expires_at INTEGER NOT NULL
+);

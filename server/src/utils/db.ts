@@ -130,6 +130,50 @@ export async function hasComments(db: D1Database, post: string): Promise<boolean
   return res ? res.count > 0 : false;
 }
 
+export async function getLoginFailCount(db: D1Database, ipHash: string): Promise<number> {
+  await ensureSchema(db);
+  const now = Date.now();
+  const stmt = db
+    .prepare('SELECT fail_count FROM login_fail_count WHERE ip_hash = ? AND expires_at > ?')
+    .bind(ipHash, now);
+  const res = await stmt.first<{ fail_count: number }>();
+  return res?.fail_count ?? 0;
+}
+
+export async function incrementLoginFailCount(
+  db: D1Database,
+  ipHash: string,
+  expirationSec: number,
+): Promise<number> {
+  await ensureSchema(db);
+  const now = Date.now();
+  const expiresAt = now + expirationSec * 1000;
+
+  // Clean up expired records first
+  await db.prepare('DELETE FROM login_fail_count WHERE expires_at <= ?').bind(now).run();
+
+  const newCount = (await getLoginFailCount(db, ipHash)) + 1;
+
+  // Upsert the fail count
+  const stmt = db
+    .prepare(
+      `INSERT INTO login_fail_count (ip_hash, fail_count, created_at, expires_at)
+       VALUES (?, ?, ?, ?)
+       ON CONFLICT(ip_hash) DO UPDATE SET
+       fail_count = excluded.fail_count,
+       expires_at = excluded.expires_at`,
+    )
+    .bind(ipHash, newCount, now, expiresAt);
+
+  const res = await stmt.run();
+  return res.success ? newCount : 0;
+}
+
+export async function clearLoginFailCount(db: D1Database, ipHash: string): Promise<void> {
+  await ensureSchema(db);
+  await db.prepare('DELETE FROM login_fail_count WHERE ip_hash = ?').bind(ipHash).run();
+}
+
 let isSchemaEnsured = false;
 async function ensureSchema(db: D1Database) {
   if (isSchemaEnsured) return;
@@ -148,6 +192,13 @@ async function ensureSchema(db: D1Database) {
   CREATE INDEX IF NOT EXISTS idx_comments_post ON comments(post);
   CREATE INDEX IF NOT EXISTS idx_comments_pub_date ON comments(pub_date DESC);
   CREATE INDEX IF NOT EXISTS idx_comments_reply_to ON comments(reply_to);
+
+  CREATE TABLE IF NOT EXISTS login_fail_count (
+    ip_hash TEXT PRIMARY KEY,
+    fail_count INTEGER NOT NULL DEFAULT 1,
+    created_at INTEGER NOT NULL,
+    expires_at INTEGER NOT NULL
+  );
   `;
 
   try {

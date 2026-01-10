@@ -9,9 +9,11 @@ import {
   AdminCheckResponseSchema,
 } from '@ziteh/yangchun-comment-shared';
 import { verifyAdminToken, constantTimeCompare, hmacSha256 } from '../utils/crypto';
+import { incrementLoginFailCount, clearLoginFailCount } from '../utils/db';
 
 const app = new Hono<{
   Bindings: {
+    DB: D1Database;
     COMMENTS: KVNamespace;
     ADMIN_SECRET_KEY: string;
     ADMIN_USERNAME: string;
@@ -31,8 +33,6 @@ app.post('/login', sValidator('json', AdminLoginRequestSchema), async (c) => {
     return c.text('Too many attempts', 429); // 429 Too Many Requests
   }
 
-  const failCountKey = `fail_count:${ipMac}`;
-
   // HACK: Normally, stored passwords should be processed using hash+salt (e.g. Argon2 or bcrypt).
   // Currently, the admin password is stored using CF Secrets,
   // which is designed for storing sensitive data.
@@ -44,20 +44,14 @@ app.post('/login', sValidator('json', AdminLoginRequestSchema), async (c) => {
   const usernameMatch = await constantTimeCompare(username, adminUsername);
   const passwordMatch = await constantTimeCompare(password, adminPassword);
   if (!usernameMatch || !passwordMatch) {
-    const failCountRaw = await c.env.COMMENTS.get(failCountKey);
-    const failCount = failCountRaw ? parseInt(failCountRaw) + 1 : 1;
-
-    // HACK: This is a simple implementation.
-    // In high-concurrency scenarios, multiple requests may simultaneously read the same failCount,
-    // leading to inaccurate counting.
+    const failCount = await incrementLoginFailCount(c.env.DB, ipMac, 3600); // TODO: magic number
     if (failCount > 5) {
-      await c.env.COMMENTS.put(blockedKey, '1', { expirationTtl: 3600 });
+      // TODO: magic number
+      // Block IP
+      await c.env.COMMENTS.put(blockedKey, '1', { expirationTtl: 3600 }); // TODO: magic number
       console.error('IP blocked due to repeated failed login attempts:', ipMac);
     } else {
-      await c.env.COMMENTS.put(failCountKey, failCount.toString(), {
-        expirationTtl: 3600,
-      });
-      console.warn('Failed login attempt:', ipMac);
+      console.warn('Failed login attempt:', ipMac, `(${failCount}/5)`);
     }
 
     // Random delay to mitigate timing attacks
@@ -66,7 +60,7 @@ app.post('/login', sValidator('json', AdminLoginRequestSchema), async (c) => {
   }
 
   // Clear fail count on successful login
-  await c.env.COMMENTS.delete(failCountKey);
+  await clearLoginFailCount(c.env.DB, ipMac);
 
   // JWT token
   const now = Math.floor(Date.now() / 1000);
@@ -74,7 +68,7 @@ app.post('/login', sValidator('json', AdminLoginRequestSchema), async (c) => {
     username: username,
     role: 'admin',
     iat: now,
-    exp: now + 3600,
+    exp: now + 3600, // TODO: magic number
     jti: crypto.randomUUID(),
   };
   const token = await sign(payload, c.env.ADMIN_SECRET_KEY);
@@ -85,7 +79,7 @@ app.post('/login', sValidator('json', AdminLoginRequestSchema), async (c) => {
     secure: true,
     httpOnly: true,
     sameSite: 'Strict',
-    maxAge: 3600,
+    maxAge: 3600, // TODO: magic number
   });
 
   console.info('Successful login');
