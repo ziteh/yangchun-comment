@@ -12,6 +12,7 @@ import { z } from 'zod';
 const envSchema = z.object({
   // Normal
   FRONTEND_URL: z.url(),
+  POST_BASE_URL: z.url().optional(),
   CORS_ORIGIN: z.string(),
   RSS_SITE_PATH: z.string(),
   ADMIN_USERNAME: z.string(),
@@ -27,8 +28,8 @@ const envSchema = z.object({
   // 64 hex characters = 32 bytes
   SECRET_ADMIN_PASSWORD_HASH: z.hex().min(64),
   SECRET_ADMIN_PASSWORD_SALT: z.hex().min(64),
-  SECRET_COMMENT_HMAC_KEY: z.hex().min(64),
   SECRET_ADMIN_JWT_KEY: z.hex().min(64),
+  SECRET_COMMENT_HMAC_KEY: z.hex().min(64),
   SECRET_FORMAL_POW_HMAC_KEY: z.hex().min(64),
   SECRET_IP_PEPPER: z.hex().min(64),
 });

@@ -24,7 +24,6 @@ export function dbCommentToComment(dbComment: DbComment): Comment {
 }
 
 export async function getCommentsByPost(db: D1Database, post: string): Promise<Comment[]> {
-  await ensureSchema(db);
   const stmt = db.prepare('SELECT * FROM comments WHERE post = ? ORDER BY pub_date ASC').bind(post);
   const res = await stmt.all<DbComment>();
   if (!res.success) {
@@ -40,7 +39,6 @@ export async function createComment(
   post: string,
   comment: Comment,
 ): Promise<boolean> {
-  await ensureSchema(db);
   const stmt = db
     .prepare(
       `INSERT INTO comments (id, post, pseudonym, msg, pub_date, mod_date, reply_to, is_admin)
@@ -67,7 +65,6 @@ export async function updateComment(
   msg: string,
   modDate: number,
 ): Promise<boolean> {
-  await ensureSchema(db);
   const stmt = db
     .prepare('UPDATE comments SET msg = ?, mod_date = ? WHERE id = ?')
     .bind(msg, modDate, id);
@@ -82,7 +79,6 @@ export async function deleteComment(
   deletedMarker: string,
   modDate: number,
 ): Promise<boolean> {
-  await ensureSchema(db);
   const stmt = db
     .prepare('UPDATE comments SET pseudonym = ?, msg = ?, mod_date = ? WHERE id = ?')
     .bind(deletedMarker, deletedMarker, modDate, id); // Mark as deleted
@@ -92,7 +88,6 @@ export async function deleteComment(
 }
 
 export async function getCommentById(db: D1Database, id: string): Promise<Comment | null> {
-  await ensureSchema(db);
   const stmt = db.prepare('SELECT * FROM comments WHERE id = ?').bind(id);
   const res = await stmt.first<DbComment>();
 
@@ -107,7 +102,6 @@ export async function getAllComments(
     ? 'SELECT * FROM comments ORDER BY pub_date DESC LIMIT ?'
     : 'SELECT * FROM comments ORDER BY pub_date DESC';
 
-  await ensureSchema(db);
   const stmt = limit ? db.prepare(sql).bind(limit) : db.prepare(sql);
   const res = await stmt.all<DbComment>();
 
@@ -123,7 +117,6 @@ export async function getAllComments(
 }
 
 export async function hasComments(db: D1Database, post: string): Promise<boolean> {
-  await ensureSchema(db);
   const stmt = db.prepare('SELECT COUNT(*) as count FROM comments WHERE post = ?').bind(post);
   const res = await stmt.first<{ count: number }>();
 
@@ -131,7 +124,6 @@ export async function hasComments(db: D1Database, post: string): Promise<boolean
 }
 
 export async function getLoginFailCount(db: D1Database, ipHash: string): Promise<number> {
-  await ensureSchema(db);
   const now = Date.now();
   const stmt = db
     .prepare('SELECT fail_count FROM login_fail_count WHERE ip_hash = ? AND expires_at > ?')
@@ -145,7 +137,6 @@ export async function incrementLoginFailCount(
   ipHash: string,
   expirationSec: number,
 ): Promise<number> {
-  await ensureSchema(db);
   const now = Date.now();
   const expiresAt = now + expirationSec * 1000;
 
@@ -172,41 +163,40 @@ export async function incrementLoginFailCount(
 }
 
 export async function clearLoginFailCount(db: D1Database, ipHash: string): Promise<void> {
-  await ensureSchema(db);
   await db.prepare('DELETE FROM login_fail_count WHERE ip_hash = ?').bind(ipHash).run();
 }
 
-let isSchemaEnsured = false;
-async function ensureSchema(db: D1Database) {
-  if (isSchemaEnsured) return;
+// let isSchemaEnsured = false;
+// async function ensureSchema(db: D1Database) {
+//   if (isSchemaEnsured) return;
 
-  const schemaSql = `CREATE TABLE IF NOT EXISTS comments (
-    id TEXT PRIMARY KEY,
-    post TEXT NOT NULL,
-    pseudonym TEXT,
-    msg TEXT NOT NULL,
-    pub_date INTEGER NOT NULL,
-    mod_date INTEGER,
-    reply_to TEXT,
-    is_admin INTEGER DEFAULT 0
-  );
+//   const schemaSql = `CREATE TABLE IF NOT EXISTS comments (
+//     id TEXT PRIMARY KEY,
+//     post TEXT NOT NULL,
+//     pseudonym TEXT,
+//     msg TEXT NOT NULL,
+//     pub_date INTEGER NOT NULL,
+//     mod_date INTEGER,
+//     reply_to TEXT,
+//     is_admin INTEGER DEFAULT 0
+//   );
 
-  CREATE INDEX IF NOT EXISTS idx_comments_post ON comments(post);
-  CREATE INDEX IF NOT EXISTS idx_comments_pub_date ON comments(pub_date DESC);
-  CREATE INDEX IF NOT EXISTS idx_comments_reply_to ON comments(reply_to);
+//   CREATE INDEX IF NOT EXISTS idx_comments_post ON comments(post);
+//   CREATE INDEX IF NOT EXISTS idx_comments_pub_date ON comments(pub_date DESC);
+//   CREATE INDEX IF NOT EXISTS idx_comments_reply_to ON comments(reply_to);
 
-  CREATE TABLE IF NOT EXISTS login_fail_count (
-    ip_hash TEXT PRIMARY KEY,
-    fail_count INTEGER NOT NULL DEFAULT 1,
-    created_at INTEGER NOT NULL,
-    expires_at INTEGER NOT NULL
-  );
-  `;
+//   CREATE TABLE IF NOT EXISTS login_fail_count (
+//     ip_hash TEXT PRIMARY KEY,
+//     fail_count INTEGER NOT NULL DEFAULT 1,
+//     created_at INTEGER NOT NULL,
+//     expires_at INTEGER NOT NULL
+//   );
+//   `;
 
-  try {
-    await db.prepare(schemaSql).run();
-    isSchemaEnsured = true;
-  } catch (err) {
-    console.error('Failed to ensure D1 schema:', err);
-  }
-}
+//   try {
+//     await db.prepare(schemaSql).run();
+//     isSchemaEnsured = true;
+//   } catch (err) {
+//     console.error('Failed to ensure D1 schema:', err);
+//   }
+// }

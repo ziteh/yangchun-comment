@@ -30,11 +30,6 @@ const app = new Hono<{
     SECRET_COMMENT_HMAC_KEY: string;
     POST_BASE_URL: string;
     SECRET_FORMAL_POW_HMAC_KEY: string;
-    PRE_POW_DIFFICULTY: number;
-    PRE_POW_MAGIC_WORD: string;
-    RE_POW_TIME_WINDOW: number;
-    FORMAL_POW_DIFFICULTY: number;
-    FORMAL_POW_EXPIRATION: number;
     SECRET_ADMIN_JWT_KEY: string;
   };
 }>();
