@@ -1,11 +1,14 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import { secureHeaders } from 'hono/secure-headers';
 
 const app = new Hono<{
   Bindings: {
     CORS_ORIGIN: string;
   };
 }>();
+
+app.use('*', secureHeaders());
 
 // Origin / Referer header
 app.use('*', async (c, next) => {
