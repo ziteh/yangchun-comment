@@ -29,9 +29,9 @@ const DOMPURIFY_CONFIG: DomPurifyConfig = {
   // FORBID_ATTR: ['style', 'onclick', 'onmouseover', 'onload', 'onunload', 'onerror'],
 };
 
-let isHookSetup = false;
+let isHookSetup = false; // TODO: is this necessary?
 
-export function setupDOMPurifyHooks() {
+function initializeHooks() {
   if (isHookSetup) return;
 
   DOMPurify.addHook('afterSanitizeAttributes', (node) => {
@@ -64,6 +64,9 @@ export function setupDOMPurifyHooks() {
 
   isHookSetup = true;
 }
+
+// Initialize immediately when module is loaded
+initializeHooks();
 
 export function sanitizeHtml(dirtyHtml: string) {
   return DOMPurify.sanitize(dirtyHtml, DOMPURIFY_CONFIG);

@@ -12,7 +12,6 @@ import type { CommentAdmin } from './comment-admin';
 import type { ApiService } from '../api/apiService';
 import { createApiService } from '../api/apiService';
 import { generatePseudonymAndHash } from '../utils/pseudonym';
-import { setupDOMPurifyHooks } from '../utils/sanitize';
 import { initI18n, enUS, zhTW, t, type I18nStrings } from '../utils/i18n';
 import { cleanupPowWorker } from '../utils/pow';
 
@@ -90,7 +89,6 @@ export class YangChunComment extends LitElement {
   @state() private accessor showAdmin = false;
   @state() private accessor showHelp = false;
   @state() private accessor showNotify = false;
-  @state() private accessor showConfirmDelete = false; // TODO: combine to deleteCommentId !== '' ?
 
   @state() private accessor isAdmin = false;
   @state() private accessor rssFeedUrl = '';
@@ -173,35 +171,19 @@ ${t('helpMdCodeBlock')}
           @comment-edit=${this.onEditComment}
           @comment-delete=${(e: CustomEvent<string>) => {
             this.deleteCommentId = e.detail;
-            this.showConfirmDelete = true;
           }}
         ></comment-list>
 
         <comment-dialog
           header=${t('confirmDelete')}
-          .open=${this.showConfirmDelete && this.deleteCommentId !== ''}
-          @close=${() => (this.showConfirmDelete = false)}
+          .open=${this.deleteCommentId !== ''}
+          @close=${() => (this.deleteCommentId = '')}
         >
           <p>${t('confirmDeleteDesc1') + this.deleteCommentId}</p>
           <strong>${t('confirmDeleteDesc2')}</strong>
           <div class="dialog-actions">
-            <button
-              class="secondary"
-              @click=${() => {
-                this.showConfirmDelete = false;
-                this.deleteComment();
-              }}
-            >
-              ${t('delete')}
-            </button>
-            <button
-              @click=${() => {
-                this.showConfirmDelete = false;
-                this.deleteCommentId = '';
-              }}
-            >
-              ${t('cancel')}
-            </button>
+            <button class="secondary" @click=${this.deleteComment}>${t('delete')}</button>
+            <button @click=${() => (this.deleteCommentId = '')}>${t('cancel')}</button>
           </div>
         </comment-dialog>
         <comment-dialog
@@ -262,14 +244,16 @@ ${t('helpMdCodeBlock')}
     super.willUpdate(changedProperties);
   }
 
-  async firstUpdated() {
-    console.debug('firstUpdated', 'apiUrl:', this.apiUrl);
-    await this.updatedComments();
+  protected updated(changedProperties: PropertyValues<this>) {
+    super.updated(changedProperties);
+    // Re-fetch comments when post ID changes
+    if (changedProperties.has('post')) {
+      this.updatedComments();
+    }
   }
 
-  connectedCallback() {
-    super.connectedCallback();
-    setupDOMPurifyHooks();
+  async firstUpdated() {
+    console.debug('firstUpdated', 'apiUrl:', this.apiUrl);
   }
 
   disconnectedCallback() {
@@ -408,16 +392,19 @@ ${t('helpMdCodeBlock')}
 
   private async deleteComment() {
     if (!this.deleteCommentId) return;
-    console.debug('Delete comment ID:', this.deleteCommentId);
+    const commentId = this.deleteCommentId;
+    console.debug('Delete comment ID:', commentId);
 
     try {
-      const ok = await this.apiService.deleteComment(this.post, this.deleteCommentId);
+      const ok = await this.apiService.deleteComment(this.post, commentId);
       if (ok) {
-        console.debug('Deleted comment ID:', this.deleteCommentId);
+        console.debug('Deleted comment ID:', commentId);
+        this.deleteCommentId = ''; // Close dialog
         await this.updatedComments();
       }
     } catch (err) {
       console.error('Failed to delete comment:', err);
+      this.deleteCommentId = ''; // Close dialog even on error
     }
   }
 }
