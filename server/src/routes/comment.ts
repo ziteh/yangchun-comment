@@ -28,7 +28,6 @@ const app = new Hono<{
     DB: D1Database;
     KV: KVNamespace;
     HMAC_SECRET_KEY: string;
-    POST_REGEX?: string;
     POST_BASE_URL: string;
     FORMAL_POW_SECRET_KEY: string;
     PRE_POW_DIFFICULTY: number;

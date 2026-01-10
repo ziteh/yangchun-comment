@@ -8,6 +8,5 @@ declare module 'cloudflare:test' {
     // Env
     HMAC_SECRET_KEY: string;
     CORS_ORIGIN: string;
-    POST_REGEX?: string;
   }
 }

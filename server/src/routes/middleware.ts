@@ -3,9 +3,7 @@ import { cors } from 'hono/cors';
 
 const app = new Hono<{
   Bindings: {
-    // Environment variables
     CORS_ORIGIN: string;
-    POST_REGEX?: string;
   };
 }>();
 

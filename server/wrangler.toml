@@ -28,7 +28,6 @@ RSS_SITE_PATH = "site"   # The path for the all-site RSS feed
 ADMIN_USERNAME = "admin" # Admin username
 MAX_ALL_SITE_RSS_COMMENTS = 20   # The max number of comments in the all-site RSS feed
 MAX_THREAD_RSS_COMMENTS = 10     # The max number of comments in the thread RSS feed
-# POST_REGEX = "${POST_REGEX}"
 PRE_POW_DIFFICULTY = 2        # The difficulty for the pre-proof-of-work
 PRE_POW_TIME_WINDOW = 60      # The time window (in seconds) for the pre-proof-of-work
 PRE_POW_MAGIC_WORD = "FIXED" # The magic word for the pre-proof-of-work
