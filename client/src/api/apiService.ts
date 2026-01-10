@@ -266,10 +266,6 @@ export const createApiService = (apiUrl: string): ApiService => {
 
   const saveAuthInfo = (id: string, timestamp: number, token: string): void => {
     commentAuthMap.set(id, { timestamp, token });
-
-    // optionally store in sessionStorage for persistence across page reloads
-    const encryptedInfo = btoa(JSON.stringify({ timestamp }));
-    sessionStorage.setItem(`comment_auth_${id}`, encryptedInfo);
   };
 
   const getAuthInfo = (commentId: string): CommentAuthInfo | null => {
@@ -281,7 +277,6 @@ export const createApiService = (apiUrl: string): ApiService => {
 
   const removeAuthInfo = (commentId: string): void => {
     commentAuthMap.delete(commentId);
-    sessionStorage.removeItem(`comment_auth_${commentId}`);
   };
 
   const canEditComment = (commentId: string): boolean => {
