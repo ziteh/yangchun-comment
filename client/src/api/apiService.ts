@@ -5,6 +5,9 @@ import {
   FormalChallengeResponseSchema,
   AdminCheckResponseSchema,
   AdminLogoutResponseSchema,
+  CreateCommentRequestSchema,
+  UpdateCommentRequestSchema,
+  AdminLoginRequestSchema,
   type GetCommentsResponse,
   type AdminLoginResponse,
 } from '@ziteh/yangchun-comment-shared';
@@ -176,16 +179,18 @@ export const createApiService = (apiUrl: string): ApiService => {
       // FIXME: directly from global DOM may break encapsulation
       const email = emailField ? emailField.value : '';
 
+      const req = CreateCommentRequestSchema.parse({
+        pseudonym,
+        msg,
+        replyTo,
+        email, // Include honeypot field
+      });
+
       const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include', // Admin HttpOnly cookies
-        body: JSON.stringify({
-          pseudonym,
-          msg,
-          replyTo,
-          email, // Include honeypot field
-        }),
+        body: JSON.stringify(req),
       });
 
       if (res.ok) {
@@ -216,7 +221,12 @@ export const createApiService = (apiUrl: string): ApiService => {
       const url = new URL('/api/comments', apiUrl);
       url.searchParams.append('post', post);
 
-      const response = await fetch(url, {
+      const req = UpdateCommentRequestSchema.parse({
+        pseudonym,
+        msg,
+      });
+
+      const res = await fetch(url, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -224,13 +234,10 @@ export const createApiService = (apiUrl: string): ApiService => {
           'X-Comment-Token': authInfo.token,
           'X-Comment-Timestamp': authInfo.timestamp.toString(),
         },
-        body: JSON.stringify({
-          pseudonym,
-          msg,
-        }),
+        body: JSON.stringify(req),
       });
 
-      return response.ok;
+      return res.ok;
     } catch {
       return false;
     }
@@ -308,11 +315,13 @@ export const createApiService = (apiUrl: string): ApiService => {
     password: string,
   ): Promise<AdminLoginResponse | null> => {
     try {
+      const req = AdminLoginRequestSchema.parse({ username, password });
+
       const url = new URL('/admin/login', apiUrl);
       const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify(req),
         credentials: 'include', // Include cookies in request
       });
 
