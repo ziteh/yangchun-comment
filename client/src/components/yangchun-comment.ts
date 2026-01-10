@@ -298,11 +298,11 @@ ${t('helpMdCodeBlock')}
   }
 
   private onDraftChange(e: CustomEvent<string>) {
-    this.draft = e.detail.trim();
+    this.draft = e.detail;
   }
 
   private onNicknameChange(e: CustomEvent<string>) {
-    this.nickname = e.detail.trim();
+    this.nickname = e.detail;
   }
 
   private async editedSubmit() {
