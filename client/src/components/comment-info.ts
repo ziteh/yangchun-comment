@@ -62,32 +62,23 @@ export class CommentInfo extends LitElement {
       `;
     }
 
-    if (!this.comment) {
-      return html`
-        <div class="info-bar">
-          <!-- TODO: refactor this -->
-          <div></div>
-          <div class="actions">
-            <button class="text-btn admin-btn" @click=${this.handleAdmin}>Admin</button>
-            <button class="text-btn" @click=${this.handleNotify}>${t('notify')}</button>
-            <button class="text-btn" @click=${this.handleHelp}>${t('help')}</button>
-          </div>
-        </div>
-      `;
-    }
-
     return html`
       <div class="info-bar">
-        <div class="reference-comment-info">
-          ${this.isReply
-            ? html`<span
-                >${t('replyingTo')}<strong
-                  >${this.comment.pseudonym || t('anonymous')}${' #' + this.comment.id}</strong
-                ></span
-              >`
-            : html`<span>${t('editing')}<strong>${this.comment.id}</strong></span>`}
-          <button class="text-btn" @click=${this.handleCancel}>${t('cancel')}</button>
-        </div>
+        ${this.comment
+          ? html`
+              <div class="reference-comment-info">
+                ${this.isReply
+                  ? html`<span
+                      >${t('replyingTo')}<strong
+                        >${this.comment.pseudonym || t('anonymous')}${' #' +
+                        this.comment.id}</strong
+                      ></span
+                    >`
+                  : html`<span>${t('editing')}<strong>${this.comment.id}</strong></span>`}
+                <button class="text-btn" @click=${this.handleCancel}>${t('cancel')}</button>
+              </div>
+            `
+          : html`<div></div>`}
         <div class="actions">
           <button class="text-btn admin-btn" @click=${this.handleAdmin}>Admin</button>
           <button class="text-btn" @click=${this.handleNotify}>${t('notify')}</button>
