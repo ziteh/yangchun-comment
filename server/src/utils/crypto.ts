@@ -129,8 +129,9 @@ export async function genFormalPowChallenge(
   const random = crypto.getRandomValues(new Uint32Array(2)).join('');
   const expiry = Math.floor(Date.now() / 1000) + expirySec;
   const payload = `${random}:${expiry}:${difficulty}`;
-  const signature = await hashSha256(payload + ':' + secret);
-  return `${payload}:${signature}`;
+  const signature = await hmacSha256(payload, secret);
+  const challenge = `${payload}:${signature}`;
+  return challenge;
 }
 
 export async function verifyPrePow(
@@ -156,6 +157,7 @@ export async function verifyFormalPow(
   post: string,
   nonce: number,
   secret: string,
+  kv: KVNamespace,
 ): Promise<boolean> {
   const parts = challenge.split(':');
   if (parts.length !== 4) return false;
@@ -168,15 +170,32 @@ export async function verifyFormalPow(
   const now = Math.floor(Date.now() / 1000);
   if (isNaN(expiry) || now > expiry) return false;
 
-  if (isNaN(difficulty)) return false;
+  if (isNaN(difficulty)) return false; // Check if challenge already used
 
-  const verifySign = await hashSha256(`${random}:${expiry}:${difficulty}:${secret}`);
-  if (signature !== verifySign) return false;
-  // TODO: redis
+  const powKey = `used_pow:${challenge}`;
+  const exists = await kv.get(powKey);
+  if (exists) {
+    return false; // already used
+  }
+
+  // Verify signature
+  const encoder = new TextEncoder();
+  const secretData = encoder.encode(secret);
+  const dataData = encoder.encode(`${random}:${expiry}:${difficulty}`);
+  const key = await crypto.subtle.importKey(
+    'raw',
+    secretData,
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['verify'],
+  );
+  const signatureBuffer = Buffer.from(signature, 'base64');
+  const isValidSignature = await crypto.subtle.verify('HMAC', key, signatureBuffer, dataData);
+  if (!isValidSignature) return false;
 
   const ok = await verifyPow(difficulty, `${challenge}:${post}`, nonce);
   if (ok) {
-    // TODO: redis
+    await kv.put(powKey, 'used', { expiration: expiry });
   }
 
   return ok;

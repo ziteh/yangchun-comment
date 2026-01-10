@@ -64,7 +64,13 @@ app.post(
 
     // Verify Formal-PoW
     const nonceNum = parseInt(nonce, 10);
-    const powPass = await verifyFormalPow(challenge, post, nonceNum, c.env.FORMAL_POW_SECRET_KEY);
+    const powPass = await verifyFormalPow(
+      challenge,
+      post,
+      nonceNum,
+      c.env.FORMAL_POW_SECRET_KEY,
+      c.env.COMMENTS,
+    );
     if (!powPass) {
       console.warn('Formal-PoW verification failed');
       return c.text('Formal-PoW verification failed', 400); // 400 Bad Request
