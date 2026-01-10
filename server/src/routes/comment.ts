@@ -15,6 +15,7 @@ import {
 import { genHmac, verifyAdminToken, verifyFormalPow, verifyHmac } from '../utils/crypto';
 import { validatePostUrl } from '../utils/validators';
 import { sanitize } from '../utils/sanitize';
+import { sendDiscordNotification } from '../utils/notify';
 import {
   getCommentsByPost,
   createComment,
@@ -31,6 +32,7 @@ const app = new Hono<{
     POST_BASE_URL: string;
     SECRET_FORMAL_POW_HMAC_KEY: string;
     SECRET_ADMIN_JWT_KEY: string;
+    SECRET_DISCORD_WEBHOOK_URL?: string;
   };
 }>();
 
@@ -126,6 +128,12 @@ app.post(
 
     const token = await genHmac(c.env.SECRET_COMMENT_HMAC_KEY, id, timestamp);
 
+    await sendDiscordNotification(
+      c.env.SECRET_DISCORD_WEBHOOK_URL,
+      'New Comment Created',
+      `Pseudonym: ${pseudonym || 'Anonymous'}\nPost: ${post}\nMessage: ${msg.substring(0, 200)}${msg.length > 200 ? '...' : ''}`,
+    );
+
     console.log(`Comment created with ID: ${id} for post: ${post}`);
     const res = CreateCommentResponseSchema.parse({ id, timestamp, token });
     return c.json(res, HTTP_STATUS.Created);
@@ -170,6 +178,12 @@ app.put(
       console.warn('Comment not found for update or failed to update:', id);
       return c.text('Comment not found or update failed', 404); // 404 Not Found
     }
+
+    await sendDiscordNotification(
+      c.env.SECRET_DISCORD_WEBHOOK_URL,
+      'Comment Updated',
+      `Pseudonym: ${pseudonym || 'Anonymous'}\nPost: ${post}\nMessage: ${msg.substring(0, 200)}${msg.length > 200 ? '...' : ''}`,
+    );
 
     console.log(`Comment updated: ${id} for post: ${post}`);
     return c.text('Comment updated', HTTP_STATUS.Ok);

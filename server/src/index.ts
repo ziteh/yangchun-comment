@@ -32,6 +32,7 @@ const envSchema = z.object({
   SECRET_COMMENT_HMAC_KEY: z.hex().min(64),
   SECRET_FORMAL_POW_HMAC_KEY: z.hex().min(64),
   SECRET_IP_PEPPER: z.hex().min(64),
+  SECRET_DISCORD_WEBHOOK_URL: z.url().optional(),
 });
 const envResult = envSchema.safeParse(env);
 if (!envResult.success) {

@@ -34,7 +34,6 @@ PRE_POW_TIME_WINDOW = 60      # The time window (in seconds) for the pre-proof-o
 FORMAL_POW_DIFFICULTY = 4 # The difficulty for the formal proof-of-work
 FORMAL_POW_EXPIRATION = 300  # The expiration time (in seconds) for the formal proof-of-work challenges
 
-
 # Secrets
 # SECRET_COMMENT_HMAC_KEY = "${SECRET_COMMENT_HMAC_KEY}"   # HMAC secret key for signing
 # SECRET_ADMIN_JWT_KEY = "${SECRET_ADMIN_JWT_KEY}" # JWT secret key for admin
