@@ -67,7 +67,7 @@ async function solvePow(difficulty: number, challenge: string): Promise<number> 
 
 export async function solvePrePow(
   difficulty: number,
-  payload: string = PRE_POW_PAYLOAD,
+  payload: string,
 ): Promise<{ challenge: string; nonce: number }> {
   const challenge = `${Math.floor(Date.now() / 1000)}:${payload}`;
   const nonce = await solvePow(difficulty, challenge);

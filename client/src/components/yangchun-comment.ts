@@ -72,9 +72,15 @@ export class YangChunComment extends LitElement {
   @property({ type: String }) accessor apiUrl = 'http://localhost:8787';
   @property({ type: String }) accessor authorName = '';
   @property({ type: String }) accessor lang = 'en-US';
+  @property({ type: Number }) accessor prePowDifficulty = 2;
+  @property({ type: String }) accessor prePowMagicWord = 'MAGIC';
   @property({ type: Object, attribute: false }) accessor customMessages: I18nStrings | undefined;
 
-  @state() private accessor apiService: ApiService = createApiService('http://localhost:8787');
+  @state() private accessor apiService: ApiService = createApiService(
+    'http://localhost:8787',
+    2,
+    'MAGIC',
+  );
 
   @state() private accessor draft = '';
   @state() private accessor nickname = '';
@@ -239,9 +245,14 @@ ${t('helpMdCodeBlock')}
     }
 
     // Initialize apiService when apiUrl changes
-    if (changedProperties.has('apiUrl') && this.apiUrl) {
+    if (
+      (changedProperties.has('apiUrl') ||
+        changedProperties.has('prePowDifficulty') ||
+        changedProperties.has('prePowMagicWord')) &&
+      this.apiUrl
+    ) {
       console.debug('Initializing API service with URL:', this.apiUrl);
-      this.apiService = createApiService(this.apiUrl);
+      this.apiService = createApiService(this.apiUrl, this.prePowDifficulty, this.prePowMagicWord);
 
       const rssUrl = new URL('/rss/thread', this.apiUrl);
       rssUrl.searchParams.append('post', this.post);

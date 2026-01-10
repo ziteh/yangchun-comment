@@ -48,8 +48,11 @@ export interface ApiService {
   checkAdminAuth: () => Promise<boolean>;
 }
 
-export const createApiService = (apiUrl: string): ApiService => {
-  const PRE_POW_DIFFICULTY = 2;
+export const createApiService = (
+  apiUrl: string,
+  prePowDifficulty: number,
+  prePowMagicWord: string,
+): ApiService => {
   const LOCAL_STORAGE_MY_COMMENT_IDS_KEY = 'my_comment_ids';
 
   // TODO HttpOnly Cookie?
@@ -98,7 +101,7 @@ export const createApiService = (apiUrl: string): ApiService => {
     replyTo?: string,
   ): Promise<string | null> => {
     try {
-      const prePow = await solvePrePow(PRE_POW_DIFFICULTY);
+      const prePow = await solvePrePow(prePowDifficulty, prePowMagicWord);
       if (prePow.nonce < 0) {
         console.error('Failed to solve pre-PoW');
         return null;
