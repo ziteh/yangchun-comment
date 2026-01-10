@@ -149,24 +149,26 @@ export async function incrementLoginFailCount(
   const now = Date.now();
   const expiresAt = now + expirationSec * 1000;
 
-  // Clean up expired records first
-  await db.prepare('DELETE FROM login_fail_count WHERE expires_at <= ?').bind(now).run();
+  // Cleanup + upsert + fetch (Atomic batch)
+  const res = await db.batch([
+    db.prepare('DELETE FROM login_fail_count WHERE expires_at <= ?').bind(now),
+    db
+      .prepare(
+        `
+      INSERT INTO login_fail_count (ip_hash, fail_count, created_at, expires_at)
+      VALUES (?, 1, ?, ?)
+      ON CONFLICT(ip_hash) DO UPDATE SET
+      fail_count = fail_count + 1,
+      expires_at = excluded.expires_at
+    `,
+      )
+      .bind(ipHash, now, expiresAt),
+    db.prepare('SELECT fail_count FROM login_fail_count WHERE ip_hash = ?').bind(ipHash),
+  ]);
 
-  const newCount = (await getLoginFailCount(db, ipHash)) + 1;
-
-  // Upsert the fail count
-  const stmt = db
-    .prepare(
-      `INSERT INTO login_fail_count (ip_hash, fail_count, created_at, expires_at)
-       VALUES (?, ?, ?, ?)
-       ON CONFLICT(ip_hash) DO UPDATE SET
-       fail_count = excluded.fail_count,
-       expires_at = excluded.expires_at`,
-    )
-    .bind(ipHash, newCount, now, expiresAt);
-
-  const res = await stmt.run();
-  return res.success ? newCount : 0;
+  // The last result in the batch is our SELECT query
+  const selectResult = res[2].results?.[0] as { fail_count: number } | undefined;
+  return selectResult?.fail_count ?? 1;
 }
 
 export async function clearLoginFailCount(db: D1Database, ipHash: string): Promise<void> {
