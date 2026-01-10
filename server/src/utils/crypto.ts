@@ -222,3 +222,44 @@ export async function constantTimeCompare(a: string, b: string): Promise<boolean
     return false;
   }
 }
+
+export async function hashPassword(
+  password: string,
+  salt: string,
+  iterations = 600000,
+): Promise<string> {
+  const encoder = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(password),
+    { name: 'PBKDF2' },
+    false,
+    ['deriveBits'],
+  );
+
+  const hashBuffer = await crypto.subtle.deriveBits(
+    {
+      name: 'PBKDF2',
+      salt: Buffer.from(salt, 'hex'),
+      iterations: iterations,
+      hash: 'SHA-256',
+    },
+    keyMaterial,
+    256, // 256 bits = 32 bytes
+  );
+
+  // Convert to hex
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+  return hashHex;
+}
+
+export async function verifyPassword(
+  password: string,
+  salt: string,
+  expectedHash: string,
+  iterations = 600000,
+): Promise<boolean> {
+  const computedHash = await hashPassword(password, salt, iterations);
+  return await constantTimeCompare(computedHash, expectedHash);
+}

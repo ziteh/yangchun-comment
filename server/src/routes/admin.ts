@@ -8,7 +8,7 @@ import {
   AdminLogoutResponseSchema,
   AdminCheckResponseSchema,
 } from '@ziteh/yangchun-comment-shared';
-import { verifyAdminToken, constantTimeCompare, hmacSha256 } from '../utils/crypto';
+import { verifyAdminToken, constantTimeCompare, hmacSha256, verifyPassword } from '../utils/crypto';
 import { incrementLoginFailCount, clearLoginFailCount } from '../utils/db';
 import { HTTP_STATUS } from '../const';
 
@@ -16,9 +16,10 @@ const app = new Hono<{
   Bindings: {
     DB: D1Database;
     KV: KVNamespace;
-    SECRET_ADMIN_JWT_KEY: string;
     ADMIN_USERNAME: string;
-    ADMIN_PASSWORD: string;
+    SECRET_ADMIN_PASSWORD_HASH: string;
+    SECRET_ADMIN_PASSWORD_SALT: string;
+    SECRET_ADMIN_JWT_KEY: string;
     SECRET_IP_PEPPER: string;
   };
 }>();
@@ -34,16 +35,13 @@ app.post('/login', sValidator('json', AdminLoginRequestSchema), async (c) => {
     return c.text('Too many attempts', HTTP_STATUS.TooManyRequests);
   }
 
-  // HACK: Normally, stored passwords should be processed using hash+salt (e.g. Argon2 or bcrypt).
-  // Currently, the admin password is stored using CF Secrets,
-  // which is designed for storing sensitive data.
-  // Values are not visible within Wrangler or CF dashboard after you define them.
-  // https://developers.cloudflare.com/workers/configuration/secrets/
   const adminUsername = c.env.ADMIN_USERNAME;
-  const adminPassword = c.env.ADMIN_PASSWORD;
+  const adminPasswordHash = c.env.SECRET_ADMIN_PASSWORD_HASH;
+  const adminPasswordSalt = c.env.SECRET_ADMIN_PASSWORD_SALT;
   const { username, password } = c.req.valid('json');
+
   const usernameMatch = await constantTimeCompare(username, adminUsername);
-  const passwordMatch = await constantTimeCompare(password, adminPassword);
+  const passwordMatch = await verifyPassword(password, adminPasswordSalt, adminPasswordHash);
   if (!usernameMatch || !passwordMatch) {
     const failCount = await incrementLoginFailCount(c.env.DB, ipHash, 3600); // TODO: magic number
     if (failCount > 5) {
