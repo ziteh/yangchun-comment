@@ -64,6 +64,22 @@ export class CommentDialog extends LitElement {
 
   private previousFocus: HTMLElement | null = null;
 
+  render() {
+    if (!this.open) return null;
+
+    return html`
+      <div class="overlay" @click=${this.handleOverlayClick}>
+        <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title">
+          <button class="close-btn" @click=${this.handleClose} aria-label=${t('close')}>
+            &times;
+          </button>
+          <h2 id="dialog-title">${this.header}</h2>
+          <slot></slot>
+        </div>
+      </div>
+    `;
+  }
+
   protected updated(changedProperties: PropertyValues) {
     if (changedProperties.has('open')) {
       if (this.open) {
@@ -99,7 +115,7 @@ export class CommentDialog extends LitElement {
     if (!this.open) return;
 
     if (e.key === 'Escape') {
-      this.onClose();
+      this.handleClose();
       return;
     }
 
@@ -130,27 +146,13 @@ export class CommentDialog extends LitElement {
     }
   }
 
-  render() {
-    if (!this.open) return null;
-
-    return html`
-      <div class="overlay" @click=${this.onOverlayClick}>
-        <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title">
-          <button class="close-btn" @click=${this.onClose} aria-label=${t('close')}>&times;</button>
-          <h2 id="dialog-title">${this.header}</h2>
-          <slot></slot>
-        </div>
-      </div>
-    `;
-  }
-
-  private onClose() {
+  private handleClose() {
     this.dispatchEvent(new CustomEvent('close'));
   }
 
-  private onOverlayClick(e: MouseEvent) {
+  private handleOverlayClick(e: MouseEvent) {
     if (e.target === e.currentTarget) {
-      this.onClose();
+      this.handleClose();
     }
   }
 }

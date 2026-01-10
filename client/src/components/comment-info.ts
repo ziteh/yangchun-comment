@@ -57,7 +57,7 @@ export class CommentInfo extends LitElement {
       return html`
         <div class="info-bar error">
           <span class="error-msg">${this.errorMessage}</span>
-          <button class="text-btn" @click=${this.onClearError}>${t('close')}</button>
+          <button class="text-btn" @click=${this.handleErrorClear}>${t('close')}</button>
         </div>
       `;
     }
@@ -68,9 +68,9 @@ export class CommentInfo extends LitElement {
           <!-- TODO: refactor this -->
           <div></div>
           <div class="actions">
-            <button class="text-btn admin-btn" @click=${this.onAdmin}>Admin</button>
-            <button class="text-btn" @click=${this.onNotify}>${t('notify')}</button>
-            <button class="text-btn" @click=${this.onHelp}>${t('help')}</button>
+            <button class="text-btn admin-btn" @click=${this.handleAdmin}>Admin</button>
+            <button class="text-btn" @click=${this.handleNotify}>${t('notify')}</button>
+            <button class="text-btn" @click=${this.handleHelp}>${t('help')}</button>
           </div>
         </div>
       `;
@@ -86,45 +86,45 @@ export class CommentInfo extends LitElement {
                 ></span
               >`
             : html`<span>${t('editing')}<strong>${this.comment.id}</strong></span>`}
-          <button class="text-btn" @click=${this.onCancel}>${t('cancel')}</button>
+          <button class="text-btn" @click=${this.handleCancel}>${t('cancel')}</button>
         </div>
         <div class="actions">
-          <button class="text-btn admin-btn" @click=${this.onAdmin}>Admin</button>
-          <button class="text-btn" @click=${this.onNotify}>${t('notify')}</button>
-          <button class="text-btn" @click=${this.onHelp}>${t('help')}</button>
+          <button class="text-btn admin-btn" @click=${this.handleAdmin}>Admin</button>
+          <button class="text-btn" @click=${this.handleNotify}>${t('notify')}</button>
+          <button class="text-btn" @click=${this.handleHelp}>${t('help')}</button>
         </div>
       </div>
     `;
   }
 
-  private onAdmin() {
+  private handleAdmin() {
     this.dispatchEvent(
-      new CustomEvent('admin-request', {
+      new CustomEvent('admin-open', {
         bubbles: true,
         composed: true,
       }),
     );
   }
 
-  private onHelp() {
+  private handleHelp() {
     this.dispatchEvent(
-      new CustomEvent('help-request', {
+      new CustomEvent('help-open', {
         bubbles: true,
         composed: true,
       }),
     );
   }
 
-  private onNotify() {
+  private handleNotify() {
     this.dispatchEvent(
-      new CustomEvent('notify-request', {
+      new CustomEvent('notify-open', {
         bubbles: true,
         composed: true,
       }),
     );
   }
 
-  private onClearError() {
+  private handleErrorClear() {
     this.dispatchEvent(
       new CustomEvent('error-clear', {
         bubbles: true,
@@ -133,7 +133,7 @@ export class CommentInfo extends LitElement {
     );
   }
 
-  private onCancel() {
+  private handleCancel() {
     if (!this.comment?.id) return;
 
     this.dispatchEvent(

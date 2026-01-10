@@ -113,10 +113,10 @@ export class CommentInput extends LitElement {
 
   static readonly MAX_NICKNAME_LENGTH: number = 25;
   static readonly MAX_MESSAGE_LENGTH: number = 1000;
-  @property({ type: String }) accessor message = '';
+  @property({ type: String }) accessor draft = '';
   @property({ type: String }) accessor nickname = '';
   @property({ type: String }) accessor editPseudonym = '';
-  @property({ type: String }) accessor authorName = '';
+  @property({ type: String }) accessor adminName = '';
   @property({ type: Boolean }) accessor isAdmin = false;
 
   @state() private accessor isPreview = false;
@@ -131,27 +131,27 @@ export class CommentInput extends LitElement {
             ? html`<div class="preview-container">
                 <comment-list-item
                   .comment=${this.previewComment}
-                  .author=${this.authorName}
+                  .author=${this.adminName}
                 ></comment-list-item>
               </div>`
             : html`<div class="draft-container">
                 <textarea
-                  .value=${this.message}
-                  @input=${this.onInputMessage}
+                  .value=${this.draft}
+                  @input=${this.handleDraftInput}
                   placeholder=${t('messagePlaceholder')}
                   aria-label=${t('messagePlaceholder')}
                   aria-describedby="message-counter"
                   maxlength=${CommentInput.MAX_MESSAGE_LENGTH}
                 ></textarea>
                 <div class="char-counter message-counter" id="message-counter" aria-live="polite">
-                  ${this.message.length}/${CommentInput.MAX_MESSAGE_LENGTH}
+                  ${this.draft.length}/${CommentInput.MAX_MESSAGE_LENGTH}
                 </div>
                 <input
                   type="email"
                   name="email"
                   class="input-email"
                   .value=${this.honeypot}
-                  @input=${this.onHoneypotInput}
+                  @input=${this.handleHoneypotInput}
                   tabindex="-1"
                   aria-hidden="true"
                   autocomplete="off"
@@ -164,7 +164,7 @@ export class CommentInput extends LitElement {
             <input
               class="nickname-input"
               .value=${this.isAdmin ? 'Admin' : this.nickname}
-              @input=${this.onInputNickname}
+              @input=${this.handleNicknameInput}
               type="text"
               placeholder=${t('nicknamePlaceholder')}
               aria-label=${t('nicknamePlaceholder')}
@@ -179,12 +179,12 @@ export class CommentInput extends LitElement {
           <div class="actions">
             <button
               class="secondary"
-              @click=${this.togglePreview}
+              @click=${this.handleTogglePreview}
               ?disabled=${!this.isValidComment()}
             >
               ${this.isPreview ? t('edit') : t('preview')}
             </button>
-            <button @click=${this.onSubmit} ?disabled=${!this.isValidComment()}>
+            <button @click=${this.handleSubmit} ?disabled=${!this.isValidComment()}>
               ${t('submit')}
             </button>
           </div>
@@ -207,7 +207,7 @@ export class CommentInput extends LitElement {
     }
 
     return {
-      msg: this.message,
+      msg: this.draft,
       pseudonym,
       pubDate: Date.now(),
       id: magicString,
@@ -216,7 +216,7 @@ export class CommentInput extends LitElement {
   }
 
   private isValidComment(): boolean {
-    const msgLength = this.message.trim().length;
+    const msgLength = this.draft.trim().length;
     const nicknameLength = this.nickname.trim().length;
 
     const isValidMessage = msgLength > 0 && msgLength <= CommentInput.MAX_MESSAGE_LENGTH;
@@ -224,26 +224,26 @@ export class CommentInput extends LitElement {
     return isValidMessage && isValidNickname;
   }
 
-  private async togglePreview() {
+  private async handleTogglePreview() {
     this.isPreview = !this.isPreview;
     if (this.isPreview) {
       this.previewComment = await this.createPreviewComment();
     }
   }
 
-  private onInputMessage(e: Event) {
+  private handleDraftInput(e: Event) {
     const target = e.target as HTMLTextAreaElement;
-    this.message = target.value.slice(0, CommentInput.MAX_MESSAGE_LENGTH);
+    this.draft = target.value.slice(0, CommentInput.MAX_MESSAGE_LENGTH);
     this.dispatchEvent(
-      new CustomEvent('comment-change', {
-        detail: this.message,
+      new CustomEvent('draft-change', {
+        detail: this.draft,
         bubbles: true,
         composed: true,
       }),
     );
   }
 
-  private onInputNickname(e: Event) {
+  private handleNicknameInput(e: Event) {
     const target = e.target as HTMLInputElement;
     this.nickname = target.value.slice(0, CommentInput.MAX_NICKNAME_LENGTH);
     this.dispatchEvent(
@@ -255,15 +255,13 @@ export class CommentInput extends LitElement {
     );
   }
 
-  private onHoneypotInput(e: Event) {
+  private handleHoneypotInput(e: Event) {
     const target = e.target as HTMLInputElement;
     this.honeypot = target.value;
   }
 
-  private onSubmit() {
-    if (this.honeypot !== '') {
-      return;
-    }
+  private handleSubmit() {
+    if (this.honeypot !== '') return;
 
     // back to edit mode
     this.isPreview = false;

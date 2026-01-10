@@ -29,10 +29,9 @@ const DOMPURIFY_CONFIG: DomPurifyConfig = {
   // FORBID_ATTR: ['style', 'onclick', 'onmouseover', 'onload', 'onunload', 'onerror'],
 };
 
-let isHookSetup = false; // TODO: is this necessary?
-
+let isHookInitialized = false;
 function initializeHooks() {
-  if (isHookSetup) return;
+  if (isHookInitialized) return;
 
   DOMPurify.addHook('afterSanitizeAttributes', (node) => {
     // <a> Make all links open in a new tab, and prevent window.opener vulnerability
@@ -62,7 +61,7 @@ function initializeHooks() {
     }
   });
 
-  isHookSetup = true;
+  isHookInitialized = true;
 }
 
 // Initialize immediately when module is loaded

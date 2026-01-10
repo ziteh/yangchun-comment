@@ -281,7 +281,7 @@ export class CommentListItem extends LitElement {
           </div>
           ${commentContent}
           ${this.shouldShowExpandBtn()
-            ? html`<button class="show-more-btn" @click=${this.toggleExpand}>
+            ? html`<button class="show-more-btn" @click=${this.handleToggleExpand}>
                 ${this.isContentExpanded ? t('showLess') : t('showMore')}
               </button>`
             : null}
@@ -292,7 +292,7 @@ export class CommentListItem extends LitElement {
                 <div class="actions">
                   <button
                     class="text-btn"
-                    @click=${this.onReply}
+                    @click=${this.handleReply}
                     title=${t('replyTo') + ' #' + this.comment.id}
                     aria-label=${t('replyTo') + ' ' + (this.comment.pseudonym || t('anonymous'))}
                   >
@@ -300,8 +300,8 @@ export class CommentListItem extends LitElement {
                   </button>
                   ${this.canEditCallback(this.comment.id) // TODO: to @state ?
                     ? html`
-                        <button class="text-btn" @click=${this.onEdit}>${t('edit')}</button>
-                        <button class="text-btn" @click=${this.onDelete}>${t('delete')}</button>
+                        <button class="text-btn" @click=${this.handleEdit}>${t('edit')}</button>
+                        <button class="text-btn" @click=${this.handleDelete}>${t('delete')}</button>
                       `
                     : null}
                 </div>
@@ -330,7 +330,7 @@ export class CommentListItem extends LitElement {
     return this.comment.id === magicString;
   }
 
-  private onDelete() {
+  private handleDelete() {
     if (!this.comment.id) return;
     this.dispatchEvent(
       new CustomEvent('comment-delete', {
@@ -341,7 +341,7 @@ export class CommentListItem extends LitElement {
     );
   }
 
-  private onEdit() {
+  private handleEdit() {
     if (!this.comment.id) return;
     this.dispatchEvent(
       new CustomEvent('comment-edit', {
@@ -352,7 +352,7 @@ export class CommentListItem extends LitElement {
     );
   }
 
-  private onReply() {
+  private handleReply() {
     if (!this.comment.id) return;
     this.dispatchEvent(
       new CustomEvent('comment-reply', {
@@ -372,7 +372,7 @@ export class CommentListItem extends LitElement {
     return lines.length > this.MAX_LINES;
   }
 
-  private toggleExpand(): void {
+  private handleToggleExpand(): void {
     this.isContentExpanded = !this.isContentExpanded;
     this.requestUpdate();
   }

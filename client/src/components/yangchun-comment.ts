@@ -67,12 +67,12 @@ export class YangChunComment extends LitElement {
     `,
   ];
 
-  @property({ type: String }) accessor post = '';
+  @property({ type: String }) accessor post = 'my-post';
   @property({ type: String }) accessor apiUrl = 'http://localhost:8787';
-  @property({ type: String }) accessor authorName = '';
+  @property({ type: String }) accessor adminName = 'Admin';
   @property({ type: String }) accessor lang = 'en-US';
-  @property({ type: Number }) accessor prePowDifficulty = 2;
   @property({ type: String }) accessor prePowMagicWord = 'MAGIC';
+  @property({ type: Number }) accessor prePowDifficulty = 2;
   @property({ type: Object, attribute: false }) accessor customMessages: I18nStrings | undefined;
 
   @state() private accessor apiService!: ApiService;
@@ -143,35 +143,33 @@ ${t('helpMdCodeBlock')}
       <div class="root" part="root">
         <!-- <slot></slot> -->
         <comment-input
-          .message=${this.draft}
+          .draft=${this.draft}
           .nickname=${this.nickname}
           .editPseudonym=${this.editPseudonym}
-          .authorName=${this.authorName}
+          .adminName=${this.adminName}
           .isAdmin=${this.isAdmin}
-          @comment-change=${this.onDraftChange}
-          @nickname-change=${this.onNicknameChange}
-          @comment-submit=${this.onDraftSubmit}
+          @draft-change=${this.handleDraftChange}
+          @nickname-change=${this.handleNicknameChange}
+          @comment-submit=${this.handleCommentSubmit}
         ></comment-input>
         <comment-info
           .comment=${this.referenceComment}
           .isReply=${this.isReply}
           .errorMessage=${this.errorMessage}
           @error-clear=${() => (this.errorMessage = '')}
-          @reference-comment-cancel=${this.onCommentInfoCancel}
-          @notify-request=${() => (this.showNotify = true)}
-          @help-request=${() => (this.showHelp = true)}
-          @admin-request=${() => (this.showAdmin = true)}
+          @reference-comment-cancel=${this.handleRefCommentCancel}
+          @notify-open=${() => (this.showNotify = true)}
+          @help-open=${() => (this.showHelp = true)}
+          @admin-open=${() => (this.showAdmin = true)}
         ></comment-info>
         <comment-list
           .comments=${this.comments}
-          .author=${this.authorName}
+          .author=${this.adminName}
           .canEditCallback=${this.apiService.canEditComment}
           .isMyCommentCallback=${this.apiService.isMyComment}
-          @comment-reply=${this.onReplyToComment}
-          @comment-edit=${this.onEditComment}
-          @comment-delete=${(e: CustomEvent<string>) => {
-            this.deleteCommentId = e.detail;
-          }}
+          @comment-reply=${this.handleCommentReply}
+          @comment-edit=${this.handleCommentEdit}
+          @comment-delete=${this.handleCommentDelete}
         ></comment-list>
 
         <comment-dialog
@@ -182,7 +180,7 @@ ${t('helpMdCodeBlock')}
           <p>${t('confirmDeleteDesc1') + this.deleteCommentId}</p>
           <strong>${t('confirmDeleteDesc2')}</strong>
           <div class="dialog-actions">
-            <button class="secondary" @click=${this.deleteComment}>${t('delete')}</button>
+            <button class="secondary" @click=${this.handleDeleteComment}>${t('delete')}</button>
             <button @click=${() => (this.deleteCommentId = '')}>${t('cancel')}</button>
           </div>
         </comment-dialog>
@@ -193,7 +191,7 @@ ${t('helpMdCodeBlock')}
         >
           <comment-admin
             .apiService=${this.apiService}
-            @auth-status-change=${this.onAuthStatusChange}
+            @auth-status-change=${this.handleAuthStatusChange}
           ></comment-admin>
         </comment-dialog>
         <comment-dialog
@@ -274,7 +272,7 @@ ${t('helpMdCodeBlock')}
     }
   }
 
-  private async onCommentInfoCancel(e: CustomEvent<string>) {
+  private async handleRefCommentCancel(e: CustomEvent<string>) {
     const commentId = e.detail;
     console.debug('Cancel reply to comment ID:', commentId);
     if (this.referenceComment?.id === commentId) {
@@ -285,11 +283,11 @@ ${t('helpMdCodeBlock')}
     }
   }
 
-  private onDraftChange(e: CustomEvent<string>) {
+  private handleDraftChange(e: CustomEvent<string>) {
     this.draft = e.detail;
   }
 
-  private onNicknameChange(e: CustomEvent<string>) {
+  private handleNicknameChange(e: CustomEvent<string>) {
     this.nickname = e.detail;
   }
 
@@ -320,7 +318,7 @@ ${t('helpMdCodeBlock')}
     }
   }
 
-  private async onDraftSubmit() {
+  private async handleCommentSubmit() {
     if (this.referenceComment && !this.isReply) {
       await this.editedSubmit();
       await this.updatedComments();
@@ -351,7 +349,7 @@ ${t('helpMdCodeBlock')}
     }
   }
 
-  private async onReplyToComment(e: CustomEvent<string>) {
+  private async handleCommentReply(e: CustomEvent<string>) {
     const commentId = e.detail;
     console.debug('Reply to comment ID:', commentId);
 
@@ -369,7 +367,13 @@ ${t('helpMdCodeBlock')}
     this.commentInput?.focus();
   }
 
-  private async onEditComment(e: CustomEvent<string>) {
+  private async handleCommentDelete(e: CustomEvent<string>) {
+    const commentId = e.detail;
+    console.debug('Delete comment ID:', commentId);
+    this.deleteCommentId = commentId;
+  }
+
+  private async handleCommentEdit(e: CustomEvent<string>) {
     const commentId = e.detail;
     console.debug('Edit comment ID:', commentId);
 
@@ -386,11 +390,11 @@ ${t('helpMdCodeBlock')}
     this.commentInput?.focus();
   }
 
-  private onAuthStatusChange = (e: CustomEvent<boolean>) => {
+  private handleAuthStatusChange = (e: CustomEvent<boolean>) => {
     this.isAdmin = e.detail;
   };
 
-  private async deleteComment() {
+  private async handleDeleteComment() {
     if (!this.deleteCommentId) return;
     const commentId = this.deleteCommentId;
     console.debug('Delete comment ID:', commentId);

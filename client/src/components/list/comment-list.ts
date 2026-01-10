@@ -29,9 +29,9 @@ export class CommentList extends LitElement {
   @property({ type: Array }) accessor comments: Comment[] = [];
   @property({ type: String }) accessor author = '';
   @property({ type: Function }) accessor canEditCallback: (commentId: string) => boolean = () =>
-    false;
+    false; // TODO: to global
   @property({ type: Function }) accessor isMyCommentCallback: (commentId: string) => boolean = () =>
-    false;
+    false; // TODO: to global
 
   render() {
     if (this.comments.length === 0) {
