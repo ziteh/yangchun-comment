@@ -268,8 +268,12 @@ ${t('helpMdCodeBlock')}
 
   async firstUpdated() {
     console.debug('firstUpdated', 'apiUrl:', this.apiUrl);
-    setupDOMPurifyHooks(); // TODO: notice the order of initialization, connectedCallback?
     await this.updatedComments();
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    setupDOMPurifyHooks();
   }
 
   disconnectedCallback() {
