@@ -27,15 +27,15 @@ const app = new Hono<{
   Bindings: {
     DB: D1Database;
     KV: KVNamespace;
-    HMAC_SECRET_KEY: string;
+    SECRET_COMMENT_HMAC_KEY: string;
     POST_BASE_URL: string;
-    FORMAL_POW_SECRET_KEY: string;
+    SECRET_FORMAL_POW_HMAC_KEY: string;
     PRE_POW_DIFFICULTY: number;
     PRE_POW_MAGIC_WORD: string;
     RE_POW_TIME_WINDOW: number;
     FORMAL_POW_DIFFICULTY: number;
     FORMAL_POW_EXPIRATION: number;
-    ADMIN_SECRET_KEY: string;
+    SECRET_ADMIN_JWT_KEY: string;
   };
 }>();
 
@@ -46,7 +46,7 @@ app.get('/', sValidator('query', CommentQuerySchema), async (c) => {
 
   // Check admin auth status
   const cookie = c.req.header('Cookie');
-  const isAdmin = await verifyAdminToken(cookie, c.env.ADMIN_SECRET_KEY, c.env.KV);
+  const isAdmin = await verifyAdminToken(cookie, c.env.SECRET_ADMIN_JWT_KEY, c.env.KV);
 
   console.debug(`Fetched ${comments.length} comments for post: ${post}, admin: ${isAdmin}`);
   const res = GetCommentsResponseSchema.parse({ comments, isAdmin });
@@ -73,7 +73,7 @@ app.post(
       challenge,
       post,
       nonceNum,
-      c.env.FORMAL_POW_SECRET_KEY,
+      c.env.SECRET_FORMAL_POW_HMAC_KEY,
       c.env.KV,
     );
     if (!powPass) {
@@ -112,7 +112,7 @@ app.post(
 
     // Check if the request is from an admin
     const cookieHeader = c.req.header('Cookie');
-    const isAdmin = await verifyAdminToken(cookieHeader, c.env.ADMIN_SECRET_KEY, c.env.KV);
+    const isAdmin = await verifyAdminToken(cookieHeader, c.env.SECRET_ADMIN_JWT_KEY, c.env.KV);
 
     const comment: Comment = {
       id,
@@ -129,7 +129,7 @@ app.post(
       return c.text('Failed to create comment', HTTP_STATUS.InternalServerError);
     }
 
-    const token = await genHmac(c.env.HMAC_SECRET_KEY, id, timestamp);
+    const token = await genHmac(c.env.SECRET_COMMENT_HMAC_KEY, id, timestamp);
 
     console.log(`Comment created with ID: ${id} for post: ${post}`);
     const res = CreateCommentResponseSchema.parse({ id, timestamp, token });
@@ -164,7 +164,7 @@ app.put(
     }
 
     // Verify token
-    const hmacOk = await verifyHmac(c.env.HMAC_SECRET_KEY, id, timestamp, token);
+    const hmacOk = await verifyHmac(c.env.SECRET_COMMENT_HMAC_KEY, id, timestamp, token);
     if (!hmacOk) {
       console.warn('Invalid HMAC for update request:', id);
       return c.text('Invalid HMAC', HTTP_STATUS.Forbidden);
@@ -194,7 +194,7 @@ app.delete(
     const timestamp = parseInt(headers['x-comment-timestamp'], 10);
 
     // Verify token
-    const hmacOk = await verifyHmac(c.env.HMAC_SECRET_KEY, id, timestamp, token);
+    const hmacOk = await verifyHmac(c.env.SECRET_COMMENT_HMAC_KEY, id, timestamp, token);
     if (!hmacOk) {
       console.warn('Invalid HMAC for delete request:', id);
       return c.text('Invalid HMAC', HTTP_STATUS.Forbidden);

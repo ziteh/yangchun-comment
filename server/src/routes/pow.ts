@@ -14,7 +14,7 @@ const app = new Hono<{
     PRE_POW_MAGIC_WORD: string;
     FORMAL_POW_DIFFICULTY: number;
     FORMAL_POW_EXPIRATION: number;
-    FORMAL_POW_SECRET_KEY: string;
+    SECRET_FORMAL_POW_HMAC_KEY: string;
   };
 }>();
 
@@ -35,7 +35,7 @@ app.get('/formal-challenge', sValidator('query', FormalChallengeQuerySchema), as
   console.debug('Pre-pow verify OK');
 
   const difficulty = c.env.FORMAL_POW_DIFFICULTY;
-  const secret = c.env.FORMAL_POW_SECRET_KEY;
+  const secret = c.env.SECRET_FORMAL_POW_HMAC_KEY;
   const expirySec = c.env.FORMAL_POW_EXPIRATION;
 
   try {

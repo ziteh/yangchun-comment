@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 env:
-  HMAC_SECRET_KEY: test_secret_key
+  SECRET_COMMENT_HMAC_KEY: test_secret_key
 
 jobs:
   build:

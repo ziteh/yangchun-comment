@@ -16,19 +16,19 @@ const app = new Hono<{
   Bindings: {
     DB: D1Database;
     KV: KVNamespace;
-    ADMIN_SECRET_KEY: string;
+    SECRET_ADMIN_JWT_KEY: string;
     ADMIN_USERNAME: string;
     ADMIN_PASSWORD: string;
-    IP_PEPPER: string;
+    SECRET_IP_PEPPER: string;
   };
 }>();
 
 // Login endpoint
 app.post('/login', sValidator('json', AdminLoginRequestSchema), async (c) => {
   const ip = c.req.header('CF-Connecting-IP') || '0.0.0.0';
-  const ipMac = await hmacSha256(ip, c.env.IP_PEPPER);
+  const ipHash = await hmacSha256(ip, c.env.SECRET_IP_PEPPER);
 
-  const blockedKey = `blocked_ip:${ipMac}`;
+  const blockedKey = `blocked_ip:${ipHash}`;
   const isBlocked = await c.env.KV.get(blockedKey);
   if (isBlocked) {
     return c.text('Too many attempts', HTTP_STATUS.TooManyRequests);
@@ -45,14 +45,14 @@ app.post('/login', sValidator('json', AdminLoginRequestSchema), async (c) => {
   const usernameMatch = await constantTimeCompare(username, adminUsername);
   const passwordMatch = await constantTimeCompare(password, adminPassword);
   if (!usernameMatch || !passwordMatch) {
-    const failCount = await incrementLoginFailCount(c.env.DB, ipMac, 3600); // TODO: magic number
+    const failCount = await incrementLoginFailCount(c.env.DB, ipHash, 3600); // TODO: magic number
     if (failCount > 5) {
       // TODO: magic number
       // Block IP
       await c.env.KV.put(blockedKey, '1', { expirationTtl: 3600 }); // TODO: magic number
-      console.error('IP blocked due to repeated failed login attempts:', ipMac);
+      console.error('IP blocked due to repeated failed login attempts:', ipHash);
     } else {
-      console.warn('Failed login attempt:', ipMac, `(${failCount}/5)`);
+      console.warn('Failed login attempt:', ipHash, `(${failCount}/5)`);
     }
 
     // Random delay to mitigate timing attacks
@@ -61,7 +61,7 @@ app.post('/login', sValidator('json', AdminLoginRequestSchema), async (c) => {
   }
 
   // Clear fail count on successful login
-  await clearLoginFailCount(c.env.DB, ipMac);
+  await clearLoginFailCount(c.env.DB, ipHash);
 
   // JWT token
   const now = Math.floor(Date.now() / 1000);
@@ -72,7 +72,7 @@ app.post('/login', sValidator('json', AdminLoginRequestSchema), async (c) => {
     exp: now + 3600, // TODO: magic number
     jti: crypto.randomUUID(),
   };
-  const token = await sign(payload, c.env.ADMIN_SECRET_KEY);
+  const token = await sign(payload, c.env.SECRET_ADMIN_JWT_KEY);
 
   // Set HttpOnly cookie
   setCookie(c, 'admin_token', token, {
@@ -100,7 +100,7 @@ app.post('/logout', async (c) => {
     if (match) {
       const token = match[1];
       try {
-        const payload = await verify(token, c.env.ADMIN_SECRET_KEY);
+        const payload = await verify(token, c.env.SECRET_ADMIN_JWT_KEY);
         if (payload.jti && payload.exp) {
           const jtiKey = `jti_blacklist:${payload.jti}`;
           const ttl = payload.exp - Math.floor(Date.now() / 1000);
@@ -132,7 +132,7 @@ app.post('/logout', async (c) => {
 // Check authentication status
 app.get('/check', async (c) => {
   const cookie = c.req.header('Cookie');
-  const isValid = await verifyAdminToken(cookie, c.env.ADMIN_SECRET_KEY, c.env.KV);
+  const isValid = await verifyAdminToken(cookie, c.env.SECRET_ADMIN_JWT_KEY, c.env.KV);
 
   const response = AdminCheckResponseSchema.parse({ authenticated: isValid });
   const status = isValid ? HTTP_STATUS.Ok : HTTP_STATUS.Unauthorized;

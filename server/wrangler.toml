@@ -36,7 +36,7 @@ FORMAL_POW_EXPIRATION = 300  # The expiration time (in seconds) for the formal p
 
 
 # Secrets
-# HMAC_SECRET_KEY = "${HMAC_SECRET_KEY}"   # HMAC secret key for signing
-# ADMIN_SECRET_KEY = "${ADMIN_SECRET_KEY}" # JWT secret key for admin
+# SECRET_COMMENT_HMAC_KEY = "${SECRET_COMMENT_HMAC_KEY}"   # HMAC secret key for signing
+# SECRET_ADMIN_JWT_KEY = "${SECRET_ADMIN_JWT_KEY}" # JWT secret key for admin
 # ADMIN_PASSWORD = "${ADMIN_PASSWORD}"     # Admin password
-# FORMAL_POW_SECRET_KEY= "${FORMAL_POW_SECRET_KEY}" # Secret key for formal PoW
+# SECRET_FORMAL_POW_HMAC_KEY= "${SECRET_FORMAL_POW_HMAC_KEY}" # Secret key for formal PoW

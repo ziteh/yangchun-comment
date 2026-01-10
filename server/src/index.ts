@@ -25,11 +25,11 @@ const envSchema = z.object({
 
   // Secrets
   // 64 hex characters = 256 bits
-  HMAC_SECRET_KEY: z.string().min(64),
-  ADMIN_SECRET_KEY: z.string().min(64),
+  SECRET_COMMENT_HMAC_KEY: z.string().min(64),
+  SECRET_ADMIN_JWT_KEY: z.string().min(64),
   ADMIN_PASSWORD: z.string().min(1),
-  FORMAL_POW_SECRET_KEY: z.string().min(64),
-  IP_PEPPER: z.string().min(64),
+  SECRET_FORMAL_POW_HMAC_KEY: z.string().min(64),
+  SECRET_IP_PEPPER: z.string().min(64),
 });
 const envResult = envSchema.safeParse(env);
 if (!envResult.success) {

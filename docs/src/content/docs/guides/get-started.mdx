@@ -98,16 +98,16 @@ Deployed yangchun-comment-be triggers (0.94 sec)
 Current Version ID: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 ```
 
-Update [Secrets][cf-secret]. You need to set a security key for `HMAC_SECRET_KEY` and `ADMIN_SECRET_KEY`. The value should be a **strong random** string that is **long enough** (at least 32 char is recommended). You can use a tool like [this](https://jwtsecrets.com/), [this](https://djecrety.ir/) or [this](https://randomkeygen.com/) to generate a random key. Also set the admin password `ADMIN_PASSWORD`.
+Update [Secrets][cf-secret]. You need to set a security key for `SECRET_COMMENT_HMAC_KEY` and `SECRET_ADMIN_JWT_KEY`. The value should be a **strong random** string that is **long enough** (at least 32 char is recommended). You can use a tool like [this](https://jwtsecrets.com/), [this](https://djecrety.ir/) or [this](https://randomkeygen.com/) to generate a random key. Also set the admin password `ADMIN_PASSWORD`.
 
 Use the `wrangler secret put` to set the secret, which will start the interactive operation and prompt you to enter the value.
 
 ```bash
 # HMAC secret key
-pnpm exec wrangler secret put "HMAC_SECRET_KEY"
+pnpm exec wrangler secret put "SECRET_COMMENT_HMAC_KEY"
 
 # Admin JWT signature key
-pnpm exec wrangler secret put "ADMIN_SECRET_KEY"
+pnpm exec wrangler secret put "SECRET_ADMIN_JWT_KEY"
 
 # Admin login password
 pnpm exec wrangler secret put "ADMIN_PASSWORD"
