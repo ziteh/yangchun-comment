@@ -14,7 +14,7 @@ import { incrementLoginFailCount, clearLoginFailCount } from '../utils/db';
 const app = new Hono<{
   Bindings: {
     DB: D1Database;
-    COMMENTS: KVNamespace;
+    KV: KVNamespace;
     ADMIN_SECRET_KEY: string;
     ADMIN_USERNAME: string;
     ADMIN_PASSWORD: string;
@@ -28,7 +28,7 @@ app.post('/login', sValidator('json', AdminLoginRequestSchema), async (c) => {
   const ipMac = await hmacSha256(ip, c.env.IP_PEPPER);
 
   const blockedKey = `blocked_ip:${ipMac}`;
-  const isBlocked = await c.env.COMMENTS.get(blockedKey);
+  const isBlocked = await c.env.KV.get(blockedKey);
   if (isBlocked) {
     return c.text('Too many attempts', 429); // 429 Too Many Requests
   }
@@ -48,7 +48,7 @@ app.post('/login', sValidator('json', AdminLoginRequestSchema), async (c) => {
     if (failCount > 5) {
       // TODO: magic number
       // Block IP
-      await c.env.COMMENTS.put(blockedKey, '1', { expirationTtl: 3600 }); // TODO: magic number
+      await c.env.KV.put(blockedKey, '1', { expirationTtl: 3600 }); // TODO: magic number
       console.error('IP blocked due to repeated failed login attempts:', ipMac);
     } else {
       console.warn('Failed login attempt:', ipMac, `(${failCount}/5)`);
@@ -104,7 +104,7 @@ app.post('/logout', async (c) => {
           const jtiKey = `jti_blacklist:${payload.jti}`;
           const ttl = payload.exp - Math.floor(Date.now() / 1000);
           if (ttl > 0) {
-            await c.env.COMMENTS.put(jtiKey, '1', { expirationTtl: ttl });
+            await c.env.KV.put(jtiKey, '1', { expirationTtl: ttl });
           }
         }
       } catch {
@@ -131,7 +131,7 @@ app.post('/logout', async (c) => {
 // Check authentication status
 app.get('/check', async (c) => {
   const cookie = c.req.header('Cookie');
-  const isValid = await verifyAdminToken(cookie, c.env.ADMIN_SECRET_KEY, c.env.COMMENTS);
+  const isValid = await verifyAdminToken(cookie, c.env.ADMIN_SECRET_KEY, c.env.KV);
 
   const response = AdminCheckResponseSchema.parse({ authenticated: isValid });
   const status = isValid ? 200 : 401;

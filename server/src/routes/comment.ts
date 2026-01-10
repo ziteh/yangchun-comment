@@ -26,7 +26,7 @@ import {
 const app = new Hono<{
   Bindings: {
     DB: D1Database;
-    COMMENTS: KVNamespace;
+    KV: KVNamespace;
     HMAC_SECRET_KEY: string;
     POST_REGEX?: string;
     POST_BASE_URL: string;
@@ -47,7 +47,7 @@ app.get('/', sValidator('query', CommentQuerySchema), async (c) => {
 
   // Check admin auth status
   const cookie = c.req.header('Cookie');
-  const isAdmin = await verifyAdminToken(cookie, c.env.ADMIN_SECRET_KEY, c.env.COMMENTS);
+  const isAdmin = await verifyAdminToken(cookie, c.env.ADMIN_SECRET_KEY, c.env.KV);
 
   console.debug(`Fetched ${comments.length} comments for post: ${post}, admin: ${isAdmin}`);
   const res = GetCommentsResponseSchema.parse({ comments, isAdmin });
@@ -75,7 +75,7 @@ app.post(
       post,
       nonceNum,
       c.env.FORMAL_POW_SECRET_KEY,
-      c.env.COMMENTS,
+      c.env.KV,
     );
     if (!powPass) {
       console.warn('Formal-PoW verification failed');
@@ -113,7 +113,7 @@ app.post(
 
     // Check if the request is from an admin
     const cookieHeader = c.req.header('Cookie');
-    const isAdmin = await verifyAdminToken(cookieHeader, c.env.ADMIN_SECRET_KEY, c.env.COMMENTS);
+    const isAdmin = await verifyAdminToken(cookieHeader, c.env.ADMIN_SECRET_KEY, c.env.KV);
 
     const comment: Comment = {
       id,
