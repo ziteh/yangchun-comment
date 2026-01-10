@@ -13,13 +13,63 @@ async function sha256(input: string): Promise<string> {
   return hashHex;
 }
 
+// Inline worker code as string to bundle everything together
+const workerCode = `
+async function sha256(input) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(input);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+  return hashHex;
+}
+
+async function solvePow(difficulty, challenge, maxRetries) {
+  let nonce = 0;
+  const targetPrefix = '0'.repeat(difficulty);
+  let retries = 0;
+
+  while (retries++ < maxRetries) {
+    const hash = await sha256(challenge + ':' + nonce);
+    if (hash.startsWith(targetPrefix)) {
+      return nonce;
+    }
+    nonce++;
+  }
+  return -1;
+}
+
+self.onmessage = async (e) => {
+  const { requestId, type, difficulty, challenge, maxRetries } = e.data;
+  if (type === 'solve') {
+    try {
+      const nonce = await solvePow(difficulty, challenge, maxRetries);
+      self.postMessage({
+        requestId,
+        success: nonce >= 0,
+        nonce,
+      });
+    } catch (error) {
+      self.postMessage({
+        requestId,
+        success: false,
+        nonce: -1,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+};
+`;
+
 let powWorker: Worker | null = null;
 let requestIdCounter = 0;
 const pendingRequests = new Map<number, (nonce: number) => void>();
 
 function getPowWorker(): Worker {
   if (!powWorker) {
-    powWorker = new Worker(new URL('./pow.worker.ts', import.meta.url), { type: 'module' });
+    const blob = new Blob([workerCode], { type: 'application/javascript' });
+    const workerUrl = URL.createObjectURL(blob);
+    powWorker = new Worker(workerUrl);
 
     powWorker.addEventListener('message', (e: MessageEvent) => {
       const { requestId, success, nonce, error } = e.data;

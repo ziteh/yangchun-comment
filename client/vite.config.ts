@@ -30,6 +30,8 @@ export default defineConfig({
           exports: 'named',
           plugins: [terser()],
           assetFileNames,
+          // Inline workers
+          inlineDynamicImports: false,
         },
         {
           format: 'umd',
@@ -38,10 +40,16 @@ export default defineConfig({
           exports: 'named',
           globals: {},
           assetFileNames,
+          // Inline workers
+          inlineDynamicImports: false,
         },
       ],
     },
     minify: 'terser',
     sourcemap: true,
+  },
+  worker: {
+    format: 'es',
+    plugins: () => [terser()],
   },
 });
