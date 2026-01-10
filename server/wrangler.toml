@@ -10,6 +10,12 @@ compatibility_flags = ["nodejs_compat"]
 enabled = true
 head_sampling_rate = 1 # optional. default = 1.
 
+[[d1_databases]]
+binding = "DB"
+database_name = "yangchun-comment-db"
+database_id = "<D1_DATABASE_ID>"
+preview_database_id = "<D1_DATABASE_PREVIEW_ID>"
+
 [[kv_namespaces]]
 binding = "COMMENTS"
 id = "<KV_COMMENTS_ID>"

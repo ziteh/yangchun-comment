@@ -13,7 +13,6 @@ import { verifyAdminToken, constantTimeCompare, hmacSha256 } from '../utils/cryp
 const app = new Hono<{
   Bindings: {
     COMMENTS: KVNamespace;
-
     ADMIN_SECRET_KEY: string;
     ADMIN_USERNAME: string;
     ADMIN_PASSWORD: string;

@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { sValidator } from '@hono/standard-validator';
-import { genId, getCommentKey } from '../utils/helpers';
+import { genId } from '../utils/helpers';
 import { CONSTANTS } from '../const';
 import {
   type Comment,
@@ -15,9 +15,17 @@ import {
 import { genHmac, verifyAdminToken, verifyFormalPow, verifyHmac } from '../utils/crypto';
 import { validatePostUrl } from '../utils/validators';
 import { sanitize } from '../utils/sanitize';
+import {
+  getCommentsByPost,
+  createComment,
+  updateComment,
+  deleteComment,
+  hasComments,
+} from '../utils/db';
 
 const app = new Hono<{
   Bindings: {
+    DB: D1Database;
     COMMENTS: KVNamespace;
     HMAC_SECRET_KEY: string;
     POST_REGEX?: string;
@@ -35,9 +43,7 @@ const app = new Hono<{
 // Get comments for a post
 app.get('/', sValidator('query', CommentQuerySchema), async (c) => {
   const { post } = c.req.query();
-  const key = getCommentKey(post);
-  const raw = await c.env.COMMENTS.get(key);
-  const comments = raw ? JSON.parse(raw) : [];
+  const comments = await getCommentsByPost(c.env.DB, post);
 
   // Check admin auth status
   const cookie = c.req.header('Cookie');
@@ -88,9 +94,8 @@ app.post(
       return c.text('Message is invalid', 400); // 400 Bad Request
     }
 
-    const key = getCommentKey(post);
-    const rawComments = await c.env.COMMENTS.get(key);
-    if (!rawComments) {
+    const postHasComments = await hasComments(c.env.DB, post);
+    if (!postHasComments) {
       // No comments yet for this post
       const baseUrl = c.env.POST_BASE_URL;
       if (baseUrl) {
@@ -119,10 +124,12 @@ app.post(
       ...(isAdmin && { isAdmin: true }),
     };
 
-    // Save to KV
-    const comments = rawComments ? JSON.parse(rawComments) : [];
-    comments.push(comment);
-    await c.env.COMMENTS.put(key, JSON.stringify(comments));
+    const success = await createComment(c.env.DB, post, comment);
+    if (!success) {
+      console.error('Failed to create comment in database');
+      return c.text('Failed to create comment', 500); // 500 Internal Server Error
+    }
+
     const token = await genHmac(c.env.HMAC_SECRET_KEY, id, timestamp);
 
     console.log(`Comment created with ID: ${id} for post: ${post}`);
@@ -164,22 +171,11 @@ app.put(
       return c.text('Invalid HMAC', 403); // 403 Forbidden
     }
 
-    const key = getCommentKey(post);
-    const raw = await c.env.COMMENTS.get(key);
-    const comments: Comment[] = raw ? JSON.parse(raw) : [];
-    const index = comments.findIndex((c) => c.id === id);
-    if (index === -1) {
-      console.warn('Comment not found for update:', id);
-      return c.text('Comment not found', 404); // 404 Not Found
+    const success = await updateComment(c.env.DB, id, cleanMsg, Date.now());
+    if (!success) {
+      console.warn('Comment not found for update or failed to update:', id);
+      return c.text('Comment not found or update failed', 404); // 404 Not Found
     }
-
-    comments[index] = {
-      ...comments[index],
-      // Keep original pseudonym when editing (don't allow changes)
-      msg: cleanMsg,
-      modDate: Date.now(), // Update modification date
-    };
-    await c.env.COMMENTS.put(key, JSON.stringify(comments));
 
     console.log(`Comment updated: ${id} for post: ${post}`);
     return c.text('Comment updated', 200); // 200 OK
@@ -205,25 +201,12 @@ app.delete(
       return c.text('Invalid HMAC', 403); // 403 Forbidden
     }
 
-    const key = getCommentKey(post);
-    const raw = await c.env.COMMENTS.get(key);
-    const comments: Comment[] = raw ? JSON.parse(raw) : [];
-
-    const index = comments.findIndex((c) => c.id === id);
-    if (index === -1) {
-      console.warn('Comment not found for deletion:', id);
-      return c.text('Comment not found', 404); // 404 Not Found
+    const success = await deleteComment(c.env.DB, id, CONSTANTS.deletedMarker, Date.now());
+    if (!success) {
+      console.warn('Comment not found for deletion or failed to delete:', id);
+      return c.text('Comment not found or delete failed', 404); // 404 Not Found
     }
 
-    // Mark it as deleted
-    comments[index] = {
-      ...comments[index],
-      pseudonym: CONSTANTS.deletedMarker,
-      msg: CONSTANTS.deletedMarker,
-      modDate: Date.now(), // Update modification date
-    };
-
-    await c.env.COMMENTS.put(key, JSON.stringify(comments));
     console.log(`Comment deleted (marked): ${id} for post: ${post}`);
     return c.text('Comment deleted', 200); // 200 OK
   },

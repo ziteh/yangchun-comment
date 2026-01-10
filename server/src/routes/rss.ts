@@ -1,9 +1,9 @@
 import { Hono } from 'hono';
-import { getCommentKey } from '../utils/helpers';
 import { CONSTANTS } from '../const';
 import { CommentQuerySchema, type Comment } from '@ziteh/yangchun-comment-shared';
 import { sValidator } from '@hono/standard-validator';
 import { sanitize } from '../utils/sanitize';
+import { getCommentsByPost, getAllComments } from '../utils/db';
 
 interface CommentWithPost extends Comment {
   post: string;
@@ -11,7 +11,7 @@ interface CommentWithPost extends Comment {
 
 const app = new Hono<{
   Bindings: {
-    COMMENTS: KVNamespace;
+    DB: D1Database;
     RSS_SITE_PATH: string;
     FRONTEND_URL: string;
     MAX_ALL_SITE_RSS_COMMENTS: number;
@@ -21,9 +21,7 @@ const app = new Hono<{
 
 app.get('/thread', sValidator('query', CommentQuerySchema), async (c) => {
   const { post } = c.req.valid('query');
-  const key = getCommentKey(post);
-  const raw = await c.env.COMMENTS.get(key);
-  const comments: Comment[] = raw ? JSON.parse(raw) : [];
+  const comments = await getCommentsByPost(c.env.DB, post);
 
   const siteUrl = c.env.FRONTEND_URL;
   const pageTitle = `Comments of ${post}`;
@@ -72,27 +70,7 @@ app.get('/site/:site', async (c) => {
   const siteUrl = c.env.FRONTEND_URL;
   const maxComments = c.env.MAX_ALL_SITE_RSS_COMMENTS;
 
-  // Get all comment keys from KV
-  const listResult = await c.env.COMMENTS.list({ prefix: CONSTANTS.commentsKeyPrefix });
-  let latestComments: CommentWithPost[] = [];
-
-  // Fetch comments from each key and maintain top N latest comments
-  for (const key of listResult.keys) {
-    const raw = await c.env.COMMENTS.get(key.name);
-    if (raw === null) continue;
-
-    const comments: Comment[] = JSON.parse(raw);
-    const post = key.name.replace(CONSTANTS.commentsKeyPrefix, '');
-    const commentsWithPost: CommentWithPost[] = comments.map((comment) => ({ ...comment, post }));
-    latestComments.push(...commentsWithPost);
-
-    // Sort by publication date (newest first) and keep only top N
-    latestComments.sort((a, b) => b.pubDate - a.pubDate);
-    if (latestComments.length > maxComments) {
-      latestComments = latestComments.slice(0, maxComments);
-    }
-  }
-
+  const latestComments: CommentWithPost[] = await getAllComments(c.env.DB, maxComments);
   const rssItems = latestComments
     .map((comment) => {
       if (
