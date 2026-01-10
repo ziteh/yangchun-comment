@@ -76,11 +76,7 @@ export class YangChunComment extends LitElement {
   @property({ type: String }) accessor prePowMagicWord = 'MAGIC';
   @property({ type: Object, attribute: false }) accessor customMessages: I18nStrings | undefined;
 
-  @state() private accessor apiService: ApiService = createApiService(
-    'http://localhost:8787',
-    2,
-    'MAGIC',
-  );
+  @state() private accessor apiService!: ApiService;
 
   @state() private accessor draft = '';
   @state() private accessor nickname = '';
