@@ -25,8 +25,6 @@ export interface CommentAuthInfo {
 }
 
 export interface ApiService {
-  ensureValidChallenge: () => Promise<boolean>;
-  precomputeFormalPow: (post: string) => Promise<boolean>;
   getComments: (post: string) => Promise<GetCommentsResponse>;
   addComment: (
     post: string,
@@ -41,22 +39,21 @@ export interface ApiService {
     msg: string,
   ) => Promise<boolean>;
   deleteComment: (post: string, commentId: string) => Promise<boolean>;
-  saveAuthInfo: (id: string, timestamp: number, token: string) => void;
-  getAuthInfo: (commentId: string) => CommentAuthInfo | null;
-  removeAuthInfo: (commentId: string) => void;
+
   canEditComment: (commentId: string) => boolean;
-  saveMyCommentId: (commentId: string) => void;
   isMyComment: (commentId: string) => boolean;
+
   adminLogin: (username: string, password: string) => Promise<AdminLoginResponse | null>;
-  checkAdminAuth: () => Promise<boolean>;
   adminLogout: () => Promise<boolean>;
+  checkAdminAuth: () => Promise<boolean>;
 }
 
-// TODO HttpOnly Cookie?
 export const createApiService = (apiUrl: string): ApiService => {
-  const commentAuthMap = new Map<string, AuthInfo>();
-  let formalChallenge: string | null = null;
   const PRE_POW_DIFFICULTY = 2;
+  const LOCAL_STORAGE_MY_COMMENT_IDS_KEY = 'my_comment_ids';
+
+  // TODO HttpOnly Cookie?
+  const commentAuthMap = new Map<string, AuthInfo>();
 
   const getFormalChallenge = async (challenge: string, nonce: number): Promise<string | null> => {
     try {
@@ -75,49 +72,6 @@ export const createApiService = (apiUrl: string): ApiService => {
     } catch (err) {
       console.error('Error getting formal challenge:', err);
       return null;
-    }
-  };
-
-  const ensureValidChallenge = async (): Promise<boolean> => {
-    const prePow = await solvePrePow(PRE_POW_DIFFICULTY);
-    if (prePow.nonce < 0) {
-      console.error('Failed to solve pre-PoW');
-      return false;
-    }
-    console.debug('Pre-PoW solved:', prePow);
-
-    const newChallenge = await getFormalChallenge(prePow.challenge, prePow.nonce);
-    if (!newChallenge) {
-      console.error('Failed to get formal challenge');
-      return false;
-    }
-
-    formalChallenge = newChallenge;
-    return true;
-  };
-
-  const precomputeFormalPow = async (post: string): Promise<boolean> => {
-    try {
-      const isValid = await ensureValidChallenge();
-      if (!isValid || !formalChallenge) {
-        console.warn('No valid challenge available for precomputing PoW');
-        return false;
-      }
-
-      const difficulty = parseInt(formalChallenge.split(':')[2], 10);
-      console.debug('Precomputing formal PoW with difficulty:', difficulty);
-
-      const nonce = await solveFormalPow(difficulty, formalChallenge, post);
-      if (nonce < 0) {
-        console.error('Failed to precompute formal PoW');
-        return false;
-      }
-
-      console.debug('Formal PoW precomputed successfully, nonce:', nonce);
-      return true;
-    } catch (err) {
-      console.error('Error precomputing formal PoW:', err);
-      return false;
     }
   };
 
@@ -157,7 +111,6 @@ export const createApiService = (apiUrl: string): ApiService => {
         return null;
       }
       console.debug('Using formal challenge:', fChallenge);
-      formalChallenge = fChallenge;
 
       const difficulty = parseInt(fChallenge.split(':')[2], 10);
       console.debug('Solving formal PoW with difficulty:', difficulty);
@@ -169,14 +122,9 @@ export const createApiService = (apiUrl: string): ApiService => {
       }
       console.debug('Formal PoW solved, nonce:', fPowNonce);
 
-      const url = new URL('/api/comments', apiUrl);
-      url.searchParams.append('post', post);
-      url.searchParams.append('challenge', fChallenge);
-      url.searchParams.append('nonce', fPowNonce.toString());
-
       // Get honeypot field if present
-      const emailField = document.querySelector('input[name="email"]') as HTMLInputElement;
       // FIXME: directly from global DOM may break encapsulation
+      const emailField = document.querySelector('input[name="email"]') as HTMLInputElement;
       const email = emailField ? emailField.value : '';
 
       const req = CreateCommentRequestSchema.parse({
@@ -185,6 +133,11 @@ export const createApiService = (apiUrl: string): ApiService => {
         replyTo,
         email, // Include honeypot field
       });
+
+      const url = new URL('/api/comments', apiUrl);
+      url.searchParams.append('post', post);
+      url.searchParams.append('challenge', fChallenge);
+      url.searchParams.append('nonce', fPowNonce.toString());
 
       const res = await fetch(url, {
         method: 'POST',
@@ -220,7 +173,6 @@ export const createApiService = (apiUrl: string): ApiService => {
     try {
       const url = new URL('/api/comments', apiUrl);
       url.searchParams.append('post', post);
-
       const req = UpdateCommentRequestSchema.parse({
         pseudonym,
         msg,
@@ -250,8 +202,7 @@ export const createApiService = (apiUrl: string): ApiService => {
     try {
       const url = new URL('/api/comments', apiUrl);
       url.searchParams.append('post', post);
-
-      const response = await fetch(url, {
+      const res = await fetch(url, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -261,7 +212,7 @@ export const createApiService = (apiUrl: string): ApiService => {
         },
       });
 
-      if (response.ok) {
+      if (res.ok) {
         removeAuthInfo(commentId);
         return true;
       }
@@ -275,15 +226,15 @@ export const createApiService = (apiUrl: string): ApiService => {
     commentAuthMap.set(id, { timestamp, token });
   };
 
+  const removeAuthInfo = (commentId: string): void => {
+    commentAuthMap.delete(commentId);
+  };
+
   const getAuthInfo = (commentId: string): CommentAuthInfo | null => {
     const authInfo = commentAuthMap.get(commentId);
     if (authInfo) return { id: commentId, ...authInfo };
 
     return null;
-  };
-
-  const removeAuthInfo = (commentId: string): void => {
-    commentAuthMap.delete(commentId);
   };
 
   const canEditComment = (commentId: string): boolean => {
@@ -292,9 +243,11 @@ export const createApiService = (apiUrl: string): ApiService => {
 
   const saveMyCommentId = (commentId: string): void => {
     try {
-      const myIds = new Set(JSON.parse(localStorage.getItem('my_comment_ids') || '[]'));
+      const myIds = new Set(
+        JSON.parse(localStorage.getItem(LOCAL_STORAGE_MY_COMMENT_IDS_KEY) || '[]'),
+      );
       myIds.add(commentId);
-      localStorage.setItem('my_comment_ids', JSON.stringify(Array.from(myIds)));
+      localStorage.setItem(LOCAL_STORAGE_MY_COMMENT_IDS_KEY, JSON.stringify(Array.from(myIds)));
     } catch (e) {
       console.warn('Failed to save my comment ID:', e);
     }
@@ -302,7 +255,7 @@ export const createApiService = (apiUrl: string): ApiService => {
 
   const isMyComment = (commentId: string): boolean => {
     try {
-      const myIds = JSON.parse(localStorage.getItem('my_comment_ids') || '[]');
+      const myIds = JSON.parse(localStorage.getItem(LOCAL_STORAGE_MY_COMMENT_IDS_KEY) || '[]');
       return myIds.includes(commentId);
     } catch (e) {
       console.warn('Failed to check if my comment:', e);
@@ -316,7 +269,6 @@ export const createApiService = (apiUrl: string): ApiService => {
   ): Promise<AdminLoginResponse | null> => {
     try {
       const req = AdminLoginRequestSchema.parse({ username, password });
-
       const url = new URL('/admin/login', apiUrl);
       const res = await fetch(url, {
         method: 'POST',
@@ -335,25 +287,6 @@ export const createApiService = (apiUrl: string): ApiService => {
     } catch (err) {
       console.error('Error during admin login:', err);
       return null;
-    }
-  };
-
-  const checkAdminAuth = async (): Promise<boolean> => {
-    try {
-      const url = new URL('/admin/check', apiUrl);
-      const res = await fetch(url, {
-        method: 'GET',
-        credentials: 'include', // Include cookies in request
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const validated = AdminCheckResponseSchema.parse(data);
-        return validated.authenticated;
-      }
-      return false;
-    } catch (err) {
-      console.error('Error checking admin auth:', err);
-      return false;
     }
   };
 
@@ -376,21 +309,34 @@ export const createApiService = (apiUrl: string): ApiService => {
     }
   };
 
+  const checkAdminAuth = async (): Promise<boolean> => {
+    try {
+      const url = new URL('/admin/check', apiUrl);
+      const res = await fetch(url, {
+        method: 'GET',
+        credentials: 'include', // Include cookies in request
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const validated = AdminCheckResponseSchema.parse(data);
+        return validated.authenticated;
+      }
+      return false;
+    } catch (err) {
+      console.error('Error checking admin auth:', err);
+      return false;
+    }
+  };
+
   return {
-    ensureValidChallenge,
-    precomputeFormalPow,
     getComments,
     addComment,
     updateComment,
     deleteComment,
-    saveAuthInfo,
-    getAuthInfo,
-    removeAuthInfo,
     canEditComment,
-    saveMyCommentId,
     isMyComment,
     adminLogin,
-    checkAdminAuth,
     adminLogout,
+    checkAdminAuth,
   };
 };
