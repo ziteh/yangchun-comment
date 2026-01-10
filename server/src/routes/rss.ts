@@ -3,6 +3,7 @@ import { getCommentKey } from '../utils/helpers';
 import { CONSTANTS } from '../const';
 import { CommentQuerySchema, type Comment } from '@ziteh/yangchun-comment-shared';
 import { sValidator } from '@hono/standard-validator';
+import { sanitize } from '../utils/sanitize';
 
 interface CommentWithPost extends Comment {
   post: string;
@@ -44,8 +45,8 @@ app.get('/thread', sValidator('query', CommentQuerySchema), async (c) => {
     .forEach((comment) => {
       rss += `
   <item>
-    <title>${comment.pseudonym || 'Anonymous'}'s Comment</title>
-    <description><![CDATA[${comment.msg}]]></description>
+    <title>${sanitize(comment.pseudonym || 'Anonymous')}'s Comment</title>
+    <description><![CDATA[${sanitize(comment.msg)}]]></description>
     <pubDate>${new Date(comment.pubDate).toUTCString()}</pubDate>
     <guid>${postUrl}#comment-${comment.id}</guid>
   </item>`;
@@ -105,8 +106,8 @@ app.get('/site/:site', async (c) => {
       const link = new URL(`${comment.post}#comment-${comment.id}`, siteUrl);
 
       return `<item>
-  <title><![CDATA[${title}]]></title>
-  <description><![CDATA[${comment.msg}]]></description>
+  <title><![CDATA[${sanitize(title)}]]></title>
+  <description><![CDATA[${sanitize(comment.msg)}]]></description>
   <link>${link.href}</link>
   <pubDate>${new Date(comment.pubDate).toUTCString()}</pubDate>
 </item>`;
