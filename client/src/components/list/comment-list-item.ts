@@ -8,6 +8,8 @@ import snarkdown from 'snarkdown';
 import { formatRelativeDate, formatAbsoluteDate } from '../../utils/format';
 import { t } from '../../utils/i18n';
 
+const deletedMark = 'deleted';
+
 @customElement('comment-list-item')
 export class CommentListItem extends LitElement {
   static styles = [
@@ -282,7 +284,8 @@ export class CommentListItem extends LitElement {
                 ${this.isContentExpanded ? t('showLess') : t('showMore')}
               </button>`
             : null}
-          ${this.isPreviewComment()
+          ${this.isPreviewComment() ||
+          (this.comment.pseudonym === deletedMark && this.comment.msg === deletedMark)
             ? null
             : html`
                 <div class="actions">

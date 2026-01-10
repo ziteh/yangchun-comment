@@ -104,6 +104,7 @@ app.post(
     if (replyTo && (typeof replyTo !== 'string' || !/^[0-9A-Z]{12}$/.test(replyTo))) {
       return c.text('Invalid reply ID', 400);
     }
+    // TODO: check if reply to deleted comment
 
     const key = getCommentKey(post);
     const rawComments = await c.env.COMMENTS.get(key);
