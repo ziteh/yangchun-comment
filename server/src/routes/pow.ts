@@ -5,6 +5,7 @@ import {
   FormalChallengeResponseSchema,
 } from '@ziteh/yangchun-comment-shared';
 import { genFormalPowChallenge, verifyPrePow } from '../utils/crypto';
+import { HTTP_STATUS } from '../const';
 
 const app = new Hono<{
   Bindings: {
@@ -29,7 +30,7 @@ app.get('/formal-challenge', sValidator('query', FormalChallengeQuerySchema), as
   );
   if (!prePowPass) {
     console.warn('Pre-PoW verification failed');
-    return c.text('Pre-PoW verification failed', 400);
+    return c.text('Pre-PoW verification failed', HTTP_STATUS.BadRequest);
   }
   console.debug('Pre-pow verify OK');
 
@@ -37,18 +38,13 @@ app.get('/formal-challenge', sValidator('query', FormalChallengeQuerySchema), as
   const secret = c.env.FORMAL_POW_SECRET_KEY;
   const expirySec = c.env.FORMAL_POW_EXPIRATION;
 
-  if (!secret) {
-    console.error('FORMAL_POW_SECRET_KEY is not set');
-    return c.text('Server misconfiguration', 500);
-  }
-
   try {
     const formalChallenge = await genFormalPowChallenge(difficulty, secret, expirySec);
     const response = FormalChallengeResponseSchema.parse({ challenge: formalChallenge });
-    return c.json(response, 200);
+    return c.json(response, HTTP_STATUS.Ok);
   } catch (err) {
     console.error('Error generating formal PoW challenge:', err);
-    return c.text('Internal Server Error', 500);
+    return c.text('Internal Server Error', HTTP_STATUS.InternalServerError);
   }
 });
 

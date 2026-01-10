@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { secureHeaders } from 'hono/secure-headers';
+import { HTTP_STATUS } from '../const';
 
 const app = new Hono<{
   Bindings: {
@@ -23,7 +24,7 @@ app.use('*', async (c, next) => {
   const referer = c.req.header('Referer');
   if (!origin && !referer) {
     console.warn(`Blocked request without Origin/Referer: ${c.req.method} ${c.req.path}`);
-    return c.text('Forbidden', 403); // 403 Forbidden
+    return c.text('Forbidden', HTTP_STATUS.Forbidden);
   }
 
   return next();

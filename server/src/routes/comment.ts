@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { sValidator } from '@hono/standard-validator';
 import { genId } from '../utils/helpers';
-import { CONSTANTS } from '../const';
+import { CONSTANTS, HTTP_STATUS } from '../const';
 import {
   type Comment,
   CreateCommentRequestSchema,
@@ -32,7 +32,7 @@ const app = new Hono<{
     FORMAL_POW_SECRET_KEY: string;
     PRE_POW_DIFFICULTY: number;
     PRE_POW_MAGIC_WORD: string;
-    PRE_POW_TIME_WINDOW: number;
+    RE_POW_TIME_WINDOW: number;
     FORMAL_POW_DIFFICULTY: number;
     FORMAL_POW_EXPIRATION: number;
     ADMIN_SECRET_KEY: string;
@@ -50,7 +50,7 @@ app.get('/', sValidator('query', CommentQuerySchema), async (c) => {
 
   console.debug(`Fetched ${comments.length} comments for post: ${post}, admin: ${isAdmin}`);
   const res = GetCommentsResponseSchema.parse({ comments, isAdmin });
-  return c.json(res, 200); // 200 OK
+  return c.json(res, HTTP_STATUS.Ok);
 });
 
 // Create a new comment
@@ -64,7 +64,7 @@ app.post(
 
     // Honeypot check, if 'email' present, it's likely a bot
     if (email) {
-      return c.text('Comment received', 200); // 200 OK, fool the bot but do nothing
+      return c.text('Comment received', HTTP_STATUS.Ok); // Fool the bot but do nothing
     }
 
     // Verify Formal-PoW
@@ -78,19 +78,19 @@ app.post(
     );
     if (!powPass) {
       console.warn('Formal-PoW verification failed');
-      return c.text('Formal-PoW verification failed', 400); // 400 Bad Request
+      return c.text('Formal-PoW verification failed', HTTP_STATUS.BadRequest);
     }
 
     // Reject any suspicious pseudonyms
     const cleanPseudonym = pseudonym ? sanitize(pseudonym) : undefined;
     if (pseudonym && cleanPseudonym !== pseudonym) {
-      return c.text('Pseudonym is invalid', 400); // 400 Bad Request
+      return c.text('Pseudonym is invalid', HTTP_STATUS.BadRequest);
     }
 
     // Reject any suspicious message content
     const cleanMsg = sanitize(msg);
     if (cleanMsg.length === 0) {
-      return c.text('Message is invalid', 400); // 400 Bad Request
+      return c.text('Message is invalid', HTTP_STATUS.BadRequest);
     }
 
     const postHasComments = await hasComments(c.env.DB, post);
@@ -103,7 +103,7 @@ app.post(
         const isValidPost = await validatePostUrl(fullUrl, 5000);
         if (!isValidPost) {
           console.warn(`No comments found for post: ${post}, invalid post`);
-          return c.text('Invalid post', 400); // 400 Bad Request
+          return c.text('Invalid post', HTTP_STATUS.BadRequest);
         }
       }
     }
@@ -126,14 +126,14 @@ app.post(
     const success = await createComment(c.env.DB, post, comment);
     if (!success) {
       console.error('Failed to create comment in database');
-      return c.text('Failed to create comment', 500); // 500 Internal Server Error
+      return c.text('Failed to create comment', HTTP_STATUS.InternalServerError);
     }
 
     const token = await genHmac(c.env.HMAC_SECRET_KEY, id, timestamp);
 
     console.log(`Comment created with ID: ${id} for post: ${post}`);
     const res = CreateCommentResponseSchema.parse({ id, timestamp, token });
-    return c.json(res, 201); // 201 Created
+    return c.json(res, HTTP_STATUS.Created);
   },
 );
 
@@ -154,20 +154,20 @@ app.put(
     // Reject any suspicious pseudonyms
     const cleanPseudonym = pseudonym ? sanitize(pseudonym) : undefined;
     if (pseudonym && cleanPseudonym !== pseudonym) {
-      return c.text('Pseudonym is invalid', 400); // 400 Bad Request
+      return c.text('Pseudonym is invalid', HTTP_STATUS.BadRequest);
     }
 
     // Reject any suspicious message content
     const cleanMsg = sanitize(msg);
     if (cleanMsg.length === 0) {
-      return c.text('Message is invalid', 400); // 400 Bad Request
+      return c.text('Message is invalid', HTTP_STATUS.BadRequest);
     }
 
     // Verify token
     const hmacOk = await verifyHmac(c.env.HMAC_SECRET_KEY, id, timestamp, token);
     if (!hmacOk) {
       console.warn('Invalid HMAC for update request:', id);
-      return c.text('Invalid HMAC', 403); // 403 Forbidden
+      return c.text('Invalid HMAC', HTTP_STATUS.Forbidden);
     }
 
     const success = await updateComment(c.env.DB, id, cleanMsg, Date.now());
@@ -177,7 +177,7 @@ app.put(
     }
 
     console.log(`Comment updated: ${id} for post: ${post}`);
-    return c.text('Comment updated', 200); // 200 OK
+    return c.text('Comment updated', HTTP_STATUS.Ok);
   },
 );
 
@@ -197,17 +197,17 @@ app.delete(
     const hmacOk = await verifyHmac(c.env.HMAC_SECRET_KEY, id, timestamp, token);
     if (!hmacOk) {
       console.warn('Invalid HMAC for delete request:', id);
-      return c.text('Invalid HMAC', 403); // 403 Forbidden
+      return c.text('Invalid HMAC', HTTP_STATUS.Forbidden);
     }
 
     const success = await deleteComment(c.env.DB, id, CONSTANTS.deletedMarker, Date.now());
     if (!success) {
       console.warn('Comment not found for deletion or failed to delete:', id);
-      return c.text('Comment not found or delete failed', 404); // 404 Not Found
+      return c.text('Comment not found or delete failed', HTTP_STATUS.NotFound);
     }
 
     console.log(`Comment deleted (marked): ${id} for post: ${post}`);
-    return c.text('Comment deleted', 200); // 200 OK
+    return c.text('Comment deleted', HTTP_STATUS.Ok);
   },
 );
 

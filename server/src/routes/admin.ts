@@ -10,6 +10,7 @@ import {
 } from '@ziteh/yangchun-comment-shared';
 import { verifyAdminToken, constantTimeCompare, hmacSha256 } from '../utils/crypto';
 import { incrementLoginFailCount, clearLoginFailCount } from '../utils/db';
+import { HTTP_STATUS } from '../const';
 
 const app = new Hono<{
   Bindings: {
@@ -30,7 +31,7 @@ app.post('/login', sValidator('json', AdminLoginRequestSchema), async (c) => {
   const blockedKey = `blocked_ip:${ipMac}`;
   const isBlocked = await c.env.KV.get(blockedKey);
   if (isBlocked) {
-    return c.text('Too many attempts', 429); // 429 Too Many Requests
+    return c.text('Too many attempts', HTTP_STATUS.TooManyRequests);
   }
 
   // HACK: Normally, stored passwords should be processed using hash+salt (e.g. Argon2 or bcrypt).
@@ -56,7 +57,7 @@ app.post('/login', sValidator('json', AdminLoginRequestSchema), async (c) => {
 
     // Random delay to mitigate timing attacks
     await new Promise((r) => setTimeout(r, Math.random() * 1000 + 500));
-    return c.text('Authentication failed', 401); // 401 Unauthorized
+    return c.text('Authentication failed', HTTP_STATUS.Unauthorized);
   }
 
   // Clear fail count on successful login
@@ -134,7 +135,7 @@ app.get('/check', async (c) => {
   const isValid = await verifyAdminToken(cookie, c.env.ADMIN_SECRET_KEY, c.env.KV);
 
   const response = AdminCheckResponseSchema.parse({ authenticated: isValid });
-  const status = isValid ? 200 : 401;
+  const status = isValid ? HTTP_STATUS.Ok : HTTP_STATUS.Unauthorized;
   return c.json(response, status);
 });
 

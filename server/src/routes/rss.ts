@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { CONSTANTS } from '../const';
+import { CONSTANTS, HTTP_STATUS } from '../const';
 import { CommentQuerySchema, type Comment } from '@ziteh/yangchun-comment-shared';
 import { sValidator } from '@hono/standard-validator';
 import { sanitize } from '../utils/sanitize';
@@ -54,7 +54,7 @@ app.get('/thread', sValidator('query', CommentQuerySchema), async (c) => {
 </channel>
 </rss>`;
 
-  return c.body(rss, 200, {
+  return c.body(rss, HTTP_STATUS.Ok, {
     'Content-Type': 'application/xml; charset=utf-8',
     'X-Content-Type-Options': 'nosniff',
   });
@@ -103,7 +103,7 @@ app.get('/site/:site', async (c) => {
   </channel>
 </rss>`;
 
-  return c.body(rss, 200, {
+  return c.body(rss, HTTP_STATUS.Ok, {
     'Content-Type': 'application/xml; charset=utf-8',
     'X-Content-Type-Options': 'nosniff',
   });
