@@ -4,6 +4,11 @@ import starlight from '@astrojs/starlight';
 
 // https://astro.build/config
 export default defineConfig({
+  vite: {
+    esbuild: {
+      target: 'es2022',
+    },
+  },
   integrations: [
     starlight({
       title: 'Yang Chun Comment',

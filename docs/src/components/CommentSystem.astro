@@ -1,5 +1,5 @@
 ---
-import '@ziteh/yangchun-comment-client/style.css';
+// Styles are included in the Web Component
 ---
 
 <div id="msw-comment-system">
@@ -44,10 +44,21 @@ import '@ziteh/yangchun-comment-client/style.css';
         this.updateStatus('Mock Service Worker starting...', 'loading');
 
         await worker.start({
-          onUnhandledRequest: 'bypass',
+          onUnhandledRequest(request, print) {
+            // Don't warn about worker files
+            if (request.url.includes('.worker') || request.url.includes('worker_file')) {
+              return;
+            }
+            // Bypass other unhandled requests silently
+          },
           serviceWorker: {
             url: '/mockServiceWorker.js',
+            options: {
+              // Don't intercept worker files
+              scope: '/',
+            },
           },
+          quiet: false,
         });
 
         this.updateStatus('Waiting for Mock Service Worker...', 'loading');
