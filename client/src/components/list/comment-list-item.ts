@@ -126,7 +126,7 @@ export class CommentListItem extends LitElement {
         color: var(--ycc-primary-hover);
       }
       .content img {
-        max-width: 100%;
+        max-width: 80%;
         height: auto;
         border-radius: var(--ycc-radius);
         display: block;
