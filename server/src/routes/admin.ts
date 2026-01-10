@@ -1,32 +1,73 @@
 import { Hono } from 'hono';
+import { setCookie } from 'hono/cookie';
 import { sValidator } from '@hono/standard-validator';
-import { sign } from 'hono/jwt';
+import { sign, verify } from 'hono/jwt';
 import {
   AdminLoginRequestSchema,
   AdminLoginResponseSchema,
   AdminLogoutResponseSchema,
   AdminCheckResponseSchema,
 } from '@ziteh/yangchun-comment-shared';
-import { verifyAdminToken } from '../utils/crypto';
+import { verifyAdminToken, constantTimeCompare, hmacSha256 } from '../utils/crypto';
 
 const app = new Hono<{
   Bindings: {
+    COMMENTS: KVNamespace;
+
     ADMIN_SECRET_KEY: string;
-    ADMIN_USERNAME?: string;
-    ADMIN_PASSWORD?: string;
+    ADMIN_USERNAME: string;
+    ADMIN_PASSWORD: string;
+    IP_PEPPER: string;
   };
 }>();
 
 // Login endpoint
 app.post('/login', sValidator('json', AdminLoginRequestSchema), async (c) => {
-  const { username, password } = c.req.valid('json');
+  const ip = c.req.header('CF-Connecting-IP') || '0.0.0.0';
+  const ipMac = await hmacSha256(ip, c.env.IP_PEPPER);
 
-  // TODO: Use hash+salt password?
+  const blockedKey = `blocked_ip:${ipMac}`;
+  const isBlocked = await c.env.COMMENTS.get(blockedKey);
+  if (isBlocked) {
+    return c.text('Too many attempts', 429); // 429 Too Many Requests
+  }
+
+  const failCountKey = `fail_count:${ipMac}`;
+
+  // HACK: Normally, stored passwords should be processed using hash+salt (e.g. Argon2 or bcrypt).
+  // Currently, the admin password is stored using CF Secrets,
+  // which is designed for storing sensitive data.
+  // Values are not visible within Wrangler or CF dashboard after you define them.
+  // https://developers.cloudflare.com/workers/configuration/secrets/
   const adminUsername = c.env.ADMIN_USERNAME;
   const adminPassword = c.env.ADMIN_PASSWORD;
-  if (username !== adminUsername || password !== adminPassword) {
-    return c.json({ error: 'Invalid username or password' }, 401);
+  const { username, password } = c.req.valid('json');
+  const usernameMatch = await constantTimeCompare(username, adminUsername);
+  const passwordMatch = await constantTimeCompare(password, adminPassword);
+  if (!usernameMatch || !passwordMatch) {
+    const failCountRaw = await c.env.COMMENTS.get(failCountKey);
+    const failCount = failCountRaw ? parseInt(failCountRaw) + 1 : 1;
+
+    // HACK: This is a simple implementation.
+    // In high-concurrency scenarios, multiple requests may simultaneously read the same failCount,
+    // leading to inaccurate counting.
+    if (failCount > 5) {
+      await c.env.COMMENTS.put(blockedKey, '1', { expirationTtl: 3600 });
+      console.error('IP blocked due to repeated failed login attempts:', ipMac);
+    } else {
+      await c.env.COMMENTS.put(failCountKey, failCount.toString(), {
+        expirationTtl: 3600,
+      });
+      console.warn('Failed login attempt:', ipMac);
+    }
+
+    // Random delay to mitigate timing attacks
+    await new Promise((r) => setTimeout(r, Math.random() * 1000 + 500));
+    return c.text('Authentication failed', 401); // 401 Unauthorized
   }
+
+  // Clear fail count on successful login
+  await c.env.COMMENTS.delete(failCountKey);
 
   // JWT token
   const now = Math.floor(Date.now() / 1000);
@@ -34,26 +75,58 @@ app.post('/login', sValidator('json', AdminLoginRequestSchema), async (c) => {
     username: username,
     role: 'admin',
     iat: now,
-    exp: now + 1 * 60 * 60, // 1 hour later
+    exp: now + 3600,
+    jti: crypto.randomUUID(),
   };
   const token = await sign(payload, c.env.ADMIN_SECRET_KEY);
 
-  // Set httpOnly cookie
-  c.header(
-    'Set-Cookie',
-    `admin_token=${token}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${1 * 60 * 60}`, // TODO: adjust Max-Age as needed
-  );
+  // Set HttpOnly cookie
+  setCookie(c, 'admin_token', token, {
+    path: '/',
+    secure: true,
+    httpOnly: true,
+    sameSite: 'Strict',
+    maxAge: 3600,
+  });
 
-  const response = AdminLoginResponseSchema.parse({
+  console.info('Successful login');
+  const res = AdminLoginResponseSchema.parse({
     success: true,
     message: 'Login successful',
   });
-  return c.json(response);
+  return c.json(res);
 });
 
 // Logout endpoint
 app.post('/logout', async (c) => {
-  c.header('Set-Cookie', `admin_token=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0`);
+  // Add JWT to JTI blacklist
+  const cookie = c.req.header('Cookie');
+  if (cookie) {
+    const match = cookie.match(/admin_token=([^;]+)/);
+    if (match) {
+      const token = match[1];
+      try {
+        const payload = await verify(token, c.env.ADMIN_SECRET_KEY);
+        if (payload.jti && payload.exp) {
+          const jtiKey = `jti_blacklist:${payload.jti}`;
+          const ttl = payload.exp - Math.floor(Date.now() / 1000);
+          if (ttl > 0) {
+            await c.env.COMMENTS.put(jtiKey, '1', { expirationTtl: ttl });
+          }
+        }
+      } catch {
+        // Ignore invalid tokens
+      }
+    }
+  }
+
+  setCookie(c, 'admin_token', '', {
+    path: '/',
+    secure: true,
+    httpOnly: true,
+    sameSite: 'Strict',
+    maxAge: 0, // Expire immediately
+  });
 
   const response = AdminLogoutResponseSchema.parse({
     success: true,
@@ -65,7 +138,7 @@ app.post('/logout', async (c) => {
 // Check authentication status
 app.get('/check', async (c) => {
   const cookie = c.req.header('Cookie');
-  const isValid = await verifyAdminToken(cookie, c.env.ADMIN_SECRET_KEY);
+  const isValid = await verifyAdminToken(cookie, c.env.ADMIN_SECRET_KEY, c.env.COMMENTS);
 
   const response = AdminCheckResponseSchema.parse({ authenticated: isValid });
   const status = isValid ? 200 : 401;

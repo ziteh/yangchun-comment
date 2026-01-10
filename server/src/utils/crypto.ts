@@ -1,5 +1,20 @@
 import { verify } from 'hono/jwt';
 
+export async function hmacSha256(data: string, secret: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const secretData = encoder.encode(secret);
+  const dataData = encoder.encode(data);
+  const key = await crypto.subtle.importKey(
+    'raw',
+    secretData,
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const mac = await crypto.subtle.sign('HMAC', key, dataData);
+  return Buffer.from(mac).toString('base64');
+}
+
 export async function genHmac(secretKey: string, commentId: string, timestamp: number) {
   const encoder = new TextEncoder();
   const keyData = encoder.encode(secretKey);
@@ -63,6 +78,7 @@ export function hashFnv1a(input: string): string {
 export async function verifyAdminToken(
   cookieHeader: string | undefined,
   secretKey: string,
+  jtiBlacklist: KVNamespace,
 ): Promise<boolean> {
   try {
     if (!cookieHeader) return false;
@@ -71,14 +87,22 @@ export async function verifyAdminToken(
     if (!match) return false;
 
     const token = match[1];
-    await verify(token, secretKey);
+    const payload = await verify(token, secretKey);
+
+    // Check JTI blacklist
+    if (jtiBlacklist && payload.jti) {
+      const jtiKey = `jti_blacklist:${payload.jti}`;
+      const isBlacklisted = await jtiBlacklist.get(jtiKey);
+      if (isBlacklisted) return false;
+    }
+
     return true;
   } catch {
     return false;
   }
 }
 
-async function sha256(input: string): Promise<string> {
+export async function hashSha256(input: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(input);
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
@@ -90,7 +114,7 @@ async function sha256(input: string): Promise<string> {
 async function verifyPow(difficulty: number, challenge: string, nonce: number): Promise<boolean> {
   if (nonce < 0 || difficulty <= 0) return false;
 
-  const hash = await sha256(`${challenge}:${nonce}`);
+  const hash = await hashSha256(`${challenge}:${nonce}`);
   const targetPrefix = '0'.repeat(difficulty);
   return hash.startsWith(targetPrefix);
 }
@@ -105,7 +129,7 @@ export async function genFormalPowChallenge(
   const random = crypto.getRandomValues(new Uint32Array(2)).join('');
   const expiry = Math.floor(Date.now() / 1000) + expirySec;
   const payload = `${random}:${expiry}:${difficulty}`;
-  const signature = await sha256(payload + ':' + secret);
+  const signature = await hashSha256(payload + ':' + secret);
   return `${payload}:${signature}`;
 }
 
@@ -146,7 +170,7 @@ export async function verifyFormalPow(
 
   if (isNaN(difficulty)) return false;
 
-  const verifySign = await sha256(`${random}:${expiry}:${difficulty}:${secret}`);
+  const verifySign = await hashSha256(`${random}:${expiry}:${difficulty}:${secret}`);
   if (signature !== verifySign) return false;
   // TODO: redis
 
@@ -156,4 +180,26 @@ export async function verifyFormalPow(
   }
 
   return ok;
+}
+
+export async function constantTimeCompare(a: string, b: string): Promise<boolean> {
+  const encoder = new TextEncoder();
+  const aBytes = encoder.encode(a);
+  const bBytes = encoder.encode(b);
+
+  const maxLen = Math.max(aBytes.length, bBytes.length);
+  const bufferA = new Uint8Array(maxLen);
+  const bufferB = new Uint8Array(maxLen);
+
+  bufferA.set(aBytes);
+  bufferB.set(bBytes);
+  const isLenEqual = aBytes.length === bBytes.length;
+
+  try {
+    // https://developers.cloudflare.com/workers/runtime-apis/web-crypto/#timingsafeequal
+    const isBufEqual = crypto.subtle.timingSafeEqual(bufferA, bufferB);
+    return isLenEqual && isBufEqual;
+  } catch {
+    return false;
+  }
 }

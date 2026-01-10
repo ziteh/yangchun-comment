@@ -44,7 +44,7 @@ app.get('/', sValidator('query', CommentQuerySchema), async (c) => {
 
   // Check admin auth status
   const cookie = c.req.header('Cookie');
-  const isAdmin = await verifyAdminToken(cookie, c.env.ADMIN_SECRET_KEY);
+  const isAdmin = await verifyAdminToken(cookie, c.env.ADMIN_SECRET_KEY, c.env.COMMENTS);
 
   console.debug(`Fetched ${comments.length} comments for post: ${post}, admin: ${isAdmin}`);
 
@@ -125,7 +125,7 @@ app.post(
 
     // Check if the request is from an admin
     const cookieHeader = c.req.header('Cookie');
-    const isAdmin = await verifyAdminToken(cookieHeader, c.env.ADMIN_SECRET_KEY);
+    const isAdmin = await verifyAdminToken(cookieHeader, c.env.ADMIN_SECRET_KEY, c.env.COMMENTS);
 
     const comment: Comment = {
       id,
