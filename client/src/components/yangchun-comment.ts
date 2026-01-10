@@ -99,6 +99,8 @@ export class YangChunComment extends LitElement {
   @state() private accessor isAdmin = false;
   @state() private accessor rssFeedUrl = '';
 
+  @state() private accessor errorMessage = '';
+
   @query('comment-input') private accessor commentInput!: CommentInput;
   @query('comment-admin') private accessor commentAdmin!: CommentAdmin;
 
@@ -159,6 +161,8 @@ ${t('helpMdCodeBlock')}
         <comment-info
           .comment=${this.referenceComment}
           .isReply=${this.isReply}
+          .errorMessage=${this.errorMessage}
+          @error-clear=${() => (this.errorMessage = '')}
           @reference-comment-cancel=${this.onCommentInfoCancel}
           @notify-request=${() => (this.showNotify = true)}
           @help-request=${() => (this.showHelp = true)}
@@ -358,7 +362,7 @@ ${t('helpMdCodeBlock')}
       await this.updatedComments();
     } catch (err) {
       console.error('Failed to add comment:', err);
-      alert((err as Error).message || 'Failed to add comment. Please try again.'); // FIXME: alert
+      this.errorMessage = (err as Error).message || 'Failed to add comment. Please try again.';
       return;
     }
   }

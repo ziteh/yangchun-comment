@@ -38,13 +38,30 @@ export class CommentInfo extends LitElement {
       .admin-btn:hover {
         opacity: 1;
       }
+      .info-bar.error {
+        justify-content: flex-start;
+        gap: var(--ycc-spacing-s);
+      }
+      .error-msg {
+        color: var(--ycc-error-color, #ff4d4f);
+      }
     `,
   ];
 
   @property({ type: Object }) accessor comment: Comment | null = null;
   @property({ type: Boolean }) accessor isReply = true; // true: reply, false: edit
+  @property({ type: String }) accessor errorMessage = '';
 
   render() {
+    if (this.errorMessage) {
+      return html`
+        <div class="info-bar error">
+          <span class="error-msg">${this.errorMessage}</span>
+          <button class="text-btn" @click=${this.onClearError}>${t('close')}</button>
+        </div>
+      `;
+    }
+
     if (!this.comment) {
       return html`
         <div class="info-bar">
@@ -101,6 +118,15 @@ export class CommentInfo extends LitElement {
   private onNotify() {
     this.dispatchEvent(
       new CustomEvent('notify-request', {
+        bubbles: true,
+        composed: true,
+      }),
+    );
+  }
+
+  private onClearError() {
+    this.dispatchEvent(
+      new CustomEvent('error-clear', {
         bubbles: true,
         composed: true,
       }),
