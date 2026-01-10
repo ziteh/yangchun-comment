@@ -34,6 +34,7 @@ app.get('/formal-challenge', sValidator('query', FormalChallengeQuerySchema), as
   }
   console.debug('Pre-pow verify OK');
 
+  // TODO: dynamic difficulty
   const difficulty = c.env.FORMAL_POW_DIFFICULTY;
   const secret = c.env.SECRET_FORMAL_POW_HMAC_KEY;
   const expirySec = c.env.FORMAL_POW_EXPIRATION;

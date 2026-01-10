@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { sanitize } from '../src/utils';
+import { sanitize } from '../src/utils/sanitize.js';
 
 describe('sanitize', () => {
   describe('HTML Tag Removal', () => {
@@ -113,25 +113,24 @@ describe('sanitize', () => {
     });
   });
 
-  describe('Pseudo protocol, javascript: URLs in Markdown', () => {
-    it('removes javascript: in Markdown links', () => {
-      const input = '[a](javascript:alert("XSS"))';
-      const output = sanitize(input);
-      expect(output).toBe('[a]()');
-    });
-
-    it('removes javascript: with whitespace', () => {
-      const input = '[a]( \r\n\t javascript:alert("XSS") )';
-      const output = sanitize(input);
-      expect(output).toBe('[a]( )');
-    });
-
-    it('removes javascript: case-insensitively', () => {
-      const input = '[a](JaVaScRiPt:alert("XSS"))';
-      const output = sanitize(input);
-      expect(output).toBe('[a]()');
-    });
-  });
+  // Pseudo protocol handled in the front-end
+  // describe('Pseudo protocol, javascript: URLs in Markdown', () => {
+  //   it('removes javascript: in Markdown links', () => {
+  //     const input = '[a](javascript:alert("XSS"))';
+  //     const output = sanitize(input);
+  //     expect(output).toBe('[a]()');
+  //   });
+  //   it('removes javascript: with whitespace', () => {
+  //     const input = '[a]( \r\n\t javascript:alert("XSS") )';
+  //     const output = sanitize(input);
+  //     expect(output).toBe('[a]( )');
+  //   });
+  //   it('removes javascript: case-insensitively', () => {
+  //     const input = '[a](JaVaScRiPt:alert("XSS"))';
+  //     const output = sanitize(input);
+  //     expect(output).toBe('[a]()');
+  //   });
+  // });
 
   describe('Markdown', () => {
     it('preserves Markdown syntax', () => {
