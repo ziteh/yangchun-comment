@@ -29,7 +29,11 @@ const DOMPURIFY_CONFIG: DomPurifyConfig = {
   // FORBID_ATTR: ['style', 'onclick', 'onmouseover', 'onload', 'onunload', 'onerror'],
 };
 
+let isHookSetup = false;
+
 export function setupDOMPurifyHooks() {
+  if (isHookSetup) return;
+
   DOMPurify.addHook('afterSanitizeAttributes', (node) => {
     // <a> Make all links open in a new tab, and prevent window.opener vulnerability
     if (node instanceof HTMLAnchorElement) {
@@ -57,6 +61,8 @@ export function setupDOMPurifyHooks() {
       }
     }
   });
+
+  isHookSetup = true;
 }
 
 export function sanitizeHtml(dirtyHtml: string) {
