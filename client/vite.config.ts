@@ -11,7 +11,11 @@ const assetFileNames = (assetInfo) => {
 };
 
 export default defineConfig({
+  esbuild: {
+    target: 'es2022',
+  },
   build: {
+    target: 'es2022',
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
       name: 'YangchunComment',
