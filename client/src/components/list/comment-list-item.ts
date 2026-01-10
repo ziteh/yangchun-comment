@@ -36,6 +36,7 @@ export class CommentListItem extends LitElement {
         margin-bottom: var(--ycc-spacing-s);
         font-size: 0.9em;
         color: var(--ycc-text-secondary);
+        flex-wrap: wrap;
       }
       .author {
         font-weight: bold;
