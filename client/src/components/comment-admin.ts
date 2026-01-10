@@ -1,7 +1,7 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, state, property } from 'lit/decorators.js';
+import { customElement, state } from 'lit/decorators.js';
 import { yangChunCommentStyles } from './yangchun-comment.styles';
-import type { ApiService } from '../api/apiService';
+import { globalApiService } from '../api/globalApiService';
 
 @customElement('comment-admin')
 export class CommentAdmin extends LitElement {
@@ -72,8 +72,6 @@ export class CommentAdmin extends LitElement {
       }
     `,
   ];
-
-  @property({ type: Object, attribute: false }) accessor apiService: ApiService | undefined;
 
   @state() private accessor username = '';
   @state() private accessor password = '';
@@ -201,15 +199,14 @@ export class CommentAdmin extends LitElement {
     this.errorMessage = '';
     this.successMessage = '';
 
-    if (!this.apiService) {
+    if (!globalApiService.isInitialized()) {
       this.errorMessage = 'API service not available';
       this.isLoading = false;
       return;
     }
 
     try {
-      const data = await this.apiService.adminLogin(this.username, this.password);
-
+      const data = await globalApiService.getInstance().adminLogin(this.username, this.password);
       if (data) {
         this.successMessage = data.message || 'Login successful';
         this.username = '';
@@ -227,13 +224,13 @@ export class CommentAdmin extends LitElement {
   };
 
   private async checkAuthStatus() {
-    if (!this.apiService) {
+    if (!globalApiService.isInitialized()) {
       this.isCheckingAuth = false;
       return;
     }
 
     try {
-      this.isLoggedIn = await this.apiService.checkAdminAuth();
+      this.isLoggedIn = await globalApiService.getInstance().checkAdminAuth();
       if (this.isLoggedIn) {
         this.handleAuthStatusChange();
       }
@@ -246,7 +243,7 @@ export class CommentAdmin extends LitElement {
   }
 
   private handleLogout = async () => {
-    if (!this.apiService) {
+    if (!globalApiService.isInitialized()) {
       this.errorMessage = 'API service not available';
       return;
     }
@@ -256,7 +253,7 @@ export class CommentAdmin extends LitElement {
     this.successMessage = '';
 
     try {
-      const success = await this.apiService.adminLogout();
+      const success = await globalApiService.getInstance().adminLogout();
 
       if (success) {
         this.successMessage = 'Logged out successfully';

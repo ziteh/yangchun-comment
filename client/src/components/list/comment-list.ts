@@ -28,10 +28,6 @@ export class CommentList extends LitElement {
 
   @property({ type: Array }) accessor comments: Comment[] = [];
   @property({ type: String }) accessor author = '';
-  @property({ type: Function }) accessor canEditCallback: (commentId: string) => boolean = () =>
-    false; // TODO: to global
-  @property({ type: Function }) accessor isMyCommentCallback: (commentId: string) => boolean = () =>
-    false; // TODO: to global
 
   render() {
     if (this.comments.length === 0) {
@@ -46,8 +42,6 @@ export class CommentList extends LitElement {
               role="listitem"
               .comment=${comment}
               .author=${this.author}
-              .canEditCallback=${this.canEditCallback}
-              .isMyCommentCallback=${this.isMyCommentCallback}
               .replyComments=${sortCommentsByDate(
                 findReplyComments(this.comments, comment.id),
                 false,

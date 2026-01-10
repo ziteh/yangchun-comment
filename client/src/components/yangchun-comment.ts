@@ -9,8 +9,8 @@ import './comment-dialog';
 import './list/comment-list';
 import './comment-admin';
 import type { CommentAdmin } from './comment-admin';
-import type { ApiService } from '../api/apiService';
 import { createApiService } from '../api/apiService';
+import { globalApiService } from '../api/globalApiService';
 import { generatePseudonymAndHash } from '../utils/pseudonym';
 import { initI18n, enUS, zhTW, t, type I18nStrings } from '../utils/i18n';
 import { cleanupPowWorker } from '../utils/pow';
@@ -75,7 +75,7 @@ export class YangChunComment extends LitElement {
   @property({ type: Number }) accessor prePowDifficulty = 2;
   @property({ type: Object, attribute: false }) accessor customMessages: I18nStrings | undefined;
 
-  @state() private accessor apiService!: ApiService;
+  // @state() private accessor apiService!: ApiService;
 
   @state() private accessor draft = '';
   @state() private accessor nickname = '';
@@ -165,8 +165,6 @@ ${t('helpMdCodeBlock')}
         <comment-list
           .comments=${this.comments}
           .author=${this.adminName}
-          .canEditCallback=${this.apiService.canEditComment}
-          .isMyCommentCallback=${this.apiService.isMyComment}
           @comment-reply=${this.handleCommentReply}
           @comment-edit=${this.handleCommentEdit}
           @comment-delete=${this.handleCommentDelete}
@@ -189,10 +187,7 @@ ${t('helpMdCodeBlock')}
           .open=${this.showAdmin}
           @close=${() => (this.showAdmin = false)}
         >
-          <comment-admin
-            .apiService=${this.apiService}
-            @auth-status-change=${this.handleAuthStatusChange}
-          ></comment-admin>
+          <comment-admin @auth-status-change=${this.handleAuthStatusChange}></comment-admin>
         </comment-dialog>
         <comment-dialog
           header=${t('notify')}
@@ -232,7 +227,8 @@ ${t('helpMdCodeBlock')}
       this.apiUrl
     ) {
       console.debug('Initializing API service with URL:', this.apiUrl);
-      this.apiService = createApiService(this.apiUrl, this.prePowDifficulty, this.prePowMagicWord);
+      const apiService = createApiService(this.apiUrl, this.prePowDifficulty, this.prePowMagicWord);
+      globalApiService.setInstance(apiService);
 
       const rssUrl = new URL('/rss/thread', this.apiUrl);
       rssUrl.searchParams.append('post', this.post);
@@ -261,7 +257,7 @@ ${t('helpMdCodeBlock')}
 
   private async updatedComments() {
     try {
-      const response = await this.apiService.getComments(this.post);
+      const response = await globalApiService.getInstance().getComments(this.post);
       this.comments = response.comments;
       // Update comment-admin component with admin status if available
       if (response.isAdmin !== undefined && this.commentAdmin) {
@@ -299,12 +295,14 @@ ${t('helpMdCodeBlock')}
     if (!pureDraft) return;
 
     try {
-      const ok = this.apiService.updateComment(
-        this.post,
-        this.referenceComment.id,
-        this.referenceComment.pseudonym || '',
-        pureDraft,
-      );
+      const ok = await globalApiService
+        .getInstance()
+        .updateComment(
+          this.post,
+          this.referenceComment.id,
+          this.referenceComment.pseudonym || '',
+          pureDraft,
+        );
 
       console.debug('Edit comment ID:', this.referenceComment.id, ok);
       this.draft = '';
@@ -335,7 +333,9 @@ ${t('helpMdCodeBlock')}
         : undefined;
 
     try {
-      const id = await this.apiService.addComment(this.post, pseudonym, pureDraft, replyTo);
+      const id = await globalApiService
+        .getInstance()
+        .addComment(this.post, pseudonym, pureDraft, replyTo);
       console.debug('Added comment ID:', id);
       this.draft = '';
       this.editPseudonym = '';
@@ -400,7 +400,7 @@ ${t('helpMdCodeBlock')}
     console.debug('Delete comment ID:', commentId);
 
     try {
-      const ok = await this.apiService.deleteComment(this.post, commentId);
+      const ok = await globalApiService.getInstance().deleteComment(this.post, commentId);
       if (ok) {
         console.debug('Deleted comment ID:', commentId);
         this.deleteCommentId = ''; // Close dialog

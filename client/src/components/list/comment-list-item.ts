@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
+import { globalApiService } from '../../api/globalApiService';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { yangChunCommentStyles } from '../yangchun-comment.styles';
 import type { Comment } from '@ziteh/yangchun-comment-shared';
@@ -203,10 +204,6 @@ export class CommentListItem extends LitElement {
   };
   @property({ type: Array }) accessor replyComments: Comment[] = [];
   @property({ type: String }) accessor author = '';
-  @property({ type: Function }) accessor canEditCallback: (commentId: string) => boolean = () =>
-    false; // TODO: rename
-  @property({ type: Function }) accessor isMyCommentCallback: (commentId: string) => boolean = () =>
-    false;
 
   private isContentExpanded = false;
   private readonly MAX_LINES = 10;
@@ -236,7 +233,10 @@ export class CommentListItem extends LitElement {
             ${(() => {
               if (this.comment.isAdmin) {
                 return html`<span class="badge">${t('author')}</span>`;
-              } else if (this.isMyCommentCallback(this.comment.id)) {
+              } else if (
+                globalApiService.isInitialized() &&
+                globalApiService.getInstance().isMyComment(this.comment.id)
+              ) {
                 return html`<span class="badge">${t('me')}</span>`;
               }
               return null;
@@ -298,7 +298,8 @@ export class CommentListItem extends LitElement {
                   >
                     ${t('reply')}
                   </button>
-                  ${this.canEditCallback(this.comment.id) // TODO: to @state ?
+                  ${globalApiService.isInitialized() &&
+                  globalApiService.getInstance().canEditComment(this.comment.id)
                     ? html`
                         <button class="text-btn" @click=${this.handleEdit}>${t('edit')}</button>
                         <button class="text-btn" @click=${this.handleDelete}>${t('delete')}</button>
@@ -315,8 +316,6 @@ export class CommentListItem extends LitElement {
                 role="listitem"
                 .comment=${cmt}
                 .author=${this.author}
-                .canEditCallback=${this.canEditCallback}
-                .isMyCommentCallback=${this.isMyCommentCallback}
               ></comment-list-item>
             `,
           )}
