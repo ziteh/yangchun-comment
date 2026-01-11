@@ -13,13 +13,13 @@ head_sampling_rate = 1 # optional. default = 1.
 [[d1_databases]]
 binding = "DB"
 database_name = "yangchun-comment-db"
-database_id = "<D1_DATABASE_ID>"
-preview_database_id = "<D1_DATABASE_PREVIEW_ID>"
+database_id = "${D1_DATABASE_ID}"
+preview_database_id = "${D1_DATABASE_PREVIEW_ID}"
 
 [[kv_namespaces]]
 binding = "KV"
-id = "<KV_COMMENTS_ID>"
-preview_id = "<KV_COMMENTS_PREVIEW_ID>"
+id = "${KV_COMMENTS_ID}"
+preview_id = "${KV_COMMENTS_PREVIEW_ID}"
 
 [vars]
 FRONTEND_URL = "https://your-frontend-url.com" # Frontend URL

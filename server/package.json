@@ -5,6 +5,7 @@
   "scripts": {
     "build": "tsc --noEmit && echo 'Type check passed'",
     "deploy": "wrangler deploy",
+    "init": "wrangler d1 migrations apply yangchun-comment-db --local",
     "dev": "wrangler dev --port 8787",
     "start": "wrangler dev --port 8787",
     "test": "vitest",
