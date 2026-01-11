@@ -16,13 +16,13 @@ const envSchema = z.object({
   CORS_ORIGIN: z.string(),
   RSS_SITE_PATH: z.string(),
   ADMIN_USERNAME: z.string(),
-  MAX_ALL_SITE_RSS_COMMENTS: z.number().min(1),
-  MAX_THREAD_RSS_COMMENTS: z.number().min(1),
-  PRE_POW_DIFFICULTY: z.number().min(1),
-  PRE_POW_TIME_WINDOW: z.number().min(1),
+  MAX_ALL_SITE_RSS_COMMENTS: z.coerce.number().min(1),
+  MAX_THREAD_RSS_COMMENTS: z.coerce.number().min(1),
+  PRE_POW_DIFFICULTY: z.coerce.number().min(1),
+  PRE_POW_TIME_WINDOW: z.coerce.number().min(1),
   PRE_POW_MAGIC_WORD: z.string().min(1),
-  FORMAL_POW_DIFFICULTY: z.number().min(1),
-  FORMAL_POW_EXPIRATION: z.number().min(1),
+  FORMAL_POW_DIFFICULTY: z.coerce.number().min(1),
+  FORMAL_POW_EXPIRATION: z.coerce.number().min(1),
 
   // Secrets
   // 64 hex characters = 32 bytes
