@@ -2,14 +2,14 @@ import { css } from 'lit';
 
 export const yangChunCommentVars = css`
   :host {
-    --ycc-primary-color: var(--ycc-primary-color, #2563eb);
-    --ycc-primary-hover: var(--ycc-primary-hover, #1d4ed8);
-    --ycc-text-color: var(--ycc-text-color, #1f2937);
-    --ycc-text-secondary: var(--ycc-text-secondary, #6b7280);
-    --ycc-bg-color: var(--ycc-bg-color, #ffffff);
-    --ycc-bg-secondary: var(--ycc-bg-secondary, #f3f4f6);
-    --ycc-border-color: var(--ycc-border-color, #e5e7eb);
-    --ycc-error-color: var(--ycc-error-color, #ef4444);
+    --ycc-primary-color: #2563eb;
+    --ycc-primary-hover: #1d4ed8;
+    --ycc-text-color: #1f2937;
+    --ycc-text-secondary: #6b7280;
+    --ycc-bg-color: #ffffff;
+    --ycc-bg-secondary: #f3f4f6;
+    --ycc-border-color: #e5e7eb;
+    --ycc-error-color: #ef4444;
 
     --ycc-spacing-xs: 4px;
     --ycc-spacing-s: 8px;
