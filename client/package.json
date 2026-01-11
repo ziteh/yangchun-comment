@@ -39,6 +39,6 @@
     "@ziteh/yangchun-comment-shared": "workspace:*",
     "@rollup/plugin-terser": "^0.4.4",
     "terser": "^5.44.0",
-    "vite": "^7.1.4"
+    "vite": "^7.1.11"
   }
 }
