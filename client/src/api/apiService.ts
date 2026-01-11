@@ -55,7 +55,6 @@ export const createApiService = (
 ): ApiService => {
   const LOCAL_STORAGE_MY_COMMENT_IDS_KEY = 'my_comment_ids';
 
-  // TODO HttpOnly Cookie?
   const commentAuthMap = new Map<string, AuthInfo>();
 
   const getFormalChallenge = async (challenge: string, nonce: number): Promise<string | null> => {
