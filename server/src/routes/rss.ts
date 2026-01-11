@@ -27,6 +27,7 @@ app.get('/thread', sValidator('query', CommentQuerySchema), async (c) => {
   const pageTitle = `Comments of ${post}`;
   const postUrl = new URL(post, siteUrl).href;
 
+  // TODO: KV caching for RSS generation?
   let rss = `<?xml version="1.0" encoding="UTF-8" ?>
 <rss version="2.0">
 <channel>
@@ -70,6 +71,7 @@ app.get('/site/:site', async (c) => {
   const siteUrl = c.env.FRONTEND_URL;
   const maxComments = c.env.MAX_ALL_SITE_RSS_COMMENTS;
 
+  // TODO: KV caching for RSS generation?
   const latestComments: CommentWithPost[] = await getAllComments(c.env.DB, maxComments);
   const rssItems = latestComments
     .map((comment) => {
