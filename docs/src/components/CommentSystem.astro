@@ -10,7 +10,7 @@
   </div>
 
   <div id="comment-container" style="display: none;">
-    <yangchun-comment post="example-post" api-url="/" language="en" author-name="ZiTe"
+    <yangchun-comment post="example-post" api-url="/" language="en-US" author-name="ZiTe"
     ></yangchun-comment>
   </div>
 </div>
@@ -126,12 +126,17 @@
 </script>
 
 <style>
-  #msw-comment-system {
+  #msw-comment-system yangchun-comment {
     /* Override CSS variables to follow site color scheme */
     --ycc-text-color: var(--sl-color-text);
-    --ycc-background-color: var(--sl-color-bg);
-    --ycc-primary-color: var(--sl-color-text-accent);
-    --ycc-minimal: var(--sl-color-gray-7);
+    --ycc-text-secondary: var(--sl-color-gray-3);
+    --ycc-primary-color: var(--sl-color-accent);
+    --ycc-primary-hover: var(--sl-color-accent-low);
+
+    --ycc-bg-color: var(--sl-color-bg);
+    --ycc-bg-secondary: var(--sl-color-bg-nav);
+    --ycc-border-color: var(--sl-color-gray-5);
+    --ycc-error-color: var(--sl-color-red);
   }
 
   .status-banner {
