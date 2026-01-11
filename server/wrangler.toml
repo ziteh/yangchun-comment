@@ -18,8 +18,8 @@ preview_database_id = "${D1_DATABASE_PREVIEW_ID}"
 
 [[kv_namespaces]]
 binding = "KV"
-id = "${KV_COMMENTS_ID}"
-preview_id = "${KV_COMMENTS_PREVIEW_ID}"
+id = "${KV_NAMESPACE_ID}"
+preview_id = "${KV_NAMESPACE_PREVIEW_ID}"
 
 [vars]
 FRONTEND_URL = "https://your-frontend-url.com" # Frontend URL
@@ -34,8 +34,7 @@ PRE_POW_TIME_WINDOW = 60      # The time window (in seconds) for the pre-proof-o
 FORMAL_POW_DIFFICULTY = 4 # The difficulty for the formal proof-of-work
 FORMAL_POW_EXPIRATION = 300  # The expiration time (in seconds) for the formal proof-of-work challenges
 
-# Secrets
-# SECRET_COMMENT_HMAC_KEY = "${SECRET_COMMENT_HMAC_KEY}"   # HMAC secret key for signing
-# SECRET_ADMIN_JWT_KEY = "${SECRET_ADMIN_JWT_KEY}" # JWT secret key for admin
-# ADMIN_PASSWORD = "${ADMIN_PASSWORD}"     # Admin password
-# SECRET_FORMAL_POW_HMAC_KEY= "${SECRET_FORMAL_POW_HMAC_KEY}" # Secret key for formal PoW
+# !!NOTE: Never store secrets (SECRET_ prefixed variables) in this file.
+#         Instead, use `.env` or `.dev.vars` for local development,
+#         and use `wrangler secret put` command for production deployment.
+#         Refer to https://developers.cloudflare.com/workers/configuration/secrets/
