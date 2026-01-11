@@ -38,6 +38,7 @@ export class CommentInput extends LitElement {
         resize: vertical;
         border: none;
         resize: none;
+        background-color: var(--ycc-bg-color);
         scrollbar-width: thin;
         scrollbar-color: var(--ycc-border-color) transparent;
       }
@@ -77,6 +78,7 @@ export class CommentInput extends LitElement {
         flex: 1;
         border: none;
         outline: none;
+        background-color: var(--ycc-bg-color);
         // max-width: 250px;
       }
       .preview-container {

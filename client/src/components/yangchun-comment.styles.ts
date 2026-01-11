@@ -1,31 +1,32 @@
 import { css } from 'lit';
 
-export const yangChunCommentStyles = css`
+export const yangChunCommentVars = css`
   :host {
-    display: block;
-
-    --ycc-primary-color: #2563eb;
-    --ycc-primary-hover: #1d4ed8;
-    --ycc-text-color: #1f2937;
-    --ycc-text-secondary: #6b7280;
-    --ycc-bg-color: #ffffff;
-    --ycc-bg-secondary: #f3f4f6;
-    --ycc-border-color: #e5e7eb;
-    --ycc-error-color: #ef4444;
+    --ycc-primary-color: var(--ycc-primary-color, #2563eb);
+    --ycc-primary-hover: var(--ycc-primary-hover, #1d4ed8);
+    --ycc-text-color: var(--ycc-text-color, #1f2937);
+    --ycc-text-secondary: var(--ycc-text-secondary, #6b7280);
+    --ycc-bg-color: var(--ycc-bg-color, #ffffff);
+    --ycc-bg-secondary: var(--ycc-bg-secondary, #f3f4f6);
+    --ycc-border-color: var(--ycc-border-color, #e5e7eb);
+    --ycc-error-color: var(--ycc-error-color, #ef4444);
 
     --ycc-spacing-xs: 4px;
     --ycc-spacing-s: 8px;
     --ycc-spacing-m: 16px;
     --ycc-spacing-l: 24px;
 
-    --ycc-font-family:
-      -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    --ycc-font-monospace:
-      ui-monospace, SFMono-Regular, SF Mono, Menlo, Monaco, Consolas, 'Liberation Mono',
-      'Courier New', monospace;
+    --ycc-font-family: sans-serif;
+    --ycc-font-monospace: ui-monospace, monospace;
     --ycc-font-size: 14px;
     --ycc-line-height: 1.5;
     --ycc-radius: 6px;
+  }
+`;
+
+export const yangChunCommentStyles = css`
+  :host {
+    display: block;
   }
 
   .root {

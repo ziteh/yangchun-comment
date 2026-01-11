@@ -1,6 +1,6 @@
 import { LitElement, css, html, type PropertyValues } from 'lit';
 import { customElement, property, state, query } from 'lit/decorators.js';
-import { yangChunCommentStyles } from './yangchun-comment.styles';
+import { yangChunCommentStyles, yangChunCommentVars } from './yangchun-comment.styles';
 import type { Comment } from '@ziteh/yangchun-comment-shared';
 import './comment-input';
 import { CommentInput } from './comment-input';
@@ -18,6 +18,7 @@ import { cleanupPowWorker } from '../utils/pow';
 @customElement('yangchun-comment')
 export class YangChunComment extends LitElement {
   static styles = [
+    yangChunCommentVars,
     yangChunCommentStyles,
     css`
       :host {

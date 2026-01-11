@@ -43,7 +43,7 @@ export class CommentInfo extends LitElement {
         gap: var(--ycc-spacing-s);
       }
       .error-msg {
-        color: var(--ycc-error-color, #ff4d4f);
+        color: var(--ycc-error-color);
       }
     `,
   ];
