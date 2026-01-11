@@ -3,61 +3,121 @@ title: Getting Started
 ---
 
 import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
 
-**Yang Chun** (陽春 — meaning “simple and unadorned”) Comment is a lightweight, privacy-first commenting system built with [Lit](https://lit.dev/) and [Hono](https://hono.dev/), designed to run on [Cloudflare Workers](https://workers.cloudflare.com/). No registration required and no personal data is stored—ideal for small sites and blogs.
+**Yang Chun Comment** 是一個輕量且注重隱私的留言系統，前端使用 [Lit](https://lit.dev/)，便於嵌入各種前端框架。後端使用 [Hono](https://hono.dev/)，設計運行在 [Cloudflare Workers](https://workers.cloudflare.com/) 無伺服器平台。非常適合個人部落格或小型網站（有時人們只是想要簡單地回應一個：酷！）。
 
-✨ Features:
+✨ 對於留言者來說，它具有以下特色:
 
-- No login
-- No cookies
-- No personal data collection
-- No browser fingerprinting*
+- 無需註冊或登入
+- 無需使用 cookie
+- 不收集個人資料，包含姓名、Email、IP 地址、User-Agent 等
+- 不進行瀏覽器指紋識別
 
-<details>
-<summary>About fingerprinting</summary>
-  Currently we use a **hashed IP** for backend rate limiting. This provides partial identifiability but is not equivalent to full browser fingerprinting:
-  
-  1. Multiple users on public networks can share the same IP.
-  2. A single user may have different IPs due to ISP dynamic addressing.
-  
-  An IP cannot uniquely identify a person. In the future we may consider a Proof-of-Work approach to reduce malicious traffic while avoiding hashed IPs.
-</details>
+<Aside type="note" title="關於指紋識別">
+目前 Yang Chun Comment 對於***一般留言者***的流量限制是採用工作量證明（Proof-of-Work）機制，未使用任何包含用戶個人資訊的識別方式。
 
-## 1. Backend
+但是對於***管理員***登入流程，系統會短期暫存經由 HMAC-SHA256（含伺服端密鑰）處理後的 IP 位址雜湊值，並將其作為流量限制與暴力破解防禦機制中的識別依據。
+
+此方式具備有限的識別能力，但並不等同於完整的瀏覽器指紋識別，因為：
+
+1. 多名使用者可能在公共或企業網路環境中共享相同的 IP 位址。
+2. 單一使用者可能因 ISP 的動態位址分配而於不同時間使用不同的 IP 位址。
+3. IP 位址經 HMAC-SHA256 處理後屬於不可逆雜湊，無法由雜湊值還原原始 IP。
+
+因此，單純基於 IP 位址（即使經過雜湊處理）的識別方式，無法有效或穩定地唯一識別一名使用者，與真正的瀏覽器指紋識別方案（例如 [FingerprintJS](https://fingerprint.com/github/)）仍存在明顯差距。
+</Aside>
+
+## 1. 準備
+
+Yang Chun Comment 是一個 Monorepo 專案，使用 pnpm workspaces，主要包含前端 (client) 和後端 (server)。以下步驟使用 pnpm 作為套件管理工具。
+
+由於後端會部署在 Cloudflare Workers 上，因此你需要註冊一個 [Cloudflare 帳號](https://dash.cloudflare.com/sign-up)。免費方案即可應付絕大多數的個人需求。
+
+首先要從 GitHub 上 clone 專案，並進入專案目錄：
 
 ```bash
-# Clone
-git clone https://github.com/ziteh/yangchun-comment.git
+git clone https://github.com/ziteh/yangchun-comment.git yangchun-comment
+```
+```bash
 cd yangchun-comment
+```
 
-# Install dependencies and build
+安裝依賴並進行專案建置：
+
+```bash
 pnpm install
+```
+```bash
 pnpm build
+```
 
-# Move to server folder
+## 2. 後端 (server)
+
+從專案目錄進入後端目錄：
+
+```bash
 cd server
 ```
 
-Create a [KV][cf-kv] namespace (comments data stored here):
+### A. 建立 D1
+
+建立一個 [D1][cf-d1] 資料庫，這是 Cloudflare 提供的 SQLite 相容資料庫服務，Yang Chun Comment 主要使用它來存放留言資料。以下指令中的 `yangchun-comment-db` 是這個資料庫的名稱，可以自行修改。關於 D1 的免費額度，請參考 [D1 Pricing][cf-d1-price]。
 
 ```bash
-pnpm exec wrangler kv namespace create "yangchun-comment-kv"
+pnpm exec wrangler d1 database create "yangchun-comment-db" --binding "DB"
 ```
 
-Example response (you'll get an `id` to copy):
+預計會得到類似下面的回應。你需要複製回應中的 `id`。
 
-```bash "506ac68ae906458692g22933d3896af3"
+```txt "506ac68ae906458692g22933d3896af3"
+...🌀 Creating database with title "yangchun-comment-db"
+✨ Success!
+To access your new D1 Database in your Worker, add the following snippet to your configuration file:
+[[d1_databases]]
+binding = "DB"
+id = "506ac68ae906458692g22933d3896af3"
+```
+
+更新你的 `wrangler.toml`，將上面回應中的 `id` 貼上：
+
+```toml frame="auto" "506ac68ae906458692g22933d3896af3"
+# wrangler.toml
 ...
 
+[[d1_databases]]
+binding = "DB"
+id = "506ac68ae906458692g22933d3896af3" # <-- Replace with your D1 ID
+...
+```
+
+D1 建立完成後，接著要初始化資料庫結構。記得要將資料庫名稱替換成你自己的名稱（如果有修改的話）：
+
+```bash
+pnpm exec wrangler d1 migrations apply "yangchun-comment-db" --remote
+```
+
+### B. 建立 KV
+
+建立一個 [KV][cf-kv] Namespace，這是 Cloudflare 提供的 Key-Value 儲存服務，Yang Chun Comment 主要使用它來存放快取資料。下面的指令中的 `yangchun-comment-kv` 是這個 namespace 的名稱，可以自行修改。關於 KV 的免費額度，請參考 [KV Pricing][cf-kv-price]。
+
+```bash
+pnpm exec wrangler kv namespace create "yangchun-comment-kv" --binding "KV"
+```
+
+預計會得到類似下面的回應。你需要複製回應中的 `id`。
+
+```txt "506ac68ae906458692g22933d3896af3"
+...
 🌀 Creating namespace with title "yangchun-comment-kv"
 ✨ Success!
 To access your new KV Namespace in your Worker, add the following snippet to your configuration file:
 [[kv_namespaces]]
-binding = "yangchun_comment_kv"
+binding = "KV"
 id = "506ac68ae906458692g22933d3896af3"
 ```
 
-Update your `wrangler.toml` and replace the `id` value with the one returned above:
+更新你的 `wrangler.toml`，將上面回應中的 `id` 貼上：
 
 ```toml frame="auto" "506ac68ae906458692g22933d3896af3"
 # wrangler.toml
@@ -65,29 +125,53 @@ Update your `wrangler.toml` and replace the `id` value with the one returned abo
 ...
 
 [[kv_namespaces]]
-binding = "COMMENTS"
-id = "506ac68ae906458692g22933d3896af3" # Replace with your KV ID
+binding = "KV"
+id = "506ac68ae906458692g22933d3896af3" # <-- Replace with your KV ID
 
 ...
-
-# You may modify these values as needed
-[vars]
-FRONTEND_URL = "https://your-frontend-url.com"  # Frontend URL
-CORS_ORIGIN = "*"               # CORS origin, use "*" to allow all origins
-RSS_SITE_PATH = "site"          # The path for the all-site RSS feed
-ADMIN_USERNAME = "admin"        # Admin username
-MAX_MSG_LENGTH = 1000           # The max length of the comment message in characters
-MAX_PSEUDONYM_LENGTH = 80       # The max length of the pseudonym in characters
-MAX_ALL_SITE_RSS_COMMENTS = 25  # The max number of comments in the all-site RSS feed
 ```
 
-Deploy to Cloudflare Workers:
+### C. 配置環境變數
+
+`wrangler.toml` 中有一些變數需要根據你的需求來修改：
+
+```toml frame="auto"
+# wrangler.toml
+...
+[vars]
+# 這些變數必須根據你的情況來修改
+ADMIN_USERNAME = "admin" # Admin username
+PRE_POW_MAGIC_WORD = "MAGIC" # The magic word for the pre-proof-of-work
+FRONTEND_URL = "https://your-frontend-url.com" # Frontend URL
+CORS_ORIGIN = "http://localhost:5173" # CORS origin, use "*" to allow all origins
+
+# 這些變數可以保留預設值
+RSS_SITE_PATH = "site"   # The path for the all-site RSS feed
+MAX_ALL_SITE_RSS_COMMENTS = 20   # The max number of comments in the all-site RSS feed
+MAX_THREAD_RSS_COMMENTS = 10     # The max number of comments in the thread RSS feed
+PRE_POW_DIFFICULTY = 2        # The difficulty for the pre-proof-of-work
+PRE_POW_TIME_WINDOW = 60      # The time window (in seconds) for the pre-proof-of-work
+FORMAL_POW_DIFFICULTY = 4 # The difficulty for the formal proof-of-work
+FORMAL_POW_EXPIRATION = 300  # The expiration time (in seconds) for the formal proof-of-work challenges
+
+...
+```
+
+<Aside type="danger">
+帶有 `SECRET_` 前綴的變數是敏感資訊，絕對不應該寫在 `wrangler.toml` 中，也不應該提交到版本控制系統（例如 Git）或公開它們。
+
+請參考後續的說明來處理這些密鑰。
+</Aside>
+
+### D. 部署 Worker
+
+使用下面的指令來部署 Worker 到 Cloudflare。`--name` 用來指定你的 Worker 名稱：
 
 ```bash
-pnpm run deploy
+pnpm exec wrangler deploy --name "yangchun-comment-be"
 ```
 
-You should see an endpoint like:
+你應該會看到類似下面的回應，其中包含你的 Worker 端點網址：
 
 ```bash "https://yangchun-comment-be.<YOUR_SUBDOMAIN>.workers.dev"
 ...
@@ -98,71 +182,156 @@ Deployed yangchun-comment-be triggers (0.94 sec)
 Current Version ID: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 ```
 
-Update [Secrets][cf-secret]. You need to set a security key for `SECRET_COMMENT_HMAC_KEY` and `SECRET_ADMIN_JWT_KEY`. The value should be a **strong random** string that is **long enough** (at least 32 char is recommended). You can use a tool like [this](https://jwtsecrets.com/), [this](https://djecrety.ir/) or [this](https://randomkeygen.com/) to generate a random key. Also set the admin password `ADMIN_PASSWORD`.
+現在你的 Worker 應該會顯示失敗，這是預期的，因為還沒有上傳密鑰。
 
-Use the `wrangler secret put` to set the secret, which will start the interactive operation and prompt you to enter the value.
+### E. 上傳密鑰
+
+Yang Chun Comment 需要一些密鑰來確保安全性。請參考下方說明來產生並上傳這些密鑰。這些密鑰會儲存在 Cloudflare Workers 的 [Secrets][cf-secret] 中。
+
+首先建立一個空的 `.dev.vars` 檔案在 `server/` 目錄下，這個檔案和 `.env` 檔案類似，用來存放環境變數。
+
+**注意：不要將這個檔案公開或提交到版本控制系統（例如 Git）中。**
 
 ```bash
-# HMAC secret key
-pnpm exec wrangler secret put "SECRET_COMMENT_HMAC_KEY"
-
-# Admin JWT signature key
-pnpm exec wrangler secret put "SECRET_ADMIN_JWT_KEY"
-
-# Admin login password
-pnpm exec wrangler secret put "ADMIN_PASSWORD"
+touch .dev.vars
 ```
 
-Once completed, you can test it by visiting `https://yangchun-comment-be.<YOUR_SUBDOMAIN>.workers.dev/rss/<RSS_SITE_PATH>`, which is an RSS feed and will return XML content. Note that the URL does **NOT** have a trailing slash.
+首先是管理員登入密碼。Yang Chun Comment 使用 PBKDF2-HMAC-SHA256 作為密碼雜湊演算法，設定輸出長度為 32 bytes，並採用 600,000 次迭代（[OWASP 建議][owasp-pbkdf2]）。你可以使用下面的 Node.js 腳本來產生：
 
-## 2. Frontend
-
-Install the client package.
-
-<Tabs syncKey="package-manager">
-  <TabItem label="pnpm">
 ```bash
-pnpm add @ziteh/yangchun-comment-client
+node generate-password-hash.js <YOUR_ADMIN_PASSWORD>
 ```
-  </TabItem>
-  <TabItem label="npm">
+
+這會輸出類似下面的回應，將最後兩行的值複製到 `.dev.vars` 檔案中：
+
+```txt {15,16}
+=== PBKDF2 Password Hash ===
+Iterations: 600000
+Key Length: 32 bytes
+Digest: sha256
+
+Hash:
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+Salt:
+yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
+
+------------------------------
+Put the following secrets into your wrangler.toml or .env or .dev.vars file:
+
+SECRET_ADMIN_PASSWORD_HASH=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+SECRET_ADMIN_PASSWORD_SALT=yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
+```
+
+再來要產生其他的密鑰，包含了 `SECRET_ADMIN_JWT_KEY`、`SECRET_COMMENT_HMAC_KEY`、`SECRET_FORMAL_POW_HMAC_KEY` 以及 `SECRET_IP_PEPPER`。
+
+這些密鑰必須是**密碼學強隨機值**，且具有足夠的長度。由於系統中的雜湊函數使用 SHA-256，因此建議密鑰長度至少 32 位元組，即 64 個 Hex 字元。各個密鑰不該相同。
+
+你可以使用下面提供的 Node.js 腳本來自動產生這些隨機密鑰：
+
 ```bash
-npm i @ziteh/yangchun-comment-client
+node generate-secret-keys.js
 ```
-  </TabItem>
-</Tabs>
 
-Add to your project:
+將產出的密鑰加入到 `.dev.vars` 檔案中。完成後，`.dev.vars` 檔案應該類似下面這樣：
 
-```tsx
-// React example
+```dotenv frame="auto"
+# .dev.vars
+SECRET_ADMIN_PASSWORD_HASH=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+SECRET_ADMIN_PASSWORD_SALT=yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
 
-import { useEffect, useRef } from 'react';
-import '@ziteh/yangchun-comment-client';
-import '@ziteh/yangchun-comment-client/style.css';
+SECRET_ADMIN_JWT_KEY=zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
+SECRET_COMMENT_HMAC_KEY=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+SECRET_FORMAL_POW_HMAC_KEY=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+SECRET_IP_PEPPER=cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+```
 
-const API_URL = 'https://yangchun-comment-be.<YOUR_SUBDOMAIN>.workers.dev';
+使用下面的指令來上傳這些變數。`--name` 用來指定你的 Worker 名稱：
 
-function App() {
-  const wcRef = useRef<HTMLElement | null>(null);
+```bash
+pnpm exec wrangler secret bulk ".dev.vars" --name "yangchun-comment-be"
+```
 
-  useEffect(() => {
-    if (!wcRef.current) return;
+密鑰上傳完成後，檢查你的 Worker，它現在應該可以正常運作了！
 
-    (wcRef.current as any).apiUrl = API_URL;
-    (wcRef.current as any).authorName = 'Test Author';
-    (wcRef.current as any).post = '/blog/my-post';
-  }, []);
+<Aside type="danger">
+帶有 `SECRET_` 前綴的變數是敏感資訊，請務必妥善保管。實際上，一旦完成本節的步驟後，你就不需要（也不應該）再查看或保管這些密鑰。它們儲存在 Cloudflare Workers 的 Secrets 中且無法被讀取或導出。
+</Aside>
 
-  return (
-    <div>
-      <yangchun-comment ref={wcRef}></yangchun-comment>
-    </div>
-  );
+## 3. 前端 (client)
+
+由於前端是以 Lit 產生的 Web Component 發佈的，因此你可以將它嵌入到幾乎任何前端框架中（例如 React、Vue、Svelte 等），甚至是無框架的 Vanilla JavaScript。
+
+### A. 安裝套件
+
+打開你的前端專案，然後安裝 Yang Chun Comment 的前端套件 [@ziteh/yangchun-comment-client][npm-client]。由於目前這個專案還不穩定，建議明確指定版本號：
+
+```bash
+pnpm add @ziteh/yangchun-comment-client@0.2.0
+```
+
+然後在你的專案中引入並使用它。基本用法如下。請注意要替換一些屬性值：
+- `post`：這是用來識別留言所屬的文章或頁面的唯一標識符。你可以使用文章的 slug 或 ID。
+- `apiUrl`：這是你部署的後端 Worker 的 URL。
+- `lang`：這是語言設定，可以根據需要調整。
+- `adminName`：這是管理員的名稱，會顯示為文章作者。
+- `prePowDifficulty` 和 `prePowMagicWord`：這些值必須與你在後端設定的值相符。
+
+```html
+<yangchun-comment
+  post="default-post"
+  apiUrl="https://yangchun-comment-be.<YOUR_SUBDOMAIN>.workers.dev"
+  lang="en-US"
+  adminName="ZiTe"
+  prePowDifficulty="2"
+  prePowMagicWord="MAGIC"
+></yangchun-comment>
+```
+
+下面是一個 Vanilla JavaScript 的範例：
+
+```ts {4,8-15}
+// Vanilla example
+
+import "./style.css";
+import "@ziteh/yangchun-comment-client";
+
+document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
+  <div>
+    <yangchun-comment
+      post="default-post"
+      apiUrl="https://yangchun-comment-be.<YOUR_SUBDOMAIN>.workers.dev"
+      lang="en-US"
+      adminName="ZiTe"
+      prePowDifficulty="2"
+      prePowMagicWord="MAGIC"
+    ></yangchun-comment>
+  </div>
+`;
+```
+
+### B. 調整 CSS
+
+你可以透過 CSS 變數來調整 Yang Chun Comment 的外觀以符合你的網站設計。下面是一個範例：
+
+```css
+yangchun-comment {
+  --ycc-primary-color: #2563eb;
+  --ycc-primary-hover: #1d4ed8;
+  --ycc-text-color: #ffffff;
+  --ycc-text-secondary: #a3a3a3;
+  --ycc-bg-color: #242424;
+  --ycc-bg-secondary: #4d4d4d;
+  --ycc-border-color: #757578;
+  --ycc-error-color: #ef4444;
 }
-
-export default App;
 ```
 
+[cf-d1]: https://developers.cloudflare.com/d1/
+[cf-d1-price]: https://developers.cloudflare.com/d1/platform/pricing/
 [cf-kv]: https://developers.cloudflare.com/kv/
+[cf-kv-price]: https://developers.cloudflare.com/kv/platform/pricing/
 [cf-secret]: https://developers.cloudflare.com/workers/configuration/secrets/
+[npm-client]: https://www.npmjs.com/package/@ziteh/yangchun-comment-client
+
+[owasp-pbkdf2]: https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html#pbkdf2
