@@ -10,17 +10,17 @@
     "url": "git+https://github.com/ziteh/yangchun-comment.git"
   },
   "homepage": "https://github.com/ziteh/yangchun-comment#readme",
-  "main": "./dist/yangchun-comment.umd.js",
-  "module": "./dist/yangchun-comment.es.js",
+  "main": "./dist/yangchun-comment.js",
+  "module": "./dist/yangchun-comment.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/yangchun-comment.es.js",
-      "require": "./dist/yangchun-comment.umd.js"
-    },
-    "./style.css": "./dist/yangchun-comment.css"
+      "import": "./dist/yangchun-comment.js",
+      "require": "./dist/yangchun-comment.umd.cjs"
+    }
   },
+  "sideEffects": true,
   "files": [
     "dist"
   ],

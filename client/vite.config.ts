@@ -26,7 +26,7 @@ export default defineConfig({
       output: [
         {
           format: 'es',
-          entryFileNames: 'yangchun-comment.es.js',
+          entryFileNames: 'yangchun-comment.js',
           exports: 'named',
           plugins: [terser()],
           assetFileNames,
@@ -35,7 +35,7 @@ export default defineConfig({
         },
         {
           format: 'umd',
-          entryFileNames: 'yangchun-comment.umd.js',
+          entryFileNames: 'yangchun-comment.umd.cjs',
           name: 'YangchunComment',
           exports: 'named',
           globals: {},
