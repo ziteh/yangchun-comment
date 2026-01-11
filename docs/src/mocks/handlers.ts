@@ -34,7 +34,7 @@ You can use \`**bold**\` for **bold**, \`*italic*\` for *italic*, and other form
   {
     id: getCommentId(4),
     pseudonym: 'ZiTe',
-    pubDate: Date.now() - 1 * msOfOneDay,
+    pubDate: Date.now() - 14 * msOfOneDay,
     isAdmin: true,
     msg: 'Thank you all for your use and feedback!',
   },

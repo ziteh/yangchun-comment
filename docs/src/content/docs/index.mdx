@@ -1,42 +1,22 @@
 ---
 title: Yang Chun Comment
-description: A lightweight, privacy-first comment system that runs on Cloudflare Workers.
+description: A lightweight, privacy-first comment system that runs on Cloudflare Workers serverless platform.
 template: splash
 hero:
-  tagline: A lightweight, privacy-first comment system that runs on Cloudflare Workers.
+  tagline: A lightweight, privacy-first comment system that runs on Cloudflare Workers serverless platform.
   # image:
   #   file: ../../assets/houston.webp
   #   alt: Screenshot of the Yang Chun Comment interface
   actions:
-    - text: Demo
-      link: '#demo'
-      icon: comment
+    # - text: Demo
+    #   link: '#demo'
+    #   icon: comment
     - text: Get Started
       link: /guides/get-started/
       icon: document
-      variant: minimal
+      # variant: minimal
 ---
 
 import CommentSystem from '../../components/CommentSystem.astro';
-import { Card, CardGrid } from '@astrojs/starlight/components';
-
-<CardGrid>
-  <Card title="Privacy" icon="seti:ignored">
-    No login, no cookies, no personal data, no browser fingerprinting.
-  </Card>
-  <Card title="Markdown" icon="seti:markdown">
-    Comments support Markdown formatting.
-  </Card>
-  <Card title="Frontend" icon="laptop">
-    Built with Lit Web Components and easy to embed.
-  </Card>
-  <Card title="Backend" icon="cloudflare">
-    Built with Hono and runs on Cloudflare Workers.
-  </Card>
-</CardGrid>
-
-## Demo
-
-Try the live demo: post, reply, edit, and delete comments.
 
 <CommentSystem />
