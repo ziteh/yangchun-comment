@@ -15,7 +15,7 @@ const DOMPURIFY_CONFIG: DomPurifyConfig = {
     'code',
     'pre',
     'blockquote',
-    'h6', // only H6
+    'h6',
     'hr',
     'br',
     'img',
@@ -64,9 +64,9 @@ function initializeHooks() {
   isHookInitialized = true;
 }
 
-// Initialize immediately when module is loaded
-initializeHooks();
-
 export function sanitizeHtml(dirtyHtml: string) {
   return DOMPurify.sanitize(dirtyHtml, DOMPURIFY_CONFIG);
 }
+
+// Initialize immediately when module is loaded
+initializeHooks();
