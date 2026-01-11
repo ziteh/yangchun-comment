@@ -5,7 +5,7 @@ title: Getting Started
 import { Tabs, TabItem } from '@astrojs/starlight/components';
 import { Aside } from '@astrojs/starlight/components';
 
-**Yang Chun Comment** 是一個輕量且注重隱私的留言系統，前端使用 [Lit](https://lit.dev/)，便於嵌入各種前端框架。後端使用 [Hono](https://hono.dev/)，設計運行在 [Cloudflare Workers](https://workers.cloudflare.com/) 無伺服器平台。非常適合個人部落格或小型網站（有時人們只是想要簡單地回應一個：酷！）。
+**Yang Chun Comment** 是一個輕量且注重隱私的留言系統，前端使用 [Lit](https://lit.dev/)，便於嵌入各種前端框架。後端使用 [Hono](https://hono.dev/)，設計運行在 [Cloudflare Workers](https://workers.cloudflare.com/) 無伺服器平台。非常適合個人部落格或小型網站（有時人們只是想要簡單地回應一個：*酷！*）。
 
 ✨ 對於留言者來說，它具有以下特色:
 
@@ -13,20 +13,6 @@ import { Aside } from '@astrojs/starlight/components';
 - 無需使用 cookie
 - 不收集個人資料，包含姓名、Email、IP 地址、User-Agent 等
 - 不進行瀏覽器指紋識別
-
-<Aside type="note" title="關於指紋識別">
-目前 Yang Chun Comment 對於***一般留言者***的流量限制是採用工作量證明（Proof-of-Work）機制，未使用任何包含用戶個人資訊的識別方式。
-
-但是對於***管理員***登入流程，系統會短期暫存經由 HMAC-SHA256（含伺服端密鑰）處理後的 IP 位址雜湊值，並將其作為流量限制與暴力破解防禦機制中的識別依據。
-
-此方式具備有限的識別能力，但並不等同於完整的瀏覽器指紋識別，因為：
-
-1. 多名使用者可能在公共或企業網路環境中共享相同的 IP 位址。
-2. 單一使用者可能因 ISP 的動態位址分配而於不同時間使用不同的 IP 位址。
-3. IP 位址經 HMAC-SHA256 處理後屬於不可逆雜湊，無法由雜湊值還原原始 IP。
-
-因此，單純基於 IP 位址（即使經過雜湊處理）的識別方式，無法有效或穩定地唯一識別一名使用者，與真正的瀏覽器指紋識別方案（例如 [FingerprintJS](https://fingerprint.com/github/)）仍存在明顯差距。
-</Aside>
 
 ## 1. 準備
 
@@ -62,16 +48,16 @@ cd server
 
 ### A. 建立 D1
 
-建立一個 [D1][cf-d1] 資料庫，這是 Cloudflare 提供的 SQLite 相容資料庫服務，Yang Chun Comment 主要使用它來存放留言資料。以下指令中的 `yangchun-comment-db` 是這個資料庫的名稱，可以自行修改。關於 D1 的免費額度，請參考 [D1 Pricing][cf-d1-price]。
+建立一個 [D1][cf-d1] 資料庫，這是 Cloudflare 提供的 SQLite 相容資料庫服務，Yang Chun Comment 主要使用它來存放留言資料。以下指令中的 `yangchun-comment-d1` 是這個資料庫的名稱，可以自行修改。關於 D1 的免費額度，請參考 [D1 Pricing][cf-d1-price]。
 
 ```bash
-pnpm exec wrangler d1 database create "yangchun-comment-db" --binding "DB"
+pnpm exec wrangler d1 database create "yangchun-comment-d1" --binding "DB"
 ```
 
 預計會得到類似下面的回應。你需要複製回應中的 `id`。
 
 ```txt "506ac68ae906458692g22933d3896af3"
-...🌀 Creating database with title "yangchun-comment-db"
+...🌀 Creating database with title "yangchun-comment-d1"
 ✨ Success!
 To access your new D1 Database in your Worker, add the following snippet to your configuration file:
 [[d1_databases]]
@@ -94,7 +80,7 @@ id = "506ac68ae906458692g22933d3896af3" # <-- Replace with your D1 ID
 D1 建立完成後，接著要初始化資料庫結構。記得要將資料庫名稱替換成你自己的名稱（如果有修改的話）：
 
 ```bash
-pnpm exec wrangler d1 migrations apply "yangchun-comment-db" --remote
+pnpm exec wrangler d1 migrations apply "yangchun-comment-d1" --remote
 ```
 
 ### B. 建立 KV
