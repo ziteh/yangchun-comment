@@ -10,16 +10,5 @@
   },
   "[mdx]": {
     "editor.defaultFormatter": "unifiedjs.vscode-mdx"
-  },
-  "cSpell.words": [
-    "chun",
-    "commitlint",
-    "HMAC",
-    "maxlength",
-    "noopener",
-    "noreferrer",
-    "snarkdown",
-    "yang",
-    "yangchun"
-  ]
+  }
 }

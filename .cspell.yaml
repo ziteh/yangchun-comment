@@ -1,0 +1,38 @@
+version: '0.2'
+language: en
+caseSensitive: false
+allowCompoundWords: false
+useGitignore: true
+ignorePaths:
+  - '**/{cspell.*,cSpell.*,.cspell.*,cspell.config.*}'
+  - '**/node_modules/**'
+  - '**/build/**'
+  - '**/dist/**'
+  - '**/.wrangler/**'
+  - '**/.astro/**'
+  - '**/.vscode/**'
+  - pnpm-lock.yaml
+  - package-lock.json
+  - '*.svg'
+words:
+  - catppuccin
+  - chun
+  - commitlint
+  - Consolas
+  - describedby
+  - HMAC
+  - labelledby
+  - maxlength
+  - Menlo
+  - noopener
+  - noreferrer
+  - nosniff
+  - Sidera
+  - snarkdown
+  - Subresource
+  - transferrables
+  - treeify
+  - yang
+  - yangchun
+  - zite
+  - ziteh
