@@ -6,25 +6,23 @@ title: Security
 These configurations are intentionally strict but can **NOT** cover all potential vulnerabilities.
 :::
 
-防禦攻擊有時不能只依靠 Yang Chun Comment 本身的設計，父網頁本身的設定也會影響攻擊的可能性，例如 CSP 設定。
+此頁面說明了在使用 Yang Chun Comment 時可能遇到的攻擊和風險，以及目前有的機制。防禦攻擊有時不能只依靠 Yang Chun Comment 本身的設計，父網頁本身的設定也會影響攻擊的可能性，例如 [Content Security Policy (CSP)](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP) 設定。
 
 ## XSS 攻擊
 
-Cross-Site Scripting 是非常危險且難以根除的攻擊，而且有非常多不同的類型。特別對於 Yang Chun Comment 這種允許使用者輸入內容的留言系統。
+Cross-Site Scripting 是非常危險且難以根除的攻擊，而且有非常多不同的類型。對於 Yang Chun Comment 這種允許使用者輸入內容的留言系統來說 XSS 的風險更大。
 
 **潛在的風險**：
 
 - 留言者的編輯權限 Token 被盜用，導致其留言被破壞或刪除。
 - 其他防禦機制失效。
+- 影響父頁面的其他功能。
 
 **現有的機制**：
 
 Yang Chun Comment 的使用者輸入有 3 個：留言內容、昵稱、Email。
 
-其中留言內容會分別在前端和後端進行消毒。昵稱在前端會經過處理變成自定的固定詞庫中的組合假名，在後端會進行消毒並過濾，且在前端顯示時不會展開成 HTML。Email 只是 Honeypot，在後端直接丟棄，前端沒有該資訊。
-
-- **前端：** [DOMPurify](https://github.com/cure53/DOMPurify)
-- **後端：** [sanitize-html](https://github.com/apostrophecms/sanitize-html)
+其中留言內容會分別在前端使用 [DOMPurify](https://github.com/cure53/DOMPurify) 和後端使用 [sanitize-html](https://github.com/apostrophecms/sanitize-html) 進行消毒。昵稱在前端會經過處理變成自定的固定詞庫中的組合假名，在後端會進行消毒並過濾，且在前端顯示時不會展開成 HTML。Email 只是 Honeypot，在後端直接丟棄，前端沒有該資訊。
 
 > DOMPurify already provides strong protection against XSS, sanitize-html is primarily a secondary layer, removing all HTML for storage cleanliness.
 
@@ -34,7 +32,7 @@ Yang Chun Comment 的使用者輸入有 3 個：留言內容、昵稱、Email。
 - Adds `target="_blank"` and `rel="noopener noreferrer"` to all `<a>` links.
 - Adds `loading="lazy"` to all `<img>` elements (performance optimization).
 - Allows only `http:` and `https:` URLs, removing unsafe protocols (e.g. `javascript:`).
-- DOMPurify 無法防禦包含父頁面 CSP 設定、瀏覽器漏洞、自我XSS等在內的攻擊。
+- DOMPurify 無法防禦包含父頁面 CSP 設定、瀏覽器漏洞、自我 XSS 等在內的攻擊。
 
 [source code](https://github.com/ziteh/yangchun-comment/blob/main/client/src/utils/sanitize.ts)
 
