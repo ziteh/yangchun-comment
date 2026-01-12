@@ -42,6 +42,11 @@ export interface I18nStrings {
   noComments: string;
   showMore: string;
   showLess: string;
+
+  externalLinkWarning: string;
+  externalLinkDesc: string;
+  openLink: string;
+  copyLink: string;
 }
 
 export const enUS: I18nStrings = {
@@ -84,6 +89,11 @@ export const enUS: I18nStrings = {
   noComments: 'No comments yet',
   showMore: 'Show more',
   showLess: 'Show less',
+
+  externalLinkWarning: 'External Link Warning',
+  externalLinkDesc: 'You are about to leave this site and visit:',
+  openLink: 'Open Link',
+  copyLink: 'Copy Link',
 };
 
 export const zhTW: I18nStrings = {
@@ -126,6 +136,11 @@ export const zhTW: I18nStrings = {
   noComments: '目前還沒有留言',
   showMore: '顯示全部',
   showLess: '折疊',
+
+  externalLinkWarning: '外部連結警告',
+  externalLinkDesc: '你即將離開本站並訪問：',
+  openLink: '開啟連結',
+  copyLink: '複製連結',
 };
 
 let currentLanguage: I18nStrings = enUS;

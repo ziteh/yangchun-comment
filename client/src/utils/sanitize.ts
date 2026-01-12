@@ -34,10 +34,18 @@ function initializeHooks() {
   if (isHookInitialized) return;
 
   DOMPurify.addHook('afterSanitizeAttributes', (node) => {
-    // <a> Make all links open in a new tab, and prevent window.opener vulnerability
+    // <a> Mark as external link and remove default behavior
     if (node instanceof HTMLAnchorElement) {
       node.setAttribute('rel', 'noopener noreferrer');
-      node.setAttribute('target', '_blank');
+      node.setAttribute('data-external-link', 'true');
+      // Store original href and remove it to prevent default navigation
+      const href = node.getAttribute('href');
+      if (href) {
+        node.setAttribute('data-href', href);
+        node.removeAttribute('href');
+      }
+      // Add visual indication that it's a link
+      node.style.cursor = 'pointer';
     }
 
     // <img> Optimize image loading

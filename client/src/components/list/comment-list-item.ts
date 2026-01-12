@@ -214,6 +214,7 @@ export class CommentListItem extends LitElement {
       <div
         part="content"
         class="content ${!this.isContentExpanded && this.shouldShowExpandBtn() ? 'collapsed' : ''}"
+        @click=${this.handleContentClick}
       >${this.renderMarkdown(this.comment.msg)}</div>
     `;
 
@@ -368,6 +369,25 @@ export class CommentListItem extends LitElement {
         composed: true,
       }),
     );
+  }
+
+  private handleContentClick(e: Event) {
+    const target = e.target as HTMLElement;
+    const link = target.closest('[data-external-link="true"]') as HTMLElement;
+    if (link) {
+      e.preventDefault();
+      e.stopPropagation();
+      const href = link.getAttribute('data-href');
+      if (href) {
+        this.dispatchEvent(
+          new CustomEvent('external-link-click', {
+            detail: href,
+            bubbles: true,
+            composed: true,
+          }),
+        );
+      }
+    }
   }
 
   private renderMarkdown(raw: string | undefined | null): ReturnType<typeof unsafeHTML> {
