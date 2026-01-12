@@ -16,7 +16,12 @@ const app = new Hono<{
   Bindings: {
     DB: D1Database;
     KV: KVNamespace;
+    COOKIE_SAME_SITE: string;
     ADMIN_USERNAME: string;
+    ADMIN_SESSION_DURATION: number;
+    ADMIN_MAX_LOGIN_ATTEMPTS: number;
+    ADMIN_LOGIN_FAIL_WINDOW: number;
+    ADMIN_IP_BLOCK_DURATION: number;
     SECRET_ADMIN_PASSWORD_HASH: string;
     SECRET_ADMIN_PASSWORD_SALT: string;
     SECRET_ADMIN_JWT_KEY: string;
@@ -43,14 +48,17 @@ app.post('/login', sValidator('json', AdminLoginRequestSchema), async (c) => {
   const usernameMatch = await constantTimeCompare(username, adminUsername);
   const passwordMatch = await verifyPassword(password, adminPasswordSalt, adminPasswordHash);
   if (!usernameMatch || !passwordMatch) {
-    const failCount = await incrementLoginFailCount(c.env.DB, ipHash, 3600); // TODO: magic number
-    if (failCount > 5) {
-      // TODO: magic number
+    const loginFailWindow = c.env.ADMIN_LOGIN_FAIL_WINDOW;
+    const maxLoginAttempts = c.env.ADMIN_MAX_LOGIN_ATTEMPTS;
+    const ipBlockDuration = c.env.ADMIN_IP_BLOCK_DURATION;
+
+    const failCount = await incrementLoginFailCount(c.env.DB, ipHash, loginFailWindow);
+    if (failCount > maxLoginAttempts) {
       // Block IP
-      await c.env.KV.put(blockedKey, '1', { expirationTtl: 3600 }); // TODO: magic number
+      await c.env.KV.put(blockedKey, '1', { expirationTtl: ipBlockDuration });
       console.error('IP blocked due to repeated failed login attempts:', ipHash);
     } else {
-      console.warn('Failed login attempt:', ipHash, `(${failCount}/5)`);
+      console.warn('Failed login attempt:', ipHash, `(${failCount}/${maxLoginAttempts})`);
     }
 
     // Random delay to mitigate timing attacks
@@ -62,23 +70,23 @@ app.post('/login', sValidator('json', AdminLoginRequestSchema), async (c) => {
   await clearLoginFailCount(c.env.DB, ipHash);
 
   // JWT token
+  const sessionDuration = c.env.ADMIN_SESSION_DURATION;
   const now = Math.floor(Date.now() / 1000);
   const payload = {
     username: username,
     role: 'admin',
     iat: now,
-    exp: now + 3600, // TODO: magic number
+    exp: now + sessionDuration,
     jti: crypto.randomUUID(),
   };
   const token = await sign(payload, c.env.SECRET_ADMIN_JWT_KEY);
 
-  // Set HttpOnly cookie
   setCookie(c, 'admin_token', token, {
     path: '/',
     secure: true,
     httpOnly: true,
-    sameSite: 'Strict',
-    maxAge: 3600, // TODO: magic number
+    sameSite: c.env.COOKIE_SAME_SITE as 'Strict' | 'Lax' | 'None',
+    maxAge: sessionDuration,
   });
 
   console.info('Successful login');
@@ -116,7 +124,7 @@ app.post('/logout', async (c) => {
     path: '/',
     secure: true,
     httpOnly: true,
-    sameSite: 'Strict',
+    sameSite: c.env.COOKIE_SAME_SITE as 'Strict' | 'Lax' | 'None',
     maxAge: 0, // Expire immediately
   });
 

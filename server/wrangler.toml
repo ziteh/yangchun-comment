@@ -1,31 +1,34 @@
 #:schema ./node_modules/wrangler/config-schema.json
 
-name = "yangchun-comment-be"
+name = "yangchun-comment-server"
 main = "src/index.ts"
-compatibility_date = "2025-05-08"
+compatibility_date = "2025-11-17"
 compatibility_flags = ["nodejs_compat"]
 
 # Workers Logs
 [observability]
 enabled = true
-head_sampling_rate = 1 # optional. default = 1.
+head_sampling_rate = 1
 
 [[d1_databases]]
 binding = "DB"
 database_name = "yangchun-comment-d1"
-database_id = "${D1_DATABASE_ID}"
-preview_database_id = "${D1_DATABASE_PREVIEW_ID}"
+database_id = "${D1_ID}"
 
 [[kv_namespaces]]
 binding = "KV"
-id = "${KV_NAMESPACE_ID}"
-preview_id = "${KV_NAMESPACE_PREVIEW_ID}"
+id = "${KV_ID}"
 
 [vars]
 FRONTEND_URL = "https://your-frontend-url.com" # Frontend URL
 CORS_ORIGIN = "http://localhost:5173" # CORS origin, use "*" to allow all origins
 RSS_SITE_PATH = "site"   # The path for the all-site RSS feed
 ADMIN_USERNAME = "admin" # Admin username
+COOKIE_SAME_SITE = "Strict" # Cookie SameSite attribute: "Strict", "Lax", or "None"
+ADMIN_MAX_LOGIN_ATTEMPTS = 5   # Maximum number of failed login attempts before IP block
+ADMIN_SESSION_DURATION = 3600  # Admin session duration in seconds (JWT and cookie expiration)
+ADMIN_LOGIN_FAIL_WINDOW = 3600 # Time window in seconds for counting failed login attempts
+ADMIN_IP_BLOCK_DURATION = 3600 # Duration in seconds to block IP after exceeding max login attempts
 MAX_ALL_SITE_RSS_COMMENTS = 20   # The max number of comments in the all-site RSS feed
 MAX_THREAD_RSS_COMMENTS = 10     # The max number of comments in the thread RSS feed
 PRE_POW_DIFFICULTY = 2        # The difficulty for the pre-proof-of-work
@@ -35,6 +38,6 @@ FORMAL_POW_DIFFICULTY = 4 # The difficulty for the formal proof-of-work
 FORMAL_POW_EXPIRATION = 300  # The expiration time (in seconds) for the formal proof-of-work challenges
 
 # !!NOTE: Never store secrets (SECRET_ prefixed variables) in this file.
-#         Instead, use `.env` or `.dev.vars` for local development,
-#         and use `wrangler secret put` command for production deployment.
+#         Instead, use `.dev.vars` or `.env` for local development,
+#         and use `wrangler secret` command for production deployment.
 #         Refer to https://developers.cloudflare.com/workers/configuration/secrets/
