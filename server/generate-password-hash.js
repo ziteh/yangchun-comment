@@ -51,8 +51,8 @@ async function main() {
   console.log('------------------------------');
   console.log('Put the following secrets into your wrangler.toml or .env or .dev.vars file:');
   console.log('');
-  console.log('SECRET_ADMIN_PASSWORD_HASH=' + hash);
-  console.log('SECRET_ADMIN_PASSWORD_SALT=' + salt);
+  console.log('SECRET_ADMIN_PASSWORD_HASH="' + hash + '"');
+  console.log('SECRET_ADMIN_PASSWORD_SALT="' + salt + '"');
   console.log('');
 }
 

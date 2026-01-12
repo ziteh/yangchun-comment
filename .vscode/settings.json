@@ -1,4 +1,7 @@
 {
+  "files.associations": {
+    ".dev.vars*": "dotenv"
+  },
   "[json]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },

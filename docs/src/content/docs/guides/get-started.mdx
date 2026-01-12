@@ -46,9 +46,15 @@ pnpm build
 cd server
 ```
 
+[Wrangler](https://developers.cloudflare.com/workers/wrangler/) 是 Cloudflare 的開發者平台 CLI 工具，在時候後續的各種 Cloudflare 操作之前，需要登入你的 Cloudflare 帳號：
+
+```bash
+pnpm exec wrangler login
+```
+
 ### A. 建立 D1
 
-建立一個 [D1][cf-d1] 資料庫，這是 Cloudflare 提供的 SQLite 相容資料庫服務，Yang Chun Comment 主要使用它來存放留言資料。以下指令中的 `yangchun-comment-d1` 是這個資料庫的名稱，可以自行修改。關於 D1 的免費額度，請參考 [D1 Pricing][cf-d1-price]。如果你需要指定地區，可以使用 `--location` 或 `--jurisdiction`，詳細請參考 [Cloudflare 的文件](https://developers.cloudflare.com/workers/wrangler/commands/#d1-create)
+建立一個 [D1][cf-d1] 資料庫，這是 Cloudflare 提供的 SQLite 相容資料庫服務，Yang Chun Comment 主要使用它來存放留言資料。以下指令中的 `yangchun-comment-d1` 是這個資料庫的名稱，可以自行修改。如果你需要指定地區，可以使用 `--location` 或 `--jurisdiction`，詳細請參考 [Cloudflare 的文件](https://developers.cloudflare.com/workers/wrangler/commands/#d1-create)。關於 D1 的免費額度，請參考 [D1 Pricing][cf-d1-price]。
 
 ```bash
 pnpm exec wrangler d1 create "yangchun-comment-d1" --binding "DB"
@@ -139,24 +145,27 @@ id = "506ac68ae906458692g22933d3896af3" # <-- Replace with your KV ID
 ```toml frame="auto"
 # wrangler.toml
 ...
+
 [vars]
 # 這些變數必須根據你的情況來修改
-ADMIN_USERNAME = "admin" # Admin username
-PRE_POW_MAGIC_WORD = "MAGIC" # The magic word for the pre-proof-of-work
+ADMIN_USERNAME = "admin"                       # Admin username
+PRE_POW_MAGIC_WORD = "MAGIC"                   # The pepper for the pre-PoW
 FRONTEND_URL = "https://your-frontend-url.com" # Frontend URL
-CORS_ORIGIN = "http://localhost:5173" # CORS origin, use "*" to allow all origins
+CORS_ORIGIN = "http://localhost:5173"          # CORS origin
 
 # 這些變數可以保留預設值
-RSS_SITE_PATH = "site"   # The path for the all-site RSS feed
+RSS_SITE_PATH = "site"           # The path for the all-site RSS feed
 MAX_ALL_SITE_RSS_COMMENTS = 20   # The max number of comments in the all-site RSS feed
 MAX_THREAD_RSS_COMMENTS = 10     # The max number of comments in the thread RSS feed
-PRE_POW_DIFFICULTY = 2        # The difficulty for the pre-proof-of-work
-PRE_POW_TIME_WINDOW = 60      # The time window (in seconds) for the pre-proof-of-work
-FORMAL_POW_DIFFICULTY = 4 # The difficulty for the formal proof-of-work
-FORMAL_POW_EXPIRATION = 300  # The expiration time (in seconds) for the formal proof-of-work challenges
-
-...
+PRE_POW_DIFFICULTY = 2           # The difficulty for the pre-PoW
+PRE_POW_TIME_WINDOW = 60         # The time window (in seconds) for the pre-PoW
+FORMAL_POW_DIFFICULTY = 4        # The difficulty for the formal-PoW
+FORMAL_POW_EXPIRATION = 300      # The expiration time (in seconds) for the formal-PoW challenges
 ```
+
+<Aside>
+系統中有檢查變數的機制，如果變數格式不正確，Worker 在啟動時會失敗並顯示錯誤訊息 `Environment variable validation failed`，這時請檢查你的環境變數設定是否正確。
+</Aside>
 
 <Aside type="danger">
 帶有 `SECRET_` 前綴的變數是敏感資訊，絕對不應該寫在 `wrangler.toml` 中，也不應該提交到版本控制系統（例如 Git）或公開它們。
@@ -164,7 +173,7 @@ FORMAL_POW_EXPIRATION = 300  # The expiration time (in seconds) for the formal p
 請參考後續的說明來處理這些密鑰。
 </Aside>
 
-### D. 上傳密鑰
+### D. 配置密鑰
 
 Yang Chun Comment 需要一些密鑰來確保安全性。請參考下方說明來產生並上傳這些密鑰。這些密鑰會儲存在 Cloudflare Workers 的 [Secrets][cf-secret] 中。
 
@@ -199,8 +208,8 @@ yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
 ------------------------------
 Put the following secrets into your wrangler.toml or .env or .dev.vars file:
 
-SECRET_ADMIN_PASSWORD_HASH=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-SECRET_ADMIN_PASSWORD_SALT=yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
+SECRET_ADMIN_PASSWORD_HASH="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+SECRET_ADMIN_PASSWORD_SALT="yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
 ```
 
 再來要產生其他的密鑰，包含了 `SECRET_ADMIN_JWT_KEY`、`SECRET_COMMENT_HMAC_KEY`、`SECRET_FORMAL_POW_HMAC_KEY` 以及 `SECRET_IP_PEPPER`。
@@ -217,33 +226,33 @@ node generate-secret-keys.js
 
 ```dotenv frame="auto"
 # .dev.vars
-SECRET_ADMIN_PASSWORD_HASH=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-SECRET_ADMIN_PASSWORD_SALT=yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
+SECRET_ADMIN_PASSWORD_HASH="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+SECRET_ADMIN_PASSWORD_SALT="yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
 
-SECRET_ADMIN_JWT_KEY=zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
-SECRET_COMMENT_HMAC_KEY=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-SECRET_FORMAL_POW_HMAC_KEY=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
-SECRET_IP_PEPPER=cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+SECRET_ADMIN_JWT_KEY="zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
+SECRET_COMMENT_HMAC_KEY="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+SECRET_FORMAL_POW_HMAC_KEY="bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+SECRET_IP_PEPPER="cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
 ```
 
 使用下面的指令來上傳這些變數。`--name` 用來指定你的 Worker 名稱：
 
 ```bash
-pnpm exec wrangler secret bulk ".dev.vars" --name "yangchun-comment-be"
+pnpm exec wrangler secret bulk ".dev.vars" --name "yangchun-comment-server"
 ```
 
 預計會看到類似下面的回應，由於我們目前還沒有建立 Worker，所以它問我們是否要建立新的 Worker 並加入密鑰，這裡請輸入 `Y` 以繼續：
 
 ```txt "(Y/n)"
-🌀 Creating the secrets for the Worker "yangchun-comment-be" 
-✔ There doesn't seem to be a Worker called "yangchun-comment-be".
+🌀 Creating the secrets for the Worker "yangchun-comment-server" 
+✔ There doesn't seem to be a Worker called "yangchun-comment-server".
   Do you want to create a new Worker with that name and add secrets to it? (Y/n)
 ```
 
 ...
 
 ```txt
-🌀 Creating new Worker "yangchun-comment-be"...
+🌀 Creating new Worker "yangchun-comment-server"...
 ✨ Successfully created secret for key: SECRET_ADMIN_PASSWORD_HASH
 ✨ Successfully created secret for key: SECRET_ADMIN_PASSWORD_SALT
 ✨ Successfully created secret for key: SECRET_ADMIN_JWT_KEY
@@ -255,8 +264,8 @@ Finished processing secrets file:
 ✨ 6 secrets successfully uploaded
 ```
 
-<Aside type="caution">
-系統中有檢查密鑰的機制，如果密鑰長度不足或格式不正確，Worker 在啟動時會失敗並顯示錯誤訊息 `Environment variable validation failed`。因此請務必確保密鑰長度符合要求。
+<Aside>
+系統中有檢查密鑰的機制，如果密鑰長度不足或格式不正確，Worker 在啟動時會失敗並顯示錯誤訊息 `Environment variable validation failed`，請確保密鑰符合要求。
 </Aside>
 
 <Aside type="danger">
@@ -268,25 +277,25 @@ Finished processing secrets file:
 使用下面的指令來部署 Worker 到 Cloudflare。`--name` 用來指定你的 Worker 名稱：
 
 ```bash
-pnpm exec wrangler deploy --name "yangchun-comment-be"
+pnpm exec wrangler deploy --name "yangchun-comment-server"
 ```
 
 你應該會看到類似下面的回應，其中包含你的 Worker 端點網址：
 
-```bash "https://yangchun-comment-be.<YOUR_SUBDOMAIN>.workers.dev"
+```bash "https://yangchun-comment-server.<YOUR_SUBDOMAIN>.workers.dev"
 Total Upload: 1130.82 KiB / gzip: 203.68 KiB
 Worker Startup Time: 39 ms
 Your Worker has access to the following bindings:
 
 ...
 
-Uploaded yangchun-comment-be (5.42 sec)
-Deployed yangchun-comment-be triggers (1.83 sec)
-  https://yangchun-comment-be.<YOUR_SUBDOMAIN>.workers.dev
+Uploaded yangchun-comment-server (5.42 sec)
+Deployed yangchun-comment-server triggers (1.83 sec)
+  https://yangchun-comment-server.<YOUR_SUBDOMAIN>.workers.dev
 Current Version ID: 1b58de00-53b1-4320-b897-0a035b035c42
 ```
 
-你可以嘗試在瀏覽器中打開這個網址 `https://yangchun-comment-be.<YOUR_SUBDOMAIN>.workers.dev/rss/site/<RSS_SITE_PATH>` 來檢查 Worker 是否成功部署，這個是全站的 RSS Feed 網址，記得要把其中的 `<YOUR_SUBDOMAIN>` 和 `<RSS_SITE_PATH>` 替換成你的實際值，注意網址沒有尾斜線。如果成功的話你應該會看到一個類似下面的 XML 回應：
+你可以嘗試在瀏覽器中打開這個網址 `https://yangchun-comment-server.<YOUR_SUBDOMAIN>.workers.dev/rss/site/<RSS_SITE_PATH>` 來檢查 Worker 是否成功部署，這個是全站的 RSS Feed 網址，記得要把其中的 `<YOUR_SUBDOMAIN>` 和 `<RSS_SITE_PATH>` 替換成你的實際值，注意網址沒有尾斜線。如果成功的話你應該會看到一個類似下面的 XML 回應：
 
 ```xml
 <rss version="2.0">
@@ -299,7 +308,7 @@ Current Version ID: 1b58de00-53b1-4320-b897-0a035b035c42
 </rss>
 ```
 
-至此，後端的部分就完成了！
+至此，後端的部分就完成了！你可以在瀏覽器中開啟 [Dashboard](https://dash.cloudflare.com/?to=/:account/workers-and-pages) 來確認其狀態。
 
 ## 3. 前端 (client)
 
@@ -323,7 +332,7 @@ pnpm add @ziteh/yangchun-comment-client@0.2.0
 ```html
 <yangchun-comment
   post="default-post"
-  apiUrl="https://yangchun-comment-be.<YOUR_SUBDOMAIN>.workers.dev"
+  apiUrl="https://yangchun-comment-server.<YOUR_SUBDOMAIN>.workers.dev"
   lang="en-US"
   adminName="ZiTe"
   prePowDifficulty="2"
@@ -333,7 +342,7 @@ pnpm add @ziteh/yangchun-comment-client@0.2.0
 
 下面是一個 Vanilla JavaScript 的範例：
 
-```ts {4,8-15}
+```ts
 // Vanilla example
 
 import "./style.css";
@@ -343,7 +352,7 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
   <div>
     <yangchun-comment
       post="default-post"
-      apiUrl="https://yangchun-comment-be.<YOUR_SUBDOMAIN>.workers.dev"
+      apiUrl="https://yangchun-comment-server.<YOUR_SUBDOMAIN>.workers.dev"
       lang="en-US"
       adminName="ZiTe"
       prePowDifficulty="2"
