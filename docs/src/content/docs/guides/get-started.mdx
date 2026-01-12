@@ -176,7 +176,7 @@ Yang Chun Comment 需要一些密鑰來確保安全性。請參考下方說明�
 touch .dev.vars
 ```
 
-首先是管理員登入密碼。Yang Chun Comment 使用 PBKDF2-HMAC-SHA256 作為密碼雜湊演算法，設定輸出長度為 32 bytes，並採用 600,000 次迭代（[OWASP 建議][owasp-pbkdf2]）。你可以使用下面的 Node.js 腳本來產生：
+首先是管理員登入密碼。Yang Chun Comment 使用 PBKDF2-HMAC-SHA256 作為密碼雜湊演算法，設定輸出長度為 32 bytes，並採用 100,000 次迭代。你可以使用下面的 Node.js 腳本來產生：
 
 ```bash
 node generate-password-hash.js <YOUR_ADMIN_PASSWORD>
@@ -186,7 +186,7 @@ node generate-password-hash.js <YOUR_ADMIN_PASSWORD>
 
 ```txt {15,16}
 === PBKDF2 Password Hash ===
-Iterations: 600000
+Iterations: 100000
 Key Length: 32 bytes
 Digest: sha256
 
@@ -239,6 +239,9 @@ pnpm exec wrangler secret bulk ".dev.vars" --name "yangchun-comment-be"
 ✔ There doesn't seem to be a Worker called "yangchun-comment-be".
   Do you want to create a new Worker with that name and add secrets to it? (Y/n)
 ```
+
+...
+
 ```txt
 🌀 Creating new Worker "yangchun-comment-be"...
 ✨ Successfully created secret for key: SECRET_ADMIN_PASSWORD_HASH
@@ -252,8 +255,12 @@ Finished processing secrets file:
 ✨ 6 secrets successfully uploaded
 ```
 
+<Aside type="caution">
+系統中有檢查密鑰的機制，如果密鑰長度不足或格式不正確，Worker 在啟動時會失敗並顯示錯誤訊息 `Environment variable validation failed`。因此請務必確保密鑰長度符合要求。
+</Aside>
+
 <Aside type="danger">
-帶有 `SECRET_` 前綴的變數是敏感資訊，請務必妥善保管。實際上，一旦完成本節的步驟後，你就不需要（也不應該）再查看或保管這些密鑰。它們儲存在 Cloudflare Workers 的 Secrets 中且無法被讀取或導出。
+帶有 `SECRET_` 前綴的變數是敏感資訊，請務必妥善保管不要公開。實際上，一旦完成本節的步驟後，你就不需要（也不應該）再查看或保管這些密鑰。它們儲存在 Cloudflare Workers 的 Secrets 中且無法被讀取或導出。
 </Aside>
 
 ### E. 部署 Worker

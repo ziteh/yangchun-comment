@@ -226,7 +226,7 @@ export async function constantTimeCompare(a: string, b: string): Promise<boolean
 export async function hashPassword(
   password: string,
   salt: string,
-  iterations = 600000,
+  iterations = 100000,
 ): Promise<string> {
   const encoder = new TextEncoder();
   const keyMaterial = await crypto.subtle.importKey(
@@ -258,7 +258,7 @@ export async function verifyPassword(
   password: string,
   salt: string,
   expectedHash: string,
-  iterations = 600000,
+  iterations = 100000,
 ): Promise<boolean> {
   const computedHash = await hashPassword(password, salt, iterations);
   return await constantTimeCompare(computedHash, expectedHash);

@@ -194,7 +194,7 @@ Cross-Site Request Forgery
 
 **現有的機制**：
 
-- 對於管理員的密碼，是使用 PBKDF2-HMAC-SHA256 作為密碼雜湊演算法，設定輸出長度為 32 bytes，並採用 600,000 次迭代（[OWASP 建議][owasp-pbkdf2]）。
+- 對於管理員的密碼，是使用 PBKDF2-HMAC-SHA256 作為密碼雜湊演算法，設定輸出長度為 32 bytes，並採用 100,000 次迭代。
 
 ## SQL 注入攻擊
 

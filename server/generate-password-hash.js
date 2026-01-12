@@ -8,7 +8,7 @@ import { Buffer } from 'node:buffer';
 
 const pbkdf2 = promisify(crypto.pbkdf2);
 
-const ITERATIONS = 600000; // OWASP recommended
+const ITERATIONS = 100000; // OWASP recommended
 const KEY_LENGTH = 32;
 const DIGEST = 'sha256';
 const FORMAT = 'hex';
