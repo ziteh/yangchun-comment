@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { csrf } from 'hono/csrf';
 import { setCookie } from 'hono/cookie';
 import { sValidator } from '@hono/standard-validator';
 import { sign, verify } from 'hono/jwt';
@@ -26,8 +27,12 @@ const app = new Hono<{
     SECRET_ADMIN_PASSWORD_SALT: string;
     SECRET_ADMIN_JWT_KEY: string;
     SECRET_IP_PEPPER: string;
+    CORS_ORIGIN: string;
   };
 }>();
+
+// CSRF protection middleware
+app.use('*', (c, next) => csrf({ origin: c.env.CORS_ORIGIN })(c, next));
 
 // Login endpoint
 app.post('/login', sValidator('json', AdminLoginRequestSchema), async (c) => {
