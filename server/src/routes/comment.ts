@@ -4,6 +4,7 @@ import { genId } from '../utils/helpers';
 import { CONSTANTS, HTTP_STATUS } from '../const';
 import {
   type Comment,
+  CommentSchema,
   CreateCommentRequestSchema,
   UpdateCommentRequestSchema,
   GetCommentsResponseSchema,
@@ -39,7 +40,23 @@ const app = new Hono<{
 // Get comments for a post
 app.get('/', sValidator('query', CommentQuerySchema), async (c) => {
   const { post } = c.req.query();
-  const comments = await getCommentsByPost(c.env.DB, post);
+  let comments: Comment[] = [];
+
+  // Cache-Aside
+  // also https://developers.cloudflare.com/workers/examples/cache-api/
+  const cacheKey = `cache-comments:${post}`;
+  const cached = await c.env.KV.get(cacheKey);
+  if (cached) {
+    console.debug(`Comments cache hit for post: ${post}`);
+    const parsed = JSON.parse(cached);
+    comments = parsed.map((c: unknown) => CommentSchema.parse(c));
+  } else {
+    console.debug(`Comments cache miss for post: ${post}`);
+    comments = await getCommentsByPost(c.env.DB, post);
+    c.env.KV.put(cacheKey, JSON.stringify(comments), { expirationTtl: 86400 }).catch((err) => {
+      console.error('Failed to cache comments:', err);
+    });
+  }
 
   // Check admin auth status
   const cookie = c.req.header('Cookie');
@@ -125,6 +142,9 @@ app.post(
       console.error('Failed to create comment in database');
       return c.text('Failed to create comment', HTTP_STATUS.InternalServerError);
     }
+    // Cache invalidation
+    const cacheKey = `cache-comments:${post}`;
+    await c.env.KV.delete(cacheKey);
 
     const token = await genHmac(c.env.SECRET_COMMENT_HMAC_KEY, id, timestamp);
 
@@ -178,6 +198,9 @@ app.put(
       console.warn('Comment not found for update or failed to update:', id);
       return c.text('Comment not found or update failed', 404); // 404 Not Found
     }
+    // Cache invalidation
+    const cacheKey = `cache-comments:${post}`;
+    await c.env.KV.delete(cacheKey);
 
     await sendDiscordNotification(
       c.env.SECRET_DISCORD_WEBHOOK_URL,
@@ -214,6 +237,9 @@ app.delete(
       console.warn('Comment not found for deletion or failed to delete:', id);
       return c.text('Comment not found or delete failed', HTTP_STATUS.NotFound);
     }
+    // Cache invalidation
+    const cacheKey = `cache-comments:${post}`;
+    await c.env.KV.delete(cacheKey);
 
     console.log(`Comment deleted (marked): ${id} for post: ${post}`);
     return c.text('Comment deleted', HTTP_STATUS.Ok);
