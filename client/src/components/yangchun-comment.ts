@@ -124,7 +124,10 @@ export class YangChunComment extends LitElement {
 
 \`\`\`
 ${t('helpMdCodeBlock')}
-\`\`\`</pre
+\`\`\`
+
+&lt;img src=/ onerror=&quot;alert(&#39;${t('helpMdNoHtml')}&#39;)&quot;&gt;
+</pre
         >
         <div class="help-footer">
           Powered by${' '}

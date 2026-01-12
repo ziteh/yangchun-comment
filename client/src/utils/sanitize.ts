@@ -64,7 +64,7 @@ function initializeHooks() {
   isHookInitialized = true;
 }
 
-export function sanitizeHtml(dirtyHtml: string) {
+export function sanitizeHtml(dirtyHtml: string): string {
   return DOMPurify.sanitize(dirtyHtml, DOMPURIFY_CONFIG);
 }
 
