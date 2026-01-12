@@ -12,6 +12,7 @@ interface CommentWithPost extends Comment {
 const app = new Hono<{
   Bindings: {
     DB: D1Database;
+    KV: KVNamespace;
     RSS_SITE_PATH: string;
     FRONTEND_URL: string;
     MAX_ALL_SITE_RSS_COMMENTS: number;
@@ -21,13 +22,23 @@ const app = new Hono<{
 
 app.get('/thread', sValidator('query', CommentQuerySchema), async (c) => {
   const { post } = c.req.valid('query');
-  const comments = await getCommentsByPost(c.env.DB, post);
 
+  // Cache-Aside for RSS
+  const cacheKey = `cache-rss-thread:${post}`;
+  const cached = await c.env.KV.get(cacheKey);
+  if (cached) {
+    console.debug(`RSS cache hit for post: ${post}`);
+    return c.body(cached, HTTP_STATUS.Ok, {
+      'Content-Type': 'application/xml; charset=utf-8',
+      'X-Content-Type-Options': 'nosniff',
+    });
+  }
+
+  const comments = await getCommentsByPost(c.env.DB, post);
   const siteUrl = c.env.FRONTEND_URL;
   const pageTitle = `Comments of ${post}`;
   const postUrl = new URL(post, siteUrl).href;
 
-  // TODO: KV caching for RSS generation?
   let rss = `<?xml version="1.0" encoding="UTF-8" ?>
 <rss version="2.0">
 <channel>
@@ -38,6 +49,7 @@ app.get('/thread', sValidator('query', CommentQuerySchema), async (c) => {
   `;
 
   // Fetch the latest N comments
+  // TODO: SQL?
   comments
     .sort((a, b) => b.pubDate - a.pubDate)
     .slice(0, c.env.MAX_THREAD_RSS_COMMENTS)
@@ -55,6 +67,11 @@ app.get('/thread', sValidator('query', CommentQuerySchema), async (c) => {
 </channel>
 </rss>`;
 
+  // Cache the RSS
+  c.env.KV.put(cacheKey, rss, { expirationTtl: 86400 }).catch((err) =>
+    console.error('KV cache write failed for RSS:', err),
+  );
+
   return c.body(rss, HTTP_STATUS.Ok, {
     'Content-Type': 'application/xml; charset=utf-8',
     'X-Content-Type-Options': 'nosniff',
@@ -68,10 +85,20 @@ app.get('/site/:site', async (c) => {
     return c.notFound();
   }
 
+  // Cache-Aside for site RSS
+  const cacheKey = `cache-rss-site:site`;
+  const cached = await c.env.KV.get(cacheKey);
+  if (cached) {
+    console.debug(`RSS cache hit for site`);
+    return c.body(cached, HTTP_STATUS.Ok, {
+      'Content-Type': 'application/xml; charset=utf-8',
+      'X-Content-Type-Options': 'nosniff',
+    });
+  }
+
   const siteUrl = c.env.FRONTEND_URL;
   const maxComments = c.env.MAX_ALL_SITE_RSS_COMMENTS;
 
-  // TODO: KV caching for RSS generation?
   const latestComments: CommentWithPost[] = await getAllComments(c.env.DB, maxComments);
   const rssItems = latestComments
     .map((comment) => {
@@ -104,6 +131,11 @@ app.get('/site/:site', async (c) => {
     ${rssItems}
   </channel>
 </rss>`;
+
+  // Cache the RSS
+  c.env.KV.put(cacheKey, rss, { expirationTtl: 86400 }).catch((err) =>
+    console.error('KV cache write failed for site RSS:', err),
+  );
 
   return c.body(rss, HTTP_STATUS.Ok, {
     'Content-Type': 'application/xml; charset=utf-8',

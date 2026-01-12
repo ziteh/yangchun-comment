@@ -33,6 +33,7 @@ const app = new Hono<{
     POST_BASE_URL: string;
     SECRET_FORMAL_POW_HMAC_KEY: string;
     SECRET_ADMIN_JWT_KEY: string;
+    RSS_SITE_PATH: string;
     SECRET_DISCORD_WEBHOOK_URL?: string;
   };
 }>();
@@ -145,6 +146,8 @@ app.post(
     // Cache invalidation
     const cacheKey = `cache-comments:${post}`;
     await c.env.KV.delete(cacheKey);
+    await c.env.KV.delete(`cache-rss-thread:${post}`);
+    await c.env.KV.delete(`cache-rss-site:site`);
 
     const token = await genHmac(c.env.SECRET_COMMENT_HMAC_KEY, id, timestamp);
 
@@ -201,6 +204,8 @@ app.put(
     // Cache invalidation
     const cacheKey = `cache-comments:${post}`;
     await c.env.KV.delete(cacheKey);
+    await c.env.KV.delete(`cache-rss-thread:${post}`);
+    await c.env.KV.delete(`cache-rss-site:site`);
 
     await sendDiscordNotification(
       c.env.SECRET_DISCORD_WEBHOOK_URL,
@@ -240,6 +245,8 @@ app.delete(
     // Cache invalidation
     const cacheKey = `cache-comments:${post}`;
     await c.env.KV.delete(cacheKey);
+    await c.env.KV.delete(`cache-rss-thread:${post}`);
+    await c.env.KV.delete(`cache-rss-site:site`);
 
     console.log(`Comment deleted (marked): ${id} for post: ${post}`);
     return c.text('Comment deleted', HTTP_STATUS.Ok);
