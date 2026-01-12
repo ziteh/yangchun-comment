@@ -48,32 +48,36 @@ cd server
 
 ### A. 建立 D1
 
-建立一個 [D1][cf-d1] 資料庫，這是 Cloudflare 提供的 SQLite 相容資料庫服務，Yang Chun Comment 主要使用它來存放留言資料。以下指令中的 `yangchun-comment-d1` 是這個資料庫的名稱，可以自行修改。關於 D1 的免費額度，請參考 [D1 Pricing][cf-d1-price]。
+建立一個 [D1][cf-d1] 資料庫，這是 Cloudflare 提供的 SQLite 相容資料庫服務，Yang Chun Comment 主要使用它來存放留言資料。以下指令中的 `yangchun-comment-d1` 是這個資料庫的名稱，可以自行修改。關於 D1 的免費額度，請參考 [D1 Pricing][cf-d1-price]。如果你需要指定地區，可以使用 `--location` 或 `--jurisdiction`，詳細請參考 [Cloudflare 的文件](https://developers.cloudflare.com/workers/wrangler/commands/#d1-create)
 
 ```bash
-pnpm exec wrangler d1 database create "yangchun-comment-d1" --binding "DB"
+pnpm exec wrangler d1 create "yangchun-comment-d1" --binding "DB"
 ```
 
-預計會得到類似下面的回應。你需要複製回應中的 `id`。
+預計會得到類似下面的回應，下面的回應看出這個 D1 建立在 APAC（Asia Pacific）。你需要複製回應中的 `id`。
 
-```txt "506ac68ae906458692g22933d3896af3"
-...🌀 Creating database with title "yangchun-comment-d1"
-✨ Success!
+```txt "a99c5674-5526-49fd-z98e-7493ce28bsx5"
+✅ Successfully created DB 'yangchun-comment-d1' in region APAC
+Created your new D1 database.
+
 To access your new D1 Database in your Worker, add the following snippet to your configuration file:
 [[d1_databases]]
 binding = "DB"
-id = "506ac68ae906458692g22933d3896af3"
+database_name = "yangchun-comment-d1"
+database_id = "a99c5674-5526-49fd-z98e-7493ce28bsx5"
 ```
 
 更新你的 `wrangler.toml`，將上面回應中的 `id` 貼上：
 
-```toml frame="auto" "506ac68ae906458692g22933d3896af3"
+```toml frame="auto" "a99c5674-5526-49fd-z98e-7493ce28bsx5"
 # wrangler.toml
 ...
 
 [[d1_databases]]
 binding = "DB"
-id = "506ac68ae906458692g22933d3896af3" # <-- Replace with your D1 ID
+database_name = "yangchun-comment-d1"
+database_id = "a99c5674-5526-49fd-z98e-7493ce28bsx5" # <-- Replace with your D1 ID
+
 ...
 ```
 
@@ -81,6 +85,19 @@ D1 建立完成後，接著要初始化資料庫結構。記得要將資料庫�
 
 ```bash
 pnpm exec wrangler d1 migrations apply "yangchun-comment-d1" --remote
+```
+
+你應該會看到類似下面的回應，確認後輸入 `Y` 以繼續：
+
+```txt "(Y/n)"
+Migrations to be applied:
+┌─────────────────────────┐
+│ name                    │
+├─────────────────────────┤
+│ 0000_initial_schema.sql │
+└─────────────────────────┘
+✔ About to apply 1 migration(s)
+Your database may not be available to serve requests during the migration, continue? (Y/n)
 ```
 
 ### B. 建立 KV
@@ -94,7 +111,6 @@ pnpm exec wrangler kv namespace create "yangchun-comment-kv" --binding "KV"
 預計會得到類似下面的回應。你需要複製回應中的 `id`。
 
 ```txt "506ac68ae906458692g22933d3896af3"
-...
 🌀 Creating namespace with title "yangchun-comment-kv"
 ✨ Success!
 To access your new KV Namespace in your Worker, add the following snippet to your configuration file:
@@ -107,7 +123,6 @@ id = "506ac68ae906458692g22933d3896af3"
 
 ```toml frame="auto" "506ac68ae906458692g22933d3896af3"
 # wrangler.toml
-
 ...
 
 [[kv_namespaces]]
@@ -149,28 +164,7 @@ FORMAL_POW_EXPIRATION = 300  # The expiration time (in seconds) for the formal p
 請參考後續的說明來處理這些密鑰。
 </Aside>
 
-### D. 部署 Worker
-
-使用下面的指令來部署 Worker 到 Cloudflare。`--name` 用來指定你的 Worker 名稱：
-
-```bash
-pnpm exec wrangler deploy --name "yangchun-comment-be"
-```
-
-你應該會看到類似下面的回應，其中包含你的 Worker 端點網址：
-
-```bash "https://yangchun-comment-be.<YOUR_SUBDOMAIN>.workers.dev"
-...
-
-Uploaded yangchun-comment-be (3.75 sec)
-Deployed yangchun-comment-be triggers (0.94 sec)
-  https://yangchun-comment-be.<YOUR_SUBDOMAIN>.workers.dev
-Current Version ID: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-```
-
-現在你的 Worker 應該會顯示失敗，這是預期的，因為還沒有上傳密鑰。
-
-### E. 上傳密鑰
+### D. 上傳密鑰
 
 Yang Chun Comment 需要一些密鑰來確保安全性。請參考下方說明來產生並上傳這些密鑰。這些密鑰會儲存在 Cloudflare Workers 的 [Secrets][cf-secret] 中。
 
@@ -238,11 +232,67 @@ SECRET_IP_PEPPER=ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 pnpm exec wrangler secret bulk ".dev.vars" --name "yangchun-comment-be"
 ```
 
-密鑰上傳完成後，檢查你的 Worker，它現在應該可以正常運作了！
+預計會看到類似下面的回應，由於我們目前還沒有建立 Worker，所以它問我們是否要建立新的 Worker 並加入密鑰，這裡請輸入 `Y` 以繼續：
+
+```txt "(Y/n)"
+🌀 Creating the secrets for the Worker "yangchun-comment-be" 
+✔ There doesn't seem to be a Worker called "yangchun-comment-be".
+  Do you want to create a new Worker with that name and add secrets to it? (Y/n)
+```
+```txt
+🌀 Creating new Worker "yangchun-comment-be"...
+✨ Successfully created secret for key: SECRET_ADMIN_PASSWORD_HASH
+✨ Successfully created secret for key: SECRET_ADMIN_PASSWORD_SALT
+✨ Successfully created secret for key: SECRET_ADMIN_JWT_KEY
+✨ Successfully created secret for key: SECRET_COMMENT_HMAC_KEY
+✨ Successfully created secret for key: SECRET_FORMAL_POW_HMAC_KEY
+✨ Successfully created secret for key: SECRET_IP_PEPPER
+
+Finished processing secrets file:
+✨ 6 secrets successfully uploaded
+```
 
 <Aside type="danger">
 帶有 `SECRET_` 前綴的變數是敏感資訊，請務必妥善保管。實際上，一旦完成本節的步驟後，你就不需要（也不應該）再查看或保管這些密鑰。它們儲存在 Cloudflare Workers 的 Secrets 中且無法被讀取或導出。
 </Aside>
+
+### E. 部署 Worker
+
+使用下面的指令來部署 Worker 到 Cloudflare。`--name` 用來指定你的 Worker 名稱：
+
+```bash
+pnpm exec wrangler deploy --name "yangchun-comment-be"
+```
+
+你應該會看到類似下面的回應，其中包含你的 Worker 端點網址：
+
+```bash "https://yangchun-comment-be.<YOUR_SUBDOMAIN>.workers.dev"
+Total Upload: 1130.82 KiB / gzip: 203.68 KiB
+Worker Startup Time: 39 ms
+Your Worker has access to the following bindings:
+
+...
+
+Uploaded yangchun-comment-be (5.42 sec)
+Deployed yangchun-comment-be triggers (1.83 sec)
+  https://yangchun-comment-be.<YOUR_SUBDOMAIN>.workers.dev
+Current Version ID: 1b58de00-53b1-4320-b897-0a035b035c42
+```
+
+你可以嘗試在瀏覽器中打開這個網址 `https://yangchun-comment-be.<YOUR_SUBDOMAIN>.workers.dev/rss/site/<RSS_SITE_PATH>` 來檢查 Worker 是否成功部署，這個是全站的 RSS Feed 網址，記得要把其中的 `<YOUR_SUBDOMAIN>` 和 `<RSS_SITE_PATH>` 替換成你的實際值，注意網址沒有尾斜線。如果成功的話你應該會看到一個類似下面的 XML 回應：
+
+```xml
+<rss version="2.0">
+  <channel>
+    <title>All Site Comments</title>
+    <link>https://your-frontend-url.com</link>
+    <description>Latest 0 comments from all posts on the site</description>
+    <lastBuildDate>Mon, 12 Jan 2026 11:04:52 GMT</lastBuildDate>
+  </channel>
+</rss>
+```
+
+至此，後端的部分就完成了！
 
 ## 3. 前端 (client)
 
