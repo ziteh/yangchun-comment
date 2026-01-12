@@ -212,6 +212,7 @@ export class CommentListItem extends LitElement {
     const commentContent = html`
       <!-- prettier-ignore -->
       <div
+        part="content"
         class="content ${!this.isContentExpanded && this.shouldShowExpandBtn() ? 'collapsed' : ''}"
       >${this.renderMarkdown(this.comment.msg)}</div>
     `;
@@ -219,31 +220,33 @@ export class CommentListItem extends LitElement {
     return html`
       <div class=${this.comment.replyTo ? 'reply-comment' : 'root-comment'}>
         <div
+          part="comment-box"
           class="comment-box"
           id=${this.comment.id}
           role="article"
           aria-labelledby="author-${this.comment.id}"
         >
-          <div class="header">
-            <span class="author" id="author-${this.comment.id}"
+          <div class="header" part="header">
+            <span class="author" part="author" id="author-${this.comment.id}"
               >${this.comment.isAdmin && this.author
                 ? this.author
                 : this.comment.pseudonym || t('anonymous')}</span
             >
             ${(() => {
               if (this.comment.isAdmin) {
-                return html`<span class="badge">${t('author')}</span>`;
+                return html`<span class="badge" part="badge">${t('author')}</span>`;
               } else if (
                 globalApiService.isInitialized() &&
                 globalApiService.getInstance().isMyComment(this.comment.id)
               ) {
-                return html`<span class="badge">${t('me')}</span>`;
+                return html`<span class="badge" part="badge">${t('me')}</span>`;
               }
               return null;
             })()}
             ${this.comment.modDate && this.comment.modDate > this.comment.pubDate
               ? html`
                   <time
+                    part="date"
                     class="date-relative"
                     datetime=${new Date(this.comment.modDate).toISOString()}
                     aria-label="${t('edited')} ${formatRelativeDate(
@@ -259,6 +262,7 @@ export class CommentListItem extends LitElement {
                 `
               : html`
                   <time
+                    part="date"
                     class="date-relative"
                     datetime=${new Date(this.comment.pubDate).toISOString()}
                     aria-label="${formatRelativeDate(
@@ -281,7 +285,11 @@ export class CommentListItem extends LitElement {
           </div>
           ${commentContent}
           ${this.shouldShowExpandBtn()
-            ? html`<button class="show-more-btn" @click=${this.handleToggleExpand}>
+            ? html`<button
+                part="show-more-btn"
+                class="show-more-btn"
+                @click=${this.handleToggleExpand}
+              >
                 ${this.isContentExpanded ? t('showLess') : t('showMore')}
               </button>`
             : null}
@@ -289,7 +297,7 @@ export class CommentListItem extends LitElement {
           (this.comment.pseudonym === deletedMark && this.comment.msg === deletedMark)
             ? null
             : html`
-                <div class="actions">
+                <div class="actions" part="actions">
                   <button
                     class="text-btn"
                     @click=${this.handleReply}
@@ -309,7 +317,7 @@ export class CommentListItem extends LitElement {
               `}
         </div>
 
-        <div class="reply-comments" role="list">
+        <div class="reply-comments" part="reply-comments" role="list">
           ${this.replyComments.map(
             (cmt) => html`
               <comment-list-item

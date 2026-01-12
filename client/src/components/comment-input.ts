@@ -55,6 +55,11 @@ export class CommentInput extends LitElement {
       textarea::-webkit-scrollbar-thumb:hover {
         background-color: var(--ycc-text-secondary);
       }
+      textarea::placeholder,
+      input::placeholder {
+        color: var(--ycc-placeholder-color);
+        opacity: 1;
+      }
       .actions {
         display: flex;
         justify-content: flex-end;
@@ -138,6 +143,7 @@ export class CommentInput extends LitElement {
               </div>`
             : html`<div class="draft-container">
                 <textarea
+                  part="textarea"
                   .value=${this.draft}
                   @input=${this.handleDraftInput}
                   placeholder=${t('messagePlaceholder')}
@@ -164,6 +170,7 @@ export class CommentInput extends LitElement {
         <div class="controls-row">
           <div class="nickname-wrapper">
             <input
+              part="nickname"
               class="nickname-input"
               .value=${this.isAdmin ? 'Admin' : this.nickname}
               @input=${this.handleNicknameInput}
@@ -180,13 +187,18 @@ export class CommentInput extends LitElement {
           </div>
           <div class="actions">
             <button
+              part="btn-preview"
               class="secondary"
               @click=${this.handleTogglePreview}
               ?disabled=${!this.isValidComment()}
             >
               ${this.isPreview ? t('edit') : t('preview')}
             </button>
-            <button @click=${this.handleSubmit} ?disabled=${!this.isValidComment()}>
+            <button
+              part="btn-submit"
+              @click=${this.handleSubmit}
+              ?disabled=${!this.isValidComment()}
+            >
               ${t('submit')}
             </button>
           </div>
