@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { sValidator } from '@hono/standard-validator';
 import {
-  FormalChallengeQuerySchema,
+  FormalChallengeRequestSchema,
   FormalChallengeResponseSchema,
 } from '@ziteh/yangchun-comment-shared';
 import { genFormalPowChallenge, verifyPrePow } from '../utils/crypto';
@@ -18,13 +18,12 @@ const app = new Hono<{
   };
 }>();
 
-app.get('/formal-challenge', sValidator('query', FormalChallengeQuerySchema), async (c) => {
-  const { challenge, nonce } = c.req.valid('query');
-  const nonceNum = parseInt(nonce, 10);
+app.post('/formal-challenge', sValidator('json', FormalChallengeRequestSchema), async (c) => {
+  const { challenge, nonce } = c.req.valid('json');
   const prePowPass = await verifyPrePow(
     c.env.PRE_POW_DIFFICULTY,
     challenge,
-    nonceNum,
+    nonce,
     c.env.PRE_POW_SALT,
     c.env.PRE_POW_TIME_WINDOW,
   );

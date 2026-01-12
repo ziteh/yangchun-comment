@@ -60,10 +60,13 @@ export const createApiService = (
   const getFormalChallenge = async (challenge: string, nonce: number): Promise<string | null> => {
     try {
       const url = new URL('/api/pow/formal-challenge', apiUrl);
-      url.searchParams.append('challenge', challenge);
-      url.searchParams.append('nonce', nonce.toString());
-
-      const res = await fetch(url);
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ challenge, nonce }),
+      });
       if (res.ok) {
         const data = await res.json();
         const validated = FormalChallengeResponseSchema.parse(data);
