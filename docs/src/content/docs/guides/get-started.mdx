@@ -151,7 +151,7 @@ id = "506ac68ae906458692g22933d3896af3" # <-- Replace with your KV ID
 [vars]
 # 這些變數必須根據你的情況來修改
 ADMIN_USERNAME = "admin"                       # Admin username
-PRE_POW_MAGIC_WORD = "MAGIC"                   # The pepper for the pre-PoW
+PRE_POW_SALT = "MAGIC"                   # The pepper for the pre-PoW
 FRONTEND_URL = "https://your-frontend-url.com" # Frontend URL
 CORS_ORIGIN = "http://localhost:5173"          # CORS origin
 
@@ -329,7 +329,7 @@ pnpm add @ziteh/yangchun-comment-client@0.2.0
 - `apiUrl`：這是你部署的後端 Worker 的 URL。
 - `lang`：這是語言設定，可以根據需要調整。
 - `adminName`：這是管理員的名稱，會顯示為文章作者。
-- `prePowDifficulty` 和 `prePowMagicWord`：這些值必須與你在後端設定的值相符。
+- `prePowDifficulty` 和 `prePowSalt`：這些值必須與你在後端設定的值相符。
 
 ```html
 <yangchun-comment
@@ -338,7 +338,7 @@ pnpm add @ziteh/yangchun-comment-client@0.2.0
   lang="en-US"
   adminName="ZiTe"
   prePowDifficulty="2"
-  prePowMagicWord="MAGIC"
+  prePowSalt="MAGIC"
 ></yangchun-comment>
 ```
 
@@ -358,7 +358,7 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
       lang="en-US"
       adminName="ZiTe"
       prePowDifficulty="2"
-      prePowMagicWord="MAGIC"
+      prePowSalt="MAGIC"
     ></yangchun-comment>
   </div>
 `;

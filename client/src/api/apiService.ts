@@ -51,7 +51,7 @@ export interface ApiService {
 export const createApiService = (
   apiUrl: string,
   prePowDifficulty: number,
-  prePowMagicWord: string,
+  prePowSalt: string,
 ): ApiService => {
   const LOCAL_STORAGE_MY_COMMENT_IDS_KEY = 'my_comment_ids';
 
@@ -100,7 +100,7 @@ export const createApiService = (
     replyTo?: string,
   ): Promise<string | null> => {
     try {
-      const prePow = await solvePrePow(prePowDifficulty, prePowMagicWord);
+      const prePow = await solvePrePow(prePowDifficulty, prePowSalt);
       if (prePow.nonce < 0) {
         console.error('Failed to solve pre-PoW');
         return null;

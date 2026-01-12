@@ -72,7 +72,7 @@ export class YangChunComment extends LitElement {
   @property({ type: String }) accessor apiUrl = 'http://localhost:8787';
   @property({ type: String }) accessor adminName = 'Admin';
   @property({ type: String }) accessor lang = 'en-US';
-  @property({ type: String }) accessor prePowMagicWord = 'MAGIC';
+  @property({ type: String }) accessor prePowSalt = 'MAGIC';
   @property({ type: Number }) accessor prePowDifficulty = 2;
   @property({ type: Object, attribute: false }) accessor customMessages: I18nStrings | undefined;
 
@@ -227,11 +227,11 @@ ${t('helpMdCodeBlock')}
     if (
       (changedProperties.has('apiUrl') ||
         changedProperties.has('prePowDifficulty') ||
-        changedProperties.has('prePowMagicWord')) &&
+        changedProperties.has('prePowSalt')) &&
       this.apiUrl
     ) {
       console.debug('Initializing API service with URL:', this.apiUrl);
-      const apiService = createApiService(this.apiUrl, this.prePowDifficulty, this.prePowMagicWord);
+      const apiService = createApiService(this.apiUrl, this.prePowDifficulty, this.prePowSalt);
       globalApiService.setInstance(apiService);
 
       const rssUrl = new URL('/rss/thread', this.apiUrl);

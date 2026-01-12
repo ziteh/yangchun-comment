@@ -11,7 +11,7 @@ const app = new Hono<{
   Bindings: {
     PRE_POW_DIFFICULTY: number;
     PRE_POW_TIME_WINDOW: number;
-    PRE_POW_MAGIC_WORD: string;
+    PRE_POW_SALT: string;
     FORMAL_POW_DIFFICULTY: number;
     FORMAL_POW_EXPIRATION: number;
     SECRET_FORMAL_POW_HMAC_KEY: string;
@@ -25,7 +25,7 @@ app.get('/formal-challenge', sValidator('query', FormalChallengeQuerySchema), as
     c.env.PRE_POW_DIFFICULTY,
     challenge,
     nonceNum,
-    c.env.PRE_POW_MAGIC_WORD,
+    c.env.PRE_POW_SALT,
     c.env.PRE_POW_TIME_WINDOW,
   );
   if (!prePowPass) {

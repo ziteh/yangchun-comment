@@ -25,7 +25,7 @@ const envSchema = z.object({
   MAX_THREAD_RSS_COMMENTS: z.coerce.number().min(1),
   PRE_POW_DIFFICULTY: z.coerce.number().min(1),
   PRE_POW_TIME_WINDOW: z.coerce.number().min(1),
-  PRE_POW_MAGIC_WORD: z.string().min(1),
+  PRE_POW_SALT: z.string().min(1),
   FORMAL_POW_DIFFICULTY: z.coerce.number().min(1),
   FORMAL_POW_EXPIRATION: z.coerce.number().min(1),
 

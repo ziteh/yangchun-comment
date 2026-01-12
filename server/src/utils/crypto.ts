@@ -138,7 +138,7 @@ export async function verifyPrePow(
   difficulty: number,
   challenge: string,
   nonce: number,
-  magic: string,
+  salt: string,
   timeWindowSec: number,
 ): Promise<boolean> {
   const parts = challenge.split(':');
@@ -147,7 +147,7 @@ export async function verifyPrePow(
   const timestamp = parseInt(parts[0], 10);
   const diffTimestamp = Math.floor(Date.now() / 1000) - timestamp;
   if (isNaN(timestamp) || diffTimestamp > timeWindowSec || diffTimestamp < 0) return false;
-  if (parts[1] !== magic) return false;
+  if (parts[1] !== salt) return false;
 
   return verifyPow(difficulty, challenge, nonce);
 }
