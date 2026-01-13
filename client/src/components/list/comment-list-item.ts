@@ -2,10 +2,11 @@ import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { globalApiService } from '../../api/globalApiService';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
+import { until } from 'lit/directives/until.js';
 import { yangChunCommentStyles } from '../yangchun-comment.styles';
 import type { Comment } from '@ziteh/yangchun-comment-shared';
 import { sanitizeHtml } from '../../utils/sanitize';
-import snarkdown from 'snarkdown';
+import { marked } from 'marked';
 import { formatRelativeDate, formatAbsoluteDate } from '../../utils/format';
 import { t } from '../../utils/i18n';
 
@@ -215,7 +216,7 @@ export class CommentListItem extends LitElement {
         part="content"
         class="content ${!this.isContentExpanded && this.shouldShowExpandBtn() ? 'collapsed' : ''}"
         @click=${this.handleContentClick}
-      >${this.renderMarkdown(this.comment.msg)}</div>
+      >${until(this.renderMarkdown(this.comment.msg), html`<span></span>`)}</div>
     `;
 
     return html`
@@ -390,8 +391,14 @@ export class CommentListItem extends LitElement {
     }
   }
 
-  private renderMarkdown(raw: string | undefined | null): ReturnType<typeof unsafeHTML> {
-    return unsafeHTML(sanitizeHtml(snarkdown(raw || '')));
+  private async renderMarkdown(
+    dirtyMd: string | undefined | null,
+  ): Promise<ReturnType<typeof unsafeHTML>> {
+    if (!dirtyMd) return unsafeHTML('');
+
+    const dirtyHtml = await marked.parse(dirtyMd);
+    const cleanHtml = sanitizeHtml(dirtyHtml);
+    return unsafeHTML(cleanHtml);
   }
 
   private shouldShowExpandBtn(): boolean {

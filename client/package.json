@@ -34,7 +34,7 @@
   "dependencies": {
     "dompurify": "^3.3.1",
     "lit": "^3.3.2",
-    "snarkdown": "^2.0.0"
+    "marked": "^17.0.1"
   },
   "devDependencies": {
     "@rollup/plugin-terser": "^0.4.4",

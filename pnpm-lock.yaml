@@ -51,9 +51,9 @@ importers:
       lit:
         specifier: ^3.3.2
         version: 3.3.2
-      snarkdown:
-        specifier: ^2.0.0
-        version: 2.0.0
+      marked:
+        specifier: ^17.0.1
+        version: 17.0.1
     devDependencies:
       '@rollup/plugin-terser':
         specifier: ^0.4.4
@@ -1920,10 +1920,6 @@ packages:
   cookie-es@1.2.2:
     resolution: {integrity: sha512-+W7VmiVINB+ywl1HGXJXmrqkOhpKrIiVZV6tQuV54ZyQC7MMuBt81Vc336GMLoHBq5hV/F9eXgt5Mnx0Rha5Fg==}
 
-  cookie@1.0.2:
-    resolution: {integrity: sha512-9Kr/j4O16ISv8zBBhJoi4bXOYNTkFLOqSL3UDB0njXxCXNezjeyVrJyGOWtgfs/q2km1gwBcfH8q1yEGoMYunA==}
-    engines: {node: '>=18'}
-
   cookie@1.1.1:
     resolution: {integrity: sha512-ei8Aos7ja0weRpFzJnEA9UHJ/7XQmqglbRwnf2ATjcB9Wq874VKH9kfjjirM6UhU2/E5fFYadylyhFldcqSidQ==}
     engines: {node: '>=18'}
@@ -2748,6 +2744,11 @@ packages:
   markdown-table@3.0.4:
     resolution: {integrity: sha512-wiYz4+JrLyb/DqW2hkFJxP7Vd7JuTDm77fvbM8VfEQdmSMqcImWeeRbHwZjBjIFki/VaMK2BhFi7oUUZeM5bqw==}
 
+  marked@17.0.1:
+    resolution: {integrity: sha512-boeBdiS0ghpWcSwoNm/jJBwdpFaMnZWRzjA6SkUMYb40SVaN1x7mmfGKp0jvexGcx+7y2La5zRZsYFZI6Qpypg==}
+    engines: {node: '>= 20'}
+    hasBin: true
+
   mdast-util-definitions@6.0.0:
     resolution: {integrity: sha512-scTllyX6pnYNZH/AIp/0ePz6s4cZtARxImwoPJ7kS42n+MnVsI4XbnG6d4ibehRIldYMWM2LD7ImQblVhUejVQ==}
 
@@ -3374,9 +3375,6 @@ packages:
   smol-toml@1.6.0:
     resolution: {integrity: sha512-4zemZi0HvTnYwLfrpk/CF9LOd9Lt87kAt50GnqhMpyF9U3poDAP2+iukq2bZsO/ufegbYehBkqINbsWxj4l4cw==}
     engines: {node: '>= 18'}
-
-  snarkdown@2.0.0:
-    resolution: {integrity: sha512-MgL/7k/AZdXCTJiNgrO7chgDqaB9FGM/1Tvlcenenb7div6obaDATzs16JhFyHHBGodHT3B7RzRc5qk8pFhg3A==}
 
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
@@ -5725,8 +5723,6 @@ snapshots:
 
   cookie-es@1.2.2: {}
 
-  cookie@1.0.2: {}
-
   cookie@1.1.1: {}
 
   cosmiconfig-typescript-loader@6.1.0(@types/node@25.0.6)(cosmiconfig@9.0.0(typescript@5.9.3))(typescript@5.9.3):
@@ -6721,6 +6717,8 @@ snapshots:
 
   markdown-table@3.0.4: {}
 
+  marked@17.0.1: {}
+
   mdast-util-definitions@6.0.0:
     dependencies:
       '@types/mdast': 4.0.4
@@ -7231,7 +7229,7 @@ snapshots:
       '@mswjs/interceptors': 0.40.0
       '@open-draft/deferred-promise': 2.2.0
       '@types/statuses': 2.0.6
-      cookie: 1.0.2
+      cookie: 1.1.1
       graphql: 16.12.0
       headers-polyfill: 4.0.3
       is-node-process: 1.2.0
@@ -7808,8 +7806,6 @@ snapshots:
   smol-toml@1.4.2: {}
 
   smol-toml@1.6.0: {}
-
-  snarkdown@2.0.0: {}
 
   source-map-js@1.2.1: {}
 
