@@ -3,6 +3,7 @@ import { z } from 'zod';
 const MAX_MSG_LENGTH = 1000;
 const MAX_PSEUDONYM_LENGTH = 80;
 const COMMENT_ID_REGEX = /^[0-9A-Z]{12}$/;
+const PSEUDONYM_REGEX = /^[a-zA-Z\s]*$/;
 
 export const CommentSchema = z.object({
   /** Unique comment identifier */
@@ -35,7 +36,7 @@ export const GetCommentsResponseSchema = z.object({
 export type GetCommentsResponse = z.infer<typeof GetCommentsResponseSchema>;
 
 export const CreateCommentRequestSchema = z.object({
-  pseudonym: z.string().max(MAX_PSEUDONYM_LENGTH).optional(),
+  pseudonym: z.string().max(MAX_PSEUDONYM_LENGTH).regex(PSEUDONYM_REGEX).optional(),
   msg: z.string().min(1).max(MAX_MSG_LENGTH),
   replyTo: z.string().regex(COMMENT_ID_REGEX).optional(),
   email: z.string().optional(), // Honeypot field
@@ -50,7 +51,7 @@ export const CreateCommentResponseSchema = z.object({
 export type CreateCommentResponse = z.infer<typeof CreateCommentResponseSchema>;
 
 export const UpdateCommentRequestSchema = z.object({
-  pseudonym: z.string().max(MAX_PSEUDONYM_LENGTH).optional(),
+  pseudonym: z.string().max(MAX_PSEUDONYM_LENGTH).regex(PSEUDONYM_REGEX).optional(),
   msg: z.string().min(1).max(MAX_MSG_LENGTH),
 });
 export type UpdateCommentRequest = z.infer<typeof UpdateCommentRequestSchema>;
