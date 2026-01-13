@@ -3,7 +3,7 @@ import { z } from 'zod';
 const MAX_MSG_LENGTH = 1000;
 const MAX_PSEUDONYM_LENGTH = 80;
 const COMMENT_ID_REGEX = /^[0-9A-Z]{12}$/;
-const PSEUDONYM_REGEX = /^[a-zA-Z\s]*$/;
+const PSEUDONYM_REGEX = /^[A-Z][a-z]+\s[A-Z][a-z]+$/;
 
 const messagePreprocess = (raw: string) =>
   raw

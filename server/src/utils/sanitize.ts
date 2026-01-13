@@ -1,5 +1,6 @@
 import sanitizeHtml from 'sanitize-html';
 
+// TODO: use Cloudflare's HTMLRewriter for better performance? (https://developers.cloudflare.com/workers/runtime-apis/html-rewriter/)
 export function sanitize(raw: unknown): string {
   if (typeof raw !== 'string') return '';
 
