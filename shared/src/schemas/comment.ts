@@ -5,6 +5,15 @@ const MAX_PSEUDONYM_LENGTH = 80;
 const COMMENT_ID_REGEX = /^[0-9A-Z]{12}$/;
 const PSEUDONYM_REGEX = /^[a-zA-Z\s]*$/;
 
+const messagePreprocess = (raw: string) =>
+  raw
+    .normalize('NFC') // Unicode normalization, or NFKC if needed
+    // eslint-disable-next-line no-control-regex
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '') // Remove control characters
+    .replace(/[\u200B-\u200D\uFEFF]/g, '') // Remove zero-width characters
+    .replace(/[\u202A-\u202E\u2066-\u2069]/g, '') // Remove bidirectional text control characters
+    .trim();
+
 export const CommentSchema = z.object({
   /** Unique comment identifier */
   id: z.string(),
@@ -37,7 +46,7 @@ export type GetCommentsResponse = z.infer<typeof GetCommentsResponseSchema>;
 
 export const CreateCommentRequestSchema = z.object({
   pseudonym: z.string().max(MAX_PSEUDONYM_LENGTH).regex(PSEUDONYM_REGEX).optional(),
-  msg: z.string().min(1).max(MAX_MSG_LENGTH),
+  msg: z.string().min(1).max(MAX_MSG_LENGTH).transform(messagePreprocess),
   replyTo: z.string().regex(COMMENT_ID_REGEX).optional(),
   email: z.string().optional(), // Honeypot field
 });
@@ -52,7 +61,7 @@ export type CreateCommentResponse = z.infer<typeof CreateCommentResponseSchema>;
 
 export const UpdateCommentRequestSchema = z.object({
   pseudonym: z.string().max(MAX_PSEUDONYM_LENGTH).regex(PSEUDONYM_REGEX).optional(),
-  msg: z.string().min(1).max(MAX_MSG_LENGTH),
+  msg: z.string().min(1).max(MAX_MSG_LENGTH).transform(messagePreprocess),
 });
 export type UpdateCommentRequest = z.infer<typeof UpdateCommentRequestSchema>;
 
