@@ -56,8 +56,12 @@ app.get('/thread', sValidator('query', CommentQuerySchema), async (c) => {
     .forEach((comment) => {
       rss += `
   <item>
-    <title>${sanitize(comment.pseudonym || 'Anonymous')}'s Comment</title>
-    <description><![CDATA[${sanitize(comment.msg)}]]></description>
+    <title>
+      <![CDATA[${comment.pseudonym || 'Anonymous'}'s Comment]]>
+    </title>
+    <description>
+      <![CDATA[${sanitize(comment.msg)}]]>
+    </description>
     <pubDate>${new Date(comment.pubDate).toUTCString()}</pubDate>
     <guid>${postUrl}#comment-${comment.id}</guid>
   </item>`;
@@ -113,7 +117,7 @@ app.get('/site/:site', async (c) => {
       const link = new URL(`${comment.post}#comment-${comment.id}`, siteUrl);
 
       return `<item>
-  <title><![CDATA[${sanitize(title)}]]></title>
+  <title><![CDATA[${title}]]></title>
   <description><![CDATA[${sanitize(comment.msg)}]]></description>
   <link>${link.href}</link>
   <pubDate>${new Date(comment.pubDate).toUTCString()}</pubDate>

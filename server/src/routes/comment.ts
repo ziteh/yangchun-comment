@@ -96,15 +96,8 @@ app.post(
       return c.text('Formal-PoW verification failed', HTTP_STATUS.BadRequest);
     }
 
-    // Reject any suspicious pseudonyms
-    const cleanPseudonym = pseudonym ? sanitize(pseudonym) : undefined;
-    if (pseudonym && cleanPseudonym !== pseudonym) {
-      return c.text('Pseudonym is invalid', HTTP_STATUS.BadRequest);
-    }
-
     // Reject any suspicious message content
-    const cleanMsg = sanitize(msg);
-    if (cleanMsg.length === 0) {
+    if (sanitize(msg).length === 0) {
       return c.text('Message is invalid', HTTP_STATUS.BadRequest);
     }
 
@@ -132,7 +125,7 @@ app.post(
     const comment: Comment = {
       id,
       pseudonym,
-      msg,
+      msg, // Note! this is unsafe content, sanitization should be performed on display
       replyTo,
       pubDate: timestamp,
       ...(isAdmin && { isAdmin: true }),
@@ -154,7 +147,7 @@ app.post(
     await sendDiscordNotification(
       c.env.SECRET_DISCORD_WEBHOOK_URL,
       'New Comment Created',
-      `Pseudonym: ${pseudonym || 'Anonymous'}\nPost: ${post}\nMessage: ${msg.substring(0, 200)}${msg.length > 200 ? '...' : ''}`,
+      `Pseudonym: ${pseudonym || 'Anonymous'}\nPost: ${post}\nMessage: ${sanitize(msg.substring(0, 200))}${msg.length > 200 ? '...' : ''}`,
     );
 
     console.log(`Comment created with ID: ${id} for post: ${post}`);
@@ -177,15 +170,8 @@ app.put(
     const token = headers['x-comment-token'];
     const timestamp = parseInt(headers['x-comment-timestamp'], 10);
 
-    // Reject any suspicious pseudonyms
-    const cleanPseudonym = pseudonym ? sanitize(pseudonym) : undefined;
-    if (pseudonym && cleanPseudonym !== pseudonym) {
-      return c.text('Pseudonym is invalid', HTTP_STATUS.BadRequest);
-    }
-
     // Reject any suspicious message content
-    const cleanMsg = sanitize(msg);
-    if (cleanMsg.length === 0) {
+    if (sanitize(msg).length === 0) {
       return c.text('Message is invalid', HTTP_STATUS.BadRequest);
     }
 
@@ -196,7 +182,12 @@ app.put(
       return c.text('Invalid HMAC', HTTP_STATUS.Forbidden);
     }
 
-    const success = await updateComment(c.env.DB, id, cleanMsg, Date.now());
+    const success = await updateComment(
+      c.env.DB,
+      id,
+      msg, // Note! this is unsafe content, sanitization should be performed on display
+      Date.now(),
+    );
     if (!success) {
       console.warn('Comment not found for update or failed to update:', id);
       return c.text('Comment not found or update failed', 404); // 404 Not Found
@@ -210,7 +201,7 @@ app.put(
     await sendDiscordNotification(
       c.env.SECRET_DISCORD_WEBHOOK_URL,
       'Comment Updated',
-      `Pseudonym: ${pseudonym || 'Anonymous'}\nPost: ${post}\nMessage: ${msg.substring(0, 200)}${msg.length > 200 ? '...' : ''}`,
+      `Pseudonym: ${pseudonym || 'Anonymous'}\nPost: ${post}\nMessage: ${sanitize(msg.substring(0, 200))}${msg.length > 200 ? '...' : ''}`,
     );
 
     console.log(`Comment updated: ${id} for post: ${post}`);
