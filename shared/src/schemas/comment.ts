@@ -45,7 +45,10 @@ export const GetCommentsResponseSchema = z.object({
 export type GetCommentsResponse = z.infer<typeof GetCommentsResponseSchema>;
 
 export const CreateCommentRequestSchema = z.object({
-  pseudonym: z.string().max(MAX_PSEUDONYM_LENGTH).regex(PSEUDONYM_REGEX).optional(),
+  pseudonym: z.preprocess(
+    (val) => (typeof val === 'string' && val.trim() === '' ? undefined : val),
+    z.string().max(MAX_PSEUDONYM_LENGTH).regex(PSEUDONYM_REGEX).optional(),
+  ),
   msg: z.string().min(1).max(MAX_MSG_LENGTH).transform(messagePreprocess),
   replyTo: z.string().regex(COMMENT_ID_REGEX).optional(),
   email: z.string().optional(), // Honeypot field
@@ -60,7 +63,10 @@ export const CreateCommentResponseSchema = z.object({
 export type CreateCommentResponse = z.infer<typeof CreateCommentResponseSchema>;
 
 export const UpdateCommentRequestSchema = z.object({
-  pseudonym: z.string().max(MAX_PSEUDONYM_LENGTH).regex(PSEUDONYM_REGEX).optional(),
+  pseudonym: z.preprocess(
+    (val) => (typeof val === 'string' && val.trim() === '' ? undefined : val),
+    z.string().max(MAX_PSEUDONYM_LENGTH).regex(PSEUDONYM_REGEX).optional(),
+  ),
   msg: z.string().min(1).max(MAX_MSG_LENGTH).transform(messagePreprocess),
 });
 export type UpdateCommentRequest = z.infer<typeof UpdateCommentRequestSchema>;
