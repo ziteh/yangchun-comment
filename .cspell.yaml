@@ -24,6 +24,7 @@ words:
   - labelledby
   - maxlength
   - Menlo
+  - msgbox
   - noopener
   - noreferrer
   - nosniff

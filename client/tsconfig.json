@@ -8,5 +8,5 @@
     "declarationDir": "./dist",
     "outDir": "./dist"
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*", "test/**/*.test.ts"]
 }
