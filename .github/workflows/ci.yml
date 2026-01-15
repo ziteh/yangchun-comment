@@ -40,6 +40,7 @@ jobs:
         run: |
           pnpm format:check
           pnpm type-check
+          pnpm lint
 
       - name: Build packages
         run: pnpm build
