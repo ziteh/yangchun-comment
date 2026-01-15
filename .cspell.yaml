@@ -17,6 +17,7 @@ ignorePaths:
 words:
   - catppuccin
   - chun
+  - commenters
   - commitlint
   - Consolas
   - describedby
