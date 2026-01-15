@@ -21,7 +21,7 @@ This monorepo uses pnpm workspace and contains four packages:
 
 ## Usage
 
-Refer to <https://ycc.ziteh.dev>
+Refer to <https://ycc.ziteh.dev> or [get-started](./docs/src/content/docs/guides/get-started.mdx)
 
 > [!WARNING]  
 > The system design is not guaranteed to comply with any data and privacy regulations, including but not limited to GDPR (General Data Protection Regulation).
