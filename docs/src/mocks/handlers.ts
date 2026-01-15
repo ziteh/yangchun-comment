@@ -7,8 +7,6 @@ import {
   CreateCommentRequestSchema,
   CreateCommentResponseSchema,
   UpdateCommentRequestSchema,
-  AdminLoginRequestSchema,
-  AdminLoginResponseSchema,
   AdminLogoutResponseSchema,
   AdminCheckResponseSchema,
 } from '@ziteh/yangchun-comment-shared';
@@ -54,7 +52,6 @@ You can use \`**bold**\` for **bold**, \`*italic*\` for *italic*, and other form
 
 const commentStorage: Comment[] = [...mockComments];
 let nextId = mockComments.length + 1;
-let isAdminAuthenticated = false;
 
 export const handlers = [
   http.post('*/api/pow/formal-challenge', async ({ request }) => {
@@ -206,37 +203,11 @@ export const handlers = [
   }),
 
   // Admin endpoints
-  http.post('*/admin/login', async ({ request }) => {
-    try {
-      const body = await request.json();
-      const validated = AdminLoginRequestSchema.parse(body);
-
-      console.debug('MSW: POST /admin/login', { username: validated.username });
-
-      // Simple mock: accept any username "admin" with any password
-      if (validated.username === 'admin') {
-        isAdminAuthenticated = true;
-        const response = AdminLoginResponseSchema.parse({
-          success: true,
-          message: 'Login successful',
-        });
-        return HttpResponse.json(response);
-      }
-
-      const errorResponse = AdminLoginResponseSchema.parse({
-        success: false,
-        message: 'Invalid credentials',
-      });
-      return HttpResponse.json(errorResponse, { status: 401 });
-    } catch (error) {
-      console.error('MSW: Validation error:', error);
-      return HttpResponse.json({ error: 'Invalid request' }, { status: 400 });
-    }
+  http.post('*/admin/login', async () => {
+    return HttpResponse.json({ error: 'Invalid request' }, { status: 400 });
   }),
 
   http.post('*/admin/logout', () => {
-    console.debug('MSW: POST /admin/logout');
-    isAdminAuthenticated = false;
     const response = AdminLogoutResponseSchema.parse({
       success: true,
       message: 'Logout successful',
@@ -245,9 +216,8 @@ export const handlers = [
   }),
 
   http.get('*/admin/check', () => {
-    console.debug('MSW: GET /admin/check', { authenticated: isAdminAuthenticated });
     const response = AdminCheckResponseSchema.parse({
-      authenticated: isAdminAuthenticated,
+      authenticated: false,
     });
     return HttpResponse.json(response);
   }),
