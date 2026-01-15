@@ -16,7 +16,7 @@ import {
 const msOfOneDay = 24 * 60 * 60 * 1000;
 const tokenPrefix = 'mock-token-';
 
-const getCommentId = (index: number) => `comment-${index}`;
+const getCommentId = (index: number) => `ID${String(index).padStart(10, '0')}`;
 
 const mockComments: Comment[] = [
   {
