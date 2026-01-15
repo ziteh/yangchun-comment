@@ -43,7 +43,7 @@ Among them, comment content is sanitized using [DOMPurify](https://github.com/cu
 - Used for RSS Feed XML
 - Strips all HTML, leaving only plain text.
 
-[source code](https://github.com/ziteh/yangchun-comment/blob/main/server/src/utils.ts)
+[source code](https://github.com/ziteh/yangchun-comment/blob/main/server/src/utils/sanitize.ts)
 
 **Recommendations**:
 
