@@ -30,7 +30,7 @@ const app = new Hono<{
     DB: D1Database;
     KV: KVNamespace;
     SECRET_COMMENT_HMAC_KEY: string;
-    POST_BASE_URL: string;
+    POST_BASE_URL?: string;
     SECRET_FORMAL_POW_HMAC_KEY: string;
     SECRET_ADMIN_JWT_KEY: string;
     RSS_SITE_PATH: string;

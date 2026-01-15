@@ -36,6 +36,7 @@ PRE_POW_SALT = "MAGIC" # The magic word for the pre-proof-of-work
 PRE_POW_TIME_WINDOW = 60      # The time window (in seconds) for the pre-proof-of-work
 FORMAL_POW_DIFFICULTY = 4 # The difficulty for the formal proof-of-work
 FORMAL_POW_EXPIRATION = 300  # The expiration time (in seconds) for the formal proof-of-work challenges
+# POST_BASE_URL = "https://your-frontend-url.com/post"
 
 # !!NOTE: Never store secrets (SECRET_ prefixed variables) in this file.
 #         Instead, use `.dev.vars` or `.env` for local development,
