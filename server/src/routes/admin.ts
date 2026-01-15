@@ -111,7 +111,7 @@ app.post('/logout', async (c) => {
     if (match) {
       const token = match[1];
       try {
-        const payload = await verify(token, c.env.SECRET_ADMIN_JWT_KEY);
+        const payload = await verify(token, c.env.SECRET_ADMIN_JWT_KEY, 'HS256');
         if (payload.jti && payload.exp) {
           const jtiKey = `jti_blacklist:${payload.jti}`;
           const ttl = payload.exp - Math.floor(Date.now() / 1000);

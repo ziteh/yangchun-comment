@@ -87,7 +87,7 @@ export async function verifyAdminToken(
     if (!match) return false;
 
     const token = match[1];
-    const payload = await verify(token, secretKey);
+    const payload = await verify(token, secretKey, 'HS256');
 
     // Check JTI blacklist
     if (jtiBlacklist && payload.jti) {

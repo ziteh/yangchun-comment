@@ -11,12 +11,12 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/starlight": "^0.37.2",
+    "@astrojs/starlight": "^0.37.3",
     "@ziteh/yangchun-comment-client": "workspace:*",
     "@ziteh/yangchun-comment-shared": "workspace:*",
-    "astro": "^5.16.8",
+    "astro": "^5.16.9",
     "sharp": "^0.34.5",
-    "zod": "^3.25.76"
+    "zod": ">3.25.76, <4.0.0"
   },
   "devDependencies": {
     "msw": "^2.12.7"
