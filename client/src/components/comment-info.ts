@@ -55,7 +55,7 @@ export class CommentInfo extends LitElement {
   render() {
     if (this.errorMessage) {
       return html`
-        <div class="info-bar error">
+        <div class="info-bar error" part="info-bar info-bar-error">
           <span class="error-msg">${this.errorMessage}</span>
           <button class="text-btn" @click=${this.handleErrorClear}>${t('close')}</button>
         </div>
@@ -63,7 +63,7 @@ export class CommentInfo extends LitElement {
     }
 
     return html`
-      <div class="info-bar">
+      <div class="info-bar" part="info-bar">
         ${this.comment
           ? html`
               <div class="reference-comment-info">
@@ -79,7 +79,7 @@ export class CommentInfo extends LitElement {
               </div>
             `
           : html`<div></div>`}
-        <div class="actions">
+        <div class="actions" part="actions">
           <button class="text-btn admin-btn" @click=${this.handleAdmin}>Admin</button>
           <button class="text-btn" @click=${this.handleNotify}>${t('notify')}</button>
           <button class="text-btn" @click=${this.handleHelp}>${t('help')}</button>

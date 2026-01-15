@@ -9,6 +9,7 @@
   <body>
     <article>
       <h1>My Blog Post</h1>
+      <!-- cSpell:disable -->
       <p>
         Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
         labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
@@ -16,6 +17,7 @@
         voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat
         cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
       </p>
+      <!-- cSpell:enable -->
     </article>
 
     <yangchun-comment
@@ -24,7 +26,22 @@
       lang="en-US"
       adminName="ZiTe"
       prePowDifficulty="2"
-      prePowMagicWord="MAGIC"
+      prePowSalt="MAGIC"
     ></yangchun-comment>
+
+    <style>
+      /* Override default styles */
+      yangchun-comment {
+        --ycc-primary-color: #37a911;
+        --ycc-primary-hover: #97d81d;
+        --ycc-text-color: #1f2937;
+        --ycc-text-secondary: #6b7280;
+        --ycc-placeholder-color: #83888f;
+        --ycc-bg-color: #ffffff;
+        --ycc-bg-secondary: #f3f4f6;
+        --ycc-border-color: #e5e7eb;
+        --ycc-error-color: #ef4444;
+      }
+    </style>
   </body>
 </html>

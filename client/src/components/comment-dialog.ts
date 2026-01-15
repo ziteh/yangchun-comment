@@ -68,12 +68,23 @@ export class CommentDialog extends LitElement {
     if (!this.open) return null;
 
     return html`
-      <div class="overlay" @click=${this.handleOverlayClick}>
-        <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title">
-          <button class="close-btn" @click=${this.handleClose} aria-label=${t('close')}>
+      <div class="overlay" part="overlay" @click=${this.handleOverlayClick}>
+        <div
+          class="dialog"
+          part="dialog"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="dialog-title"
+        >
+          <button
+            part="close-btn"
+            class="close-btn"
+            @click=${this.handleClose}
+            aria-label=${t('close')}
+          >
             &times;
           </button>
-          <h2 id="dialog-title">${this.header}</h2>
+          <h2 id="dialog-title" part="header">${this.header}</h2>
           <slot></slot>
         </div>
       </div>

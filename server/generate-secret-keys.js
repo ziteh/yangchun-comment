@@ -24,7 +24,9 @@ try {
   const randomBytes = crypto.randomBytes(bytes);
   const hexString = randomBytes.toString('hex');
 
+  console.log('');
   console.log(hexString);
+  console.log('');
 } catch (error) {
   console.error('Error generating random bytes:', error.message);
   process.exit(1);

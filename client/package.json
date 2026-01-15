@@ -28,17 +28,21 @@
     "dev": "vite",
     "build": "vite build && tsc",
     "preview": "vite preview",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test": "vitest"
   },
   "dependencies": {
     "dompurify": "^3.3.1",
     "lit": "^3.3.2",
-    "snarkdown": "^2.0.0"
+    "marked": "^17.0.1"
   },
   "devDependencies": {
-    "@ziteh/yangchun-comment-shared": "workspace:*",
     "@rollup/plugin-terser": "^0.4.4",
+    "@vitest/ui": "^4.0.17",
+    "@ziteh/yangchun-comment-shared": "workspace:*",
+    "jsdom": "^27.4.0",
     "terser": "^5.44.1",
-    "vite": "^7.3.1"
+    "vite": "^7.3.1",
+    "vitest": "~4.0.16"
   }
 }

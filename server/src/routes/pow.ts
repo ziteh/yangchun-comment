@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { sValidator } from '@hono/standard-validator';
 import {
-  FormalChallengeQuerySchema,
+  FormalChallengeRequestSchema,
   FormalChallengeResponseSchema,
 } from '@ziteh/yangchun-comment-shared';
 import { genFormalPowChallenge, verifyPrePow } from '../utils/crypto';
@@ -11,21 +11,20 @@ const app = new Hono<{
   Bindings: {
     PRE_POW_DIFFICULTY: number;
     PRE_POW_TIME_WINDOW: number;
-    PRE_POW_MAGIC_WORD: string;
+    PRE_POW_SALT: string;
     FORMAL_POW_DIFFICULTY: number;
     FORMAL_POW_EXPIRATION: number;
     SECRET_FORMAL_POW_HMAC_KEY: string;
   };
 }>();
 
-app.get('/formal-challenge', sValidator('query', FormalChallengeQuerySchema), async (c) => {
-  const { challenge, nonce } = c.req.valid('query');
-  const nonceNum = parseInt(nonce, 10);
+app.post('/formal-challenge', sValidator('json', FormalChallengeRequestSchema), async (c) => {
+  const { challenge, nonce } = c.req.valid('json');
   const prePowPass = await verifyPrePow(
     c.env.PRE_POW_DIFFICULTY,
     challenge,
-    nonceNum,
-    c.env.PRE_POW_MAGIC_WORD,
+    nonce,
+    c.env.PRE_POW_SALT,
     c.env.PRE_POW_TIME_WINDOW,
   );
   if (!prePowPass) {

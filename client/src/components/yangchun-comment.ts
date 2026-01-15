@@ -65,6 +65,12 @@ export class YangChunComment extends LitElement {
       .help-footer a:hover {
         text-decoration: underline;
       }
+      .external-link-url {
+        word-break: break-all;
+        color: var(--ycc-primary-color);
+        font-family: var(--ycc-font-monospace);
+        font-size: 0.9em;
+      }
     `,
   ];
 
@@ -72,7 +78,7 @@ export class YangChunComment extends LitElement {
   @property({ type: String }) accessor apiUrl = 'http://localhost:8787';
   @property({ type: String }) accessor adminName = 'Admin';
   @property({ type: String }) accessor lang = 'en-US';
-  @property({ type: String }) accessor prePowMagicWord = 'MAGIC';
+  @property({ type: String }) accessor prePowSalt = 'MAGIC';
   @property({ type: Number }) accessor prePowDifficulty = 2;
   @property({ type: Object, attribute: false }) accessor customMessages: I18nStrings | undefined;
 
@@ -90,6 +96,8 @@ export class YangChunComment extends LitElement {
   @state() private accessor showAdmin = false;
   @state() private accessor showHelp = false;
   @state() private accessor showNotify = false;
+  @state() private accessor showExternalLink = false;
+  @state() private accessor externalLinkUrl = '';
 
   @state() private accessor isAdmin = false;
   @state() private accessor rssFeedUrl = '';
@@ -124,7 +132,10 @@ export class YangChunComment extends LitElement {
 
 \`\`\`
 ${t('helpMdCodeBlock')}
-\`\`\`</pre
+\`\`\`
+
+&lt;img src=&quot;${t('helpMdNoHtml')}&quot;&gt;
+</pre
         >
         <div class="help-footer">
           Powered by${' '}
@@ -205,6 +216,18 @@ ${t('helpMdCodeBlock')}
         >
           ${HelpContent}
         </comment-dialog>
+        <comment-dialog
+          header=${t('externalLinkWarning')}
+          .open=${this.showExternalLink}
+          @close=${() => (this.showExternalLink = false)}
+        >
+          <p>${t('externalLinkDesc')}</p>
+          <p class="external-link-url">${this.externalLinkUrl}</p>
+          <div class="dialog-actions">
+            <button class="secondary" @click=${this.handleCopyLink}>${t('copyLink')}</button>
+            <button @click=${this.handleOpenLink}>${t('openLink')}</button>
+          </div>
+        </comment-dialog>
       </div>
     `;
   }
@@ -224,11 +247,11 @@ ${t('helpMdCodeBlock')}
     if (
       (changedProperties.has('apiUrl') ||
         changedProperties.has('prePowDifficulty') ||
-        changedProperties.has('prePowMagicWord')) &&
+        changedProperties.has('prePowSalt')) &&
       this.apiUrl
     ) {
       console.debug('Initializing API service with URL:', this.apiUrl);
-      const apiService = createApiService(this.apiUrl, this.prePowDifficulty, this.prePowMagicWord);
+      const apiService = createApiService(this.apiUrl, this.prePowDifficulty, this.prePowSalt);
       globalApiService.setInstance(apiService);
 
       const rssUrl = new URL('/rss/thread', this.apiUrl);
@@ -249,10 +272,12 @@ ${t('helpMdCodeBlock')}
 
   async firstUpdated() {
     console.debug('firstUpdated', 'apiUrl:', this.apiUrl);
+    this.addEventListener('external-link-click', this.handleExternalLinkClick as EventListener);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
+    this.removeEventListener('external-link-click', this.handleExternalLinkClick as EventListener);
     cleanupPowWorker();
   }
 
@@ -412,6 +437,35 @@ ${t('helpMdCodeBlock')}
       this.deleteCommentId = ''; // Close dialog even on error
     }
   }
+
+  private handleExternalLinkClick = (e: CustomEvent<string>) => {
+    const href = e.detail;
+    if (href) {
+      this.externalLinkUrl = href;
+      this.showExternalLink = true;
+    }
+  };
+
+  private handleOpenLink = () => {
+    if (this.externalLinkUrl) {
+      window.open(this.externalLinkUrl, '_blank', 'noopener,noreferrer');
+      this.showExternalLink = false;
+      this.externalLinkUrl = '';
+    }
+  };
+
+  private handleCopyLink = async () => {
+    if (this.externalLinkUrl) {
+      try {
+        await navigator.clipboard.writeText(this.externalLinkUrl);
+        console.log('Link copied to clipboard');
+      } catch (err) {
+        console.error('Failed to copy link:', err);
+      }
+      this.showExternalLink = false;
+      this.externalLinkUrl = '';
+    }
+  };
 }
 
 declare global {

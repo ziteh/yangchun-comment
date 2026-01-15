@@ -2,10 +2,11 @@ import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { globalApiService } from '../../api/globalApiService';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
+import { until } from 'lit/directives/until.js';
 import { yangChunCommentStyles } from '../yangchun-comment.styles';
 import type { Comment } from '@ziteh/yangchun-comment-shared';
 import { sanitizeHtml } from '../../utils/sanitize';
-import snarkdown from 'snarkdown';
+import { marked } from 'marked';
 import { formatRelativeDate, formatAbsoluteDate } from '../../utils/format';
 import { t } from '../../utils/i18n';
 
@@ -212,38 +213,42 @@ export class CommentListItem extends LitElement {
     const commentContent = html`
       <!-- prettier-ignore -->
       <div
+        part="content"
         class="content ${!this.isContentExpanded && this.shouldShowExpandBtn() ? 'collapsed' : ''}"
-      >${this.renderMarkdown(this.comment.msg)}</div>
+        @click=${this.handleContentClick}
+      >${until(this.renderMarkdown(this.comment.msg), html`<span></span>`)}</div>
     `;
 
     return html`
       <div class=${this.comment.replyTo ? 'reply-comment' : 'root-comment'}>
         <div
+          part="comment-box"
           class="comment-box"
           id=${this.comment.id}
           role="article"
           aria-labelledby="author-${this.comment.id}"
         >
-          <div class="header">
-            <span class="author" id="author-${this.comment.id}"
+          <div class="header" part="header">
+            <span class="author" part="author" id="author-${this.comment.id}"
               >${this.comment.isAdmin && this.author
                 ? this.author
                 : this.comment.pseudonym || t('anonymous')}</span
             >
             ${(() => {
               if (this.comment.isAdmin) {
-                return html`<span class="badge">${t('author')}</span>`;
+                return html`<span class="badge" part="badge">${t('author')}</span>`;
               } else if (
                 globalApiService.isInitialized() &&
                 globalApiService.getInstance().isMyComment(this.comment.id)
               ) {
-                return html`<span class="badge">${t('me')}</span>`;
+                return html`<span class="badge" part="badge">${t('me')}</span>`;
               }
               return null;
             })()}
             ${this.comment.modDate && this.comment.modDate > this.comment.pubDate
               ? html`
                   <time
+                    part="date"
                     class="date-relative"
                     datetime=${new Date(this.comment.modDate).toISOString()}
                     aria-label="${t('edited')} ${formatRelativeDate(
@@ -259,6 +264,7 @@ export class CommentListItem extends LitElement {
                 `
               : html`
                   <time
+                    part="date"
                     class="date-relative"
                     datetime=${new Date(this.comment.pubDate).toISOString()}
                     aria-label="${formatRelativeDate(
@@ -281,7 +287,11 @@ export class CommentListItem extends LitElement {
           </div>
           ${commentContent}
           ${this.shouldShowExpandBtn()
-            ? html`<button class="show-more-btn" @click=${this.handleToggleExpand}>
+            ? html`<button
+                part="show-more-btn"
+                class="show-more-btn"
+                @click=${this.handleToggleExpand}
+              >
                 ${this.isContentExpanded ? t('showLess') : t('showMore')}
               </button>`
             : null}
@@ -289,7 +299,7 @@ export class CommentListItem extends LitElement {
           (this.comment.pseudonym === deletedMark && this.comment.msg === deletedMark)
             ? null
             : html`
-                <div class="actions">
+                <div class="actions" part="actions">
                   <button
                     class="text-btn"
                     @click=${this.handleReply}
@@ -309,7 +319,7 @@ export class CommentListItem extends LitElement {
               `}
         </div>
 
-        <div class="reply-comments" role="list">
+        <div class="reply-comments" part="reply-comments" role="list">
           ${this.replyComments.map(
             (cmt) => html`
               <comment-list-item
@@ -362,8 +372,33 @@ export class CommentListItem extends LitElement {
     );
   }
 
-  private renderMarkdown(raw: string | undefined | null): ReturnType<typeof unsafeHTML> {
-    return unsafeHTML(sanitizeHtml(snarkdown(raw || '')));
+  private handleContentClick(e: Event) {
+    const target = e.target as HTMLElement;
+    const link = target.closest('[data-external-link="true"]') as HTMLElement;
+    if (link) {
+      e.preventDefault();
+      e.stopPropagation();
+      const href = link.getAttribute('data-href');
+      if (href) {
+        this.dispatchEvent(
+          new CustomEvent('external-link-click', {
+            detail: href,
+            bubbles: true,
+            composed: true,
+          }),
+        );
+      }
+    }
+  }
+
+  private async renderMarkdown(
+    dirtyMd: string | undefined | null,
+  ): Promise<ReturnType<typeof unsafeHTML>> {
+    if (!dirtyMd) return unsafeHTML('');
+
+    const dirtyHtml = await marked.parse(dirtyMd);
+    const cleanHtml = sanitizeHtml(dirtyHtml);
+    return unsafeHTML(cleanHtml);
   }
 
   private shouldShowExpandBtn(): boolean {

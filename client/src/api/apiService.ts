@@ -51,7 +51,7 @@ export interface ApiService {
 export const createApiService = (
   apiUrl: string,
   prePowDifficulty: number,
-  prePowMagicWord: string,
+  prePowSalt: string,
 ): ApiService => {
   const LOCAL_STORAGE_MY_COMMENT_IDS_KEY = 'my_comment_ids';
 
@@ -60,10 +60,13 @@ export const createApiService = (
   const getFormalChallenge = async (challenge: string, nonce: number): Promise<string | null> => {
     try {
       const url = new URL('/api/pow/formal-challenge', apiUrl);
-      url.searchParams.append('challenge', challenge);
-      url.searchParams.append('nonce', nonce.toString());
-
-      const res = await fetch(url);
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ challenge, nonce }),
+      });
       if (res.ok) {
         const data = await res.json();
         const validated = FormalChallengeResponseSchema.parse(data);
@@ -100,7 +103,7 @@ export const createApiService = (
     replyTo?: string,
   ): Promise<string | null> => {
     try {
-      const prePow = await solvePrePow(prePowDifficulty, prePowMagicWord);
+      const prePow = await solvePrePow(prePowDifficulty, prePowSalt);
       if (prePow.nonce < 0) {
         console.error('Failed to solve pre-PoW');
         return null;

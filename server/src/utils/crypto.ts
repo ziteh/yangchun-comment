@@ -138,7 +138,7 @@ export async function verifyPrePow(
   difficulty: number,
   challenge: string,
   nonce: number,
-  magic: string,
+  salt: string,
   timeWindowSec: number,
 ): Promise<boolean> {
   const parts = challenge.split(':');
@@ -147,7 +147,7 @@ export async function verifyPrePow(
   const timestamp = parseInt(parts[0], 10);
   const diffTimestamp = Math.floor(Date.now() / 1000) - timestamp;
   if (isNaN(timestamp) || diffTimestamp > timeWindowSec || diffTimestamp < 0) return false;
-  if (parts[1] !== magic) return false;
+  if (parts[1] !== salt) return false;
 
   return verifyPow(difficulty, challenge, nonce);
 }
@@ -226,7 +226,7 @@ export async function constantTimeCompare(a: string, b: string): Promise<boolean
 export async function hashPassword(
   password: string,
   salt: string,
-  iterations = 600000,
+  iterations = 100000,
 ): Promise<string> {
   const encoder = new TextEncoder();
   const keyMaterial = await crypto.subtle.importKey(
@@ -258,7 +258,7 @@ export async function verifyPassword(
   password: string,
   salt: string,
   expectedHash: string,
-  iterations = 600000,
+  iterations = 100000,
 ): Promise<boolean> {
   const computedHash = await hashPassword(password, salt, iterations);
   return await constantTimeCompare(computedHash, expectedHash);

@@ -2,27 +2,29 @@
 title: Data Type
 ---
 
+🚧 Work in progress 🚧
+
 ```ts
-export interface Comment {
-  /** Unique identifier for the comment */
-  id: string;
+export const CommentSchema = z.object({
+  /** Unique comment identifier */
+  id: z.string(),
 
-  /** Pseudonym of the author */
-  pseudonym?: string;
+  /** Author's display name; anonymous if omitted */
+  pseudonym: z.string().optional(),
 
-  /** Content of the comment */
-  msg: string;
+  /** The comment body text */
+  msg: z.string(),
 
   /** Publish timestamp */
-  pubDate: number;
+  pubDate: z.number(),
 
-  /** Last modification timestamp */
-  modDate?: number;
+  /** Last modified timestamp, if edited or deleted */
+  modDate: z.number().optional(),
 
-  /** ID of the comment being replied to */
-  replyTo?: string;
+  /** Parent comment ID, if this comment is a reply */
+  replyTo: z.string().optional(),
 
-  /** Indicates whether the comment was made by an admin */
-  isAdmin?: boolean;
-}
+  /** Flags if the author is an admin */
+  isAdmin: z.boolean().optional(),
+});
 ```

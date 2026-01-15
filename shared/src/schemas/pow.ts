@@ -1,10 +1,10 @@
 import { z } from 'zod';
 
-export const FormalChallengeQuerySchema = z.object({
+export const FormalChallengeRequestSchema = z.object({
   challenge: z.string(),
-  nonce: z.string(),
+  nonce: z.number().int().positive(),
 });
-export type FormalChallengeQuery = z.infer<typeof FormalChallengeQuerySchema>;
+export type FormalChallengeRequest = z.infer<typeof FormalChallengeRequestSchema>;
 
 export const FormalChallengeResponseSchema = z.object({
   challenge: z.string(),

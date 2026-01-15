@@ -35,12 +35,18 @@ export interface I18nStrings {
   helpMdOrderedList: string;
   helpMdInlineCode: string;
   helpMdCodeBlock: string;
+  helpMdNoHtml: string;
 
   notifyDesc: string;
 
   noComments: string;
   showMore: string;
   showLess: string;
+
+  externalLinkWarning: string;
+  externalLinkDesc: string;
+  openLink: string;
+  copyLink: string;
 }
 
 export const enUS: I18nStrings = {
@@ -78,10 +84,16 @@ export const enUS: I18nStrings = {
   helpMdOrderedList: 'Ordered list item',
   helpMdInlineCode: 'Inline code',
   helpMdCodeBlock: 'Code block',
+  helpMdNoHtml: 'No HTML',
   notifyDesc: 'You can subscribe to the comments RSS feed for this post: ',
   noComments: 'No comments yet',
   showMore: 'Show more',
   showLess: 'Show less',
+
+  externalLinkWarning: 'External Link Warning',
+  externalLinkDesc: 'You are about to leave this site and visit:',
+  openLink: 'Open Link',
+  copyLink: 'Copy Link',
 };
 
 export const zhTW: I18nStrings = {
@@ -119,10 +131,16 @@ export const zhTW: I18nStrings = {
   helpMdOrderedList: '有序清單項目',
   helpMdInlineCode: '行內程式碼',
   helpMdCodeBlock: '程式碼區塊',
+  helpMdNoHtml: '不支援 HTML',
   notifyDesc: '你可以訂閱此文章的留言 RSS Feed：',
   noComments: '目前還沒有留言',
   showMore: '顯示全部',
   showLess: '折疊',
+
+  externalLinkWarning: '外部連結警告',
+  externalLinkDesc: '你即將離開本站並訪問：',
+  openLink: '開啟連結',
+  copyLink: '複製連結',
 };
 
 let currentLanguage: I18nStrings = enUS;

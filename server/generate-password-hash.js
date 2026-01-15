@@ -8,7 +8,7 @@ import { Buffer } from 'node:buffer';
 
 const pbkdf2 = promisify(crypto.pbkdf2);
 
-const ITERATIONS = 600000; // OWASP recommended
+const ITERATIONS = 100000;
 const KEY_LENGTH = 32;
 const DIGEST = 'sha256';
 const FORMAT = 'hex';
@@ -49,10 +49,10 @@ async function main() {
   console.log(salt);
   console.log('');
   console.log('------------------------------');
-  console.log('Put the following secrets into your wrangler.toml or .env or .dev.vars file:');
+  console.log('Put the following secrets into your .dev.vars file:');
   console.log('');
-  console.log('SECRET_ADMIN_PASSWORD_HASH=' + hash);
-  console.log('SECRET_ADMIN_PASSWORD_SALT=' + salt);
+  console.log('SECRET_ADMIN_PASSWORD_HASH="' + hash + '"');
+  console.log('SECRET_ADMIN_PASSWORD_SALT="' + salt + '"');
   console.log('');
 }
 

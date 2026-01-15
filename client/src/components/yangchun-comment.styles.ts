@@ -6,6 +6,7 @@ export const yangChunCommentVars = css`
     --ycc-primary-hover: #1d4ed8;
     --ycc-text-color: #1f2937;
     --ycc-text-secondary: #6b7280;
+    --ycc-placeholder-color: #9ca3af;
     --ycc-bg-color: #ffffff;
     --ycc-bg-secondary: #f3f4f6;
     --ycc-border-color: #e5e7eb;

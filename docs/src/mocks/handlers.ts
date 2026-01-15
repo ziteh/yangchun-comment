@@ -1,10 +1,20 @@
 import { http, HttpResponse } from 'msw';
-import type { Comment } from '@ziteh/yangchun-comment-shared';
+import {
+  type Comment,
+  FormalChallengeRequestSchema,
+  FormalChallengeResponseSchema,
+  GetCommentsResponseSchema,
+  CreateCommentRequestSchema,
+  CreateCommentResponseSchema,
+  UpdateCommentRequestSchema,
+  AdminLogoutResponseSchema,
+  AdminCheckResponseSchema,
+} from '@ziteh/yangchun-comment-shared';
 
 const msOfOneDay = 24 * 60 * 60 * 1000;
 const tokenPrefix = 'mock-token-';
 
-const getCommentId = (index: number) => `comment-${index}`;
+const getCommentId = (index: number) => `ID${String(index).padStart(10, '0')}`;
 
 const mockComments: Comment[] = [
   {
@@ -42,24 +52,28 @@ You can use \`**bold**\` for **bold**, \`*italic*\` for *italic*, and other form
 
 const commentStorage: Comment[] = [...mockComments];
 let nextId = mockComments.length + 1;
-let isAdminAuthenticated = false;
 
 export const handlers = [
-  http.get('*/api/pow/formal-challenge', ({ request }) => {
-    const url = new URL(request.url);
-    const challenge = url.searchParams.get('challenge');
-    const nonce = url.searchParams.get('nonce');
+  http.post('*/api/pow/formal-challenge', async ({ request }) => {
+    try {
+      const body = await request.json();
+      const { challenge, nonce } = FormalChallengeRequestSchema.parse(body);
 
-    console.debug('MSW: GET /api/pow/formal-challenge', { challenge, nonce });
+      console.debug('MSW: POST /api/pow/formal-challenge', { challenge, nonce });
 
-    // Simple mock: just return a formal challenge based on the pre-challenge
-    const timestamp = Math.floor(Date.now() / 1000);
-    const difficulty = 2; // Mock difficulty
-    const formalChallenge = `${timestamp}:${challenge}:${difficulty}`;
+      // Simple mock: just return a formal challenge based on the pre-challenge
+      const timestamp = Math.floor(Date.now() / 1000);
+      const difficulty = 2; // Mock difficulty
+      const formalChallenge = `${timestamp}:${challenge}:${difficulty}`;
 
-    return HttpResponse.json({
-      challenge: formalChallenge,
-    });
+      const response = FormalChallengeResponseSchema.parse({
+        challenge: formalChallenge,
+      });
+      return HttpResponse.json(response);
+    } catch (error) {
+      console.error('MSW: Validation error:', error);
+      return HttpResponse.json({ error: 'Invalid request' }, { status: 400 });
+    }
   }),
 
   http.get('*/api/comments', ({ request }) => {
@@ -68,10 +82,11 @@ export const handlers = [
 
     console.debug('MSW: GET', post);
 
-    return HttpResponse.json({
+    const response = GetCommentsResponseSchema.parse({
       comments: commentStorage,
       isAdmin: false,
     });
+    return HttpResponse.json(response);
   }),
 
   http.post('*/api/comments', async ({ request }) => {
@@ -79,37 +94,34 @@ export const handlers = [
     const post = url.searchParams.get('post');
 
     try {
-      const body = (await request.json()) as {
-        pseudonym?: string;
-        msg: string;
-        replyTo?: string;
-        email?: string; // honeypot field
-      };
+      const body = await request.json();
+      const validatedBody = CreateCommentRequestSchema.parse(body);
 
-      console.debug('MSW: POST', post, body);
+      console.debug('MSW: POST', post, validatedBody);
 
-      if (body.email && body.email.trim() !== '') {
+      if (validatedBody.email && validatedBody.email.trim() !== '') {
         return HttpResponse.json({ error: 'Spam detected' }, { status: 400 });
       }
 
       const newComment: Comment = {
         id: getCommentId(nextId++),
-        pseudonym: body.pseudonym,
-        msg: body.msg,
+        pseudonym: validatedBody.pseudonym,
+        msg: validatedBody.msg,
         pubDate: Date.now(),
-        replyTo: body.replyTo || undefined,
+        replyTo: validatedBody.replyTo || undefined,
         isAdmin: false,
       };
 
       commentStorage.push(newComment);
 
-      return HttpResponse.json({
+      const response = CreateCommentResponseSchema.parse({
         id: newComment.id,
         timestamp: newComment.pubDate,
         token: `${tokenPrefix}${newComment.id}`,
       });
+      return HttpResponse.json(response);
     } catch (error) {
-      console.error('MSW: Error:', error);
+      console.error('MSW: Validation error:', error);
       return HttpResponse.json({ error: 'Invalid request' }, { status: 400 });
     }
   }),
@@ -123,12 +135,10 @@ export const handlers = [
         request.headers.get('x-comment-timestamp') || request.headers.get('X-Comment-Timestamp');
       const timestamp = tsHeader ? parseInt(tsHeader, 10) : NaN;
 
-      const body = (await request.json()) as {
-        pseudonym?: string;
-        msg: string;
-      };
+      const body = await request.json();
+      const validatedBody = UpdateCommentRequestSchema.parse(body);
 
-      console.debug('MSW: PUT:', { id, token, timestamp, body });
+      console.debug('MSW: PUT:', { id, token, timestamp, body: validatedBody });
 
       if (!token || !token.startsWith(tokenPrefix)) {
         return HttpResponse.json({ error: 'Invalid token' }, { status: 401 });
@@ -145,14 +155,14 @@ export const handlers = [
 
       commentStorage[commentIndex] = {
         ...commentStorage[commentIndex],
-        pseudonym: body.pseudonym,
-        msg: body.msg,
+        pseudonym: validatedBody.pseudonym,
+        msg: validatedBody.msg,
         modDate: Date.now(),
       };
 
       return HttpResponse.json({ success: true });
     } catch (error) {
-      console.error('MSW: Error:', error);
+      console.error('MSW: Validation error:', error);
       return HttpResponse.json({ error: 'Invalid request' }, { status: 400 });
     }
   }),
@@ -193,50 +203,22 @@ export const handlers = [
   }),
 
   // Admin endpoints
-  http.post('*/admin/login', async ({ request }) => {
-    try {
-      const body = (await request.json()) as {
-        username: string;
-        password: string;
-      };
-
-      console.debug('MSW: POST /admin/login', { username: body.username });
-
-      // Simple mock: accept any username "admin" with any password
-      if (body.username === 'admin') {
-        isAdminAuthenticated = true;
-        return HttpResponse.json({
-          success: true,
-          message: 'Login successful',
-        });
-      }
-
-      return HttpResponse.json(
-        {
-          success: false,
-          message: 'Invalid credentials',
-        },
-        { status: 401 },
-      );
-    } catch (error) {
-      console.error('MSW: Error:', error);
-      return HttpResponse.json({ error: 'Invalid request' }, { status: 400 });
-    }
+  http.post('*/admin/login', async () => {
+    return HttpResponse.json({ error: 'Invalid request' }, { status: 400 });
   }),
 
   http.post('*/admin/logout', () => {
-    console.debug('MSW: POST /admin/logout');
-    isAdminAuthenticated = false;
-    return HttpResponse.json({
+    const response = AdminLogoutResponseSchema.parse({
       success: true,
       message: 'Logout successful',
     });
+    return HttpResponse.json(response);
   }),
 
   http.get('*/admin/check', () => {
-    console.debug('MSW: GET /admin/check', { authenticated: isAdminAuthenticated });
-    return HttpResponse.json({
-      authenticated: isAdminAuthenticated,
+    const response = AdminCheckResponseSchema.parse({
+      authenticated: false,
     });
+    return HttpResponse.json(response);
   }),
 ];

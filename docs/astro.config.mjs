@@ -52,6 +52,11 @@ export default defineConfig({
           },
         },
       ],
+      defaultLocale: 'root',
+      locales: {
+        root: { label: 'English', lang: 'en' },
+        'zh-tw': { label: '繁體中文', lang: 'zh-TW' },
+      },
       customCss: ['./src/styles/custom.css'],
       expressiveCode: {
         // https://expressive-code.com/guides/themes/

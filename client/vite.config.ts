@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 import { resolve } from 'path';
 import terser from '@rollup/plugin-terser';
 
@@ -13,6 +13,10 @@ const assetFileNames = (assetInfo) => {
 export default defineConfig({
   esbuild: {
     target: 'es2022',
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom', // For DOMPurify tests
   },
   build: {
     target: 'es2022',

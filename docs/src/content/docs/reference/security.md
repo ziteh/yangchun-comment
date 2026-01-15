@@ -4,28 +4,29 @@ title: Security
 
 :::caution
 These configurations are intentionally strict but can **NOT** cover all potential vulnerabilities.
+
+I am not an expert in the field of information security. This document merely provides a technical explanation of the system's design and operation.
 :::
 
-防禦攻擊有時不能只依靠 Yang Chun Comment 本身的設計，父網頁本身的設定也會影響攻擊的可能性，例如 CSP 設定。
+🚧 Work in progress 🚧
 
-## XSS 攻擊
+This page describes the attacks and risks that may be encountered when using Yang Chun Comment, as well as the existing mechanisms. Defense against attacks sometimes cannot rely solely on the design of Yang Chun Comment itself; the settings of the parent page also affect the possibility of attacks, such as [Content Security Policy (CSP)](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP) settings.
 
-Cross-Site Scripting 是非常危險且難以根除的攻擊，而且有非常多不同的類型。特別對於 Yang Chun Comment 這種允許使用者輸入內容的留言系統。
+## XSS Attacks
 
-**潛在的風險**：
+Cross-Site Scripting is a very dangerous and difficult-to-eradicate attack, and there are many different types. For a comment system that allows user input like Yang Chun Comment, the risk of XSS is greater.
 
-- 留言者的編輯權限 Token 被盜用，導致其留言被破壞或刪除。
+**Potential Risks**:
 
-**現有的機制**：
+- Commenter's editing permission Token is stolen, leading to their comments being destroyed or deleted.
+- Failure of other defense mechanisms.
+- Affecting other functions of the parent page.
 
-Yang Chun Comment 的使用者輸入有 3 個：留言內容、昵稱、Email。
+**Existing Mechanisms**:
 
-其中留言內容會分別在前端和後端進行消毒。昵稱在前端會經過處理變成自定的固定詞庫中的組合假名，在後端會進行消毒並過濾，且在前端顯示時不會展開成 HTML。Email 只是 Honeypot，在後端直接丟棄，前端沒有該資訊。
+Yang Chun Comment has 3 input fields: comment content, nickname, and Email.
 
-- **前端：** [DOMPurify](https://github.com/cure53/DOMPurify)
-- **後端：** [sanitize-html](https://github.com/apostrophecms/sanitize-html)
-
-> DOMPurify already provides strong protection against XSS, sanitize-html is primarily a secondary layer, removing all HTML for storage cleanliness.
+Among them, comment content is sanitized using [DOMPurify](https://github.com/cure53/DOMPurify) on the frontend and [sanitize-html](https://github.com/apostrophecms/sanitize-html) on the backend respectively (for RSS Feed XML). Nicknames are processed on the frontend into combined pseudonyms from a custom fixed word bank, sanitized and filtered on the backend, and are not expanded into HTML when displayed on the frontend. Email is just a Honeypot, directly discarded on the backend, and this information is not displayed on the frontend.
 
 ### DOMPurify
 
@@ -33,252 +34,181 @@ Yang Chun Comment 的使用者輸入有 3 個：留言內容、昵稱、Email。
 - Adds `target="_blank"` and `rel="noopener noreferrer"` to all `<a>` links.
 - Adds `loading="lazy"` to all `<img>` elements (performance optimization).
 - Allows only `http:` and `https:` URLs, removing unsafe protocols (e.g. `javascript:`).
-- DOMPurify 無法防禦包含父頁面 CSP 設定、瀏覽器漏洞、自我XSS等在內的攻擊。
+- DOMPurify cannot defend against attacks including parent page CSP settings, browser vulnerabilities, Self-XSS, etc.
 
 [source code](https://github.com/ziteh/yangchun-comment/blob/main/client/src/utils/sanitize.ts)
 
-```ts
-import DOMPurify, { type Config as DomPurifyConfig } from 'dompurify';
-
-const DOMPURIFY_CONFIG: DomPurifyConfig = {
-  ALLOWED_TAGS: [
-    'a',
-    'b',
-    'i',
-    'em',
-    'strong',
-    's',
-    'p',
-    'ul',
-    'ol',
-    'li',
-    'code',
-    'pre',
-    'blockquote',
-    'h6',
-    'hr',
-    'br',
-    'img',
-  ],
-  ALLOWED_ATTR: ['href', 'src', 'alt'],
-  ALLOW_DATA_ATTR: false, // disable data-* attributes
-  ALLOW_ARIA_ATTR: false, // disable aria-* attributes
-};
-
-function initializeHooks() {
-  DOMPurify.addHook('afterSanitizeAttributes', (node) => {
-    // <a> Make all links open in a new tab, and prevent window.opener vulnerability
-    if (node instanceof HTMLAnchorElement) {
-      node.setAttribute('rel', 'noopener noreferrer');
-      node.setAttribute('target', '_blank');
-    }
-
-    // <img> Optimize image loading
-    if (node instanceof HTMLImageElement) {
-      node.setAttribute('loading', 'lazy');
-    }
-  });
-
-  DOMPurify.addHook('uponSanitizeAttribute', (_node, data) => {
-    // Only allow http: and https: for href/src attributes
-    // Remove javascript: and other potentially dangerous protocols
-    if (data.attrName === 'href' || data.attrName === 'src') {
-      try {
-        const url = new URL(data.attrValue || '');
-        if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-          data.keepAttr = false;
-        }
-      } catch {
-        data.keepAttr = false;
-      }
-    }
-  });
-}
-
-export function sanitizeHtml(dirtyHtml: string) {
-  return DOMPurify.sanitize(dirtyHtml, DOMPURIFY_CONFIG);
-}
-```
-
 ### sanitize-html
 
+- Used for RSS Feed XML
 - Strips all HTML, leaving only plain text.
 
 [source code](https://github.com/ziteh/yangchun-comment/blob/main/server/src/utils.ts)
 
-```ts
-export function sanitize(raw: unknown): string {
-  if (typeof raw !== 'string') return '';
+**Recommendations**:
 
-  const htmlRemoved = sanitizeHtml(raw, {
-    allowedTags: [], // no tags allowed
-    allowedAttributes: {}, // no attributes allowed
-    disallowedTagsMode: 'discard', // or 'completelyDiscard'
-    parser: {
-      // If set to true, entities within the document will be decoded. Defaults to true.
-      // It is recommended to never disable the 'decodeEntities' option
-      decodeEntities: true,
-      lowerCaseTags: true,
-    },
-  });
+- Enhance the CSP policy for the webpage itself.
 
-  return htmlRemoved;
-}
-```
+## Replay Attacks
 
-**建議**：
+**Potential Risks**:
 
-- 網頁本身的 CSP 政策。
+- Legitimate requests are reused, including modifying or deleting comment content.
 
-## 供應鏈攻擊
+**Existing Mechanisms**:
 
-透過 CDN 使用本留言系統要注意供應鏈攻擊（Supply chain attack）的風險。
+- The JWT used for administrator login has JTI, which is added to a blacklist after each logout to prevent reuse.
+- FormalPoW Challenge includes an expiration time and is added to a blacklist after use to prevent reuse.
+- Commenter's edit Token has an expiration time.
 
-**潛在的風險**：
+## Timing Attacks on Login
 
-- 所有防禦措施失效。
-- 向上影響父頁面。
+**Existing Mechanisms**:
 
-**現有的機制**：
-
-- Yang Chun Comment 本身無法防禦供應鏈攻擊，因為攻擊發生在不同層面，請參考建議進行相關措施。
-
-**建議**：
-
-- 優先使用 npm 等套件管理器在本地安裝並確認，而不是從 CDN 載入。
-- 如果一定要使用 CDN，要加上 SRI。
-
-## 重放攻擊
-
-**潛在的風險**：
-
-- 被進行不正確的請求，包含被修改或刪除留言內容。
-
-**現有的機制**：
-
-- 對於管理員登入所使用的 JWT 有 JTI，每次登出後會將其加入黑名單中，防止重複使用。
-- FormalPoW 的 Challenge 中包含過期時效，且在使用過後會被加入黑名單中，防止重複使用。
-- 留言者的編輯 Token 有過期時效。
-
-## 登入時間
-
-**現有的機制**：
-
-- 對於管理員登入的名稱和密碼比對，在後端使用常數時間比對函式，並且在失敗時有隨機延遲。
+- For administrator login name and password comparison, a constant-time comparison function is used on the backend, and there is a random delay upon failure.
 
 ## CSRF
 
 Cross-Site Request Forgery
 
-## 垃圾機器人
+**Existing Mechanisms**:
 
-**現有的機制**：
+- Hono [CSRF protection middleware](https://hono.dev/docs/middleware/builtin/csrf) (Origin header check)
+- GET endpoints have no dangerous operations or side effects.
+- Data format uses JSON.
 
-- 對於新增留言的 API 端點，使用 Proof-of-Work 進行流量限制，防止低階機器人在短時間內大量發送留言。
-- 前端有名為 Email 的 Honeypot 欄位，該欄位有值的請求不會進行處理。
+**Recommendations**:
+
+- HttpOnly cookie uses sameSite="Strict" or "Lax". Refer to [`CORS_ORIGIN`](http://localhost:4321/reference/var/#environment-variables).
+
+## Spam Bots
+
+**Existing Mechanisms**:
+
+- For the API endpoint adding comments, Proof-of-Work is used for rate limiting to prevent low-level bots from sending a large number of comments in a short time.
+- The frontend has a Honeypot field named Email; requests with a value in this field will not be processed.
 
 ## Window.opener
 
-**現有的機制**：
+**Existing Mechanisms**:
 
-- 透過 DOMPurify 對所有留言內容中的 `<a>` 增加 `rel="noopener noreferrer" target="_blank"` 來抵禦 window.opener 攻擊。
+- Defends against window.opener attacks by adding `rel="noopener noreferrer"` to all `<a>` tags in comment content via DOMPurify.
 
-## 暴力破解
+## Brute Force
 
-暴力嘗試進行登入
+Brute force attempts to login
 
-**潛在的風險**：
+**Potential Risks**:
 
-- 攻擊者以管理員進行登入。
-- 資料庫的內容被破壞或刪除。
+- Attacker logs in as an administrator.
+- Database content is destroyed or deleted.
 
-**現有的機制**：
+**Existing Mechanisms**:
 
-- 對於管理員的登入驗證端點，使用含密鑰的 HMAC-SHA256 處理的 IP 雜湊值作為識別，記錄失敗次數，在 1 天內如果驗證失敗 5 次會封鎖此 IP 雜湊值 1 天。
+- For the administrator login verification endpoint, the IP hash processed by HMAC-SHA256 with a key is used as identification. Failure counts are recorded. If verification fails 5 times within 1 day, this IP hash is blocked for 1 day.
 
-## 彩虹表攻擊
+## Rainbow Table Attacks
 
-**潛在的風險**：
+**Potential Risks**:
 
-- 攻擊者以管理員進行登入。
-- 資料庫的內容被破壞或刪除。
+- Attacker logs in as an administrator.
+- Database content is destroyed or deleted.
 
-**現有的機制**：
+**Existing Mechanisms**:
 
-- 對於管理員的密碼，是使用 PBKDF2-HMAC-SHA256 作為密碼雜湊演算法，設定輸出長度為 32 bytes，並採用 600,000 次迭代（[OWASP 建議][owasp-pbkdf2]）。
+- For administrator passwords, PBKDF2-HMAC-SHA256 is used as the password hashing algorithm, with an output length set to 32 bytes and 100,000 iterations.
 
-## SQL 注入攻擊
+## SQL Injection Attacks
 
-Yang Chun Comment 使用 SQLite 兼容的 Cloudflare D1 儲存所有留言內容。
+Yang Chun Comment uses SQLite-compatible Cloudflare D1 to store all comment content.
 
-**潛在的風險**：
+**Potential Risks**:
 
-- 儲存的所有留言內容被看到，但是 Yang Chun Comment 不儲存個人資料或驗證訊息，所有的留言內容本來就被視為是公開資訊。
+- All stored comment content is seen, but Yang Chun Comment does not store personal data or verification information, and all comment content is inherently considered public information.
 
-**現有的機制**：
+**Existing Mechanisms**:
 
-- 在後端操作 D1 的 SQL 操作使用 `.bind()` 完成，未進行字串拼接。
-- API 端點的輸入資料有使用 Zod 驗證資料格式。
-- API 端點無法直接操作 D1。
+- SQL operations on D1 in the backend use `.bind()` without string concatenation.
+- API endpoint input data uses Zod to validate data format.
+- API endpoints cannot directly manipulate D1.
 
-## 鍵名注入攻擊
+## Key Injection Attacks
 
-Yang Chun Comment 使用基於 Key-value 的 Cloudflare KV 儲存快取。
+Yang Chun Comment uses Cloudflare KV based on Key-value to store cache.
 
-**潛在的風險**：
+**Potential Risks**:
 
-- 後端內部邏輯錯誤。
-- 其他防禦機制的黑名單失效。
+- Backend internal logic errors.
+- Failure of blacklists in other defense mechanisms.
 
-**現有的機制**：
+**Existing Mechanisms**:
 
-- 後端的 KV 操作中，鍵名不包含使用者輸入值。
-- API 端點的輸入資料有使用 Zod 驗證資料格式。
+- In backend KV operations, key names do not contain user input values.
+- API endpoint input data uses Zod to validate data format.
 
-## 程式碼注入
+## Code Injection Attacks
 
-**潛在的風險**：
+**Potential Risks**:
 
-- 密鑰洩露。
-- 後端被執行任意程式。
-- 發出惡意請求。
+- Key leakage.
+- Arbitrary code execution on the backend.
+- Sending malicious requests.
 
-**現有的機制**：
+**Existing Mechanisms**:
 
-- 在後端程式碼中沒有使用 `eval()` 或 `new Function()`。
-- API 端點的輸入資料有使用 Zod 驗證資料格式。
+- `eval()` or `new Function()` are not used in backend code (checked via ESLint).
+- API endpoint input data uses Zod to validate data format.
 
-## 惡意外部資源
+## Malicious External Resources
 
-攻擊者可能會留下一個外部的惡意連結（或圖片），其它使用者可能會點擊並被引導過去。
+Attackers may leave an external malicious link (or image), and other users may click and be redirected.
 
-**潛在的風險**：
+**Potential Risks**:
 
-- 攻擊者在留言中貼出一個詐騙網頁的連結，一般使用者看到後點擊進入並遭受詐騙。
+- Attackers post a link to a scam website in a comment, and general users click to enter and are scammed after seeing it.
 
-**現有的機制**：
+**Existing Mechanisms**:
 
-- Yang Chun Comment 本身無法主動審查留言中出現的惡意外部資源，如果有此需求需要額外的措施。
+- Yang Chun Comment itself cannot actively censor malicious external resources appearing in comments. Additional measures are needed if this requirement exists.
 
-**建議**：
+**Recommendations**:
 
-- 管理員留意各個留言內容中的外部資源，並做出處理。
+- When clicking a link in a comment, a message box will pop up first, alerting the user that they are about to leave this site and displaying the destination URL.
+- Administrators should pay attention to external resources in comments and take action.
+
+## Supply Chain Attacks
+
+When using this comment system via CDN, be aware of the risk of Supply chain attacks.
+
+**Potential Risks**:
+
+- Failure of other defense measures.
+- Affecting the parent page upwards.
+
+**Existing Mechanisms**:
+
+- Yang Chun Comment itself cannot defend against supply chain attacks because the attack occurs at a different layer. Please refer to recommendations for relevant measures.
+
+**Recommendations**:
+
+- Prioritize using package managers like npm to install and verify locally instead of loading from CDN.
+- If you must use CDN, use Subresource Integrity (SRI).
 
 ## DDoS
 
-DDoS 是一種很強大的攻擊，對於使用 Cloudflare Worker 的 Yang Chun Comment 來說，特別是 L7 Application Layer DDoS，最大的影響是大量的 API 請求會瞬間耗盡免費額度。
+DDoS is a powerful attack. For Yang Chun Comment using Cloudflare Worker, especially L7 DDoS, the biggest impact is that a large number of API requests will instantly exhaust the free quota.
 
-**潛在的風險**：
+**Potential Risks**:
 
-- API 請求額度被大量消耗，導致管理員需要支付額外的費用。
-- 一般使用者無法正常使用 Yang Chun Comment，例如無法查看或發佈留言。
+- API request quota is consumed in large quantities, causing the administrator to pay extra fees.
+- General users cannot use Yang Chun Comment normally, such as unable to view or post comments.
 
-**現有的機制**：
+**Existing Mechanisms**:
 
-- Yang Chun Comment 本身無法對 DDoS 做出任何防禦，如果有此需求需要額外的措施。
+- Yang Chun Comment itself cannot offer any defense or mitigation against DDoS. Additional measures are needed if this requirement exists.
 
-**建議**：
+**Recommendations**:
 
-- 使用額外的 WAF 等方案提升對 DDoS 的防禦能力。
+- Use additional WAF or other solutions to improve defense against DDoS.
 
 [owasp-pbkdf2]: https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html#pbkdf2

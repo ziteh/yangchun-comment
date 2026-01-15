@@ -1,11 +1,12 @@
 {
   "name": "@ziteh/yangchun-comment-server",
   "version": "0.1.0",
+  "type": "module",
   "private": true,
   "scripts": {
     "build": "tsc --noEmit && echo 'Type check passed'",
     "deploy": "wrangler deploy",
-    "init": "wrangler d1 migrations apply yangchun-comment-db --local",
+    "init": "wrangler d1 migrations apply yangchun-comment-d1 --local",
     "dev": "wrangler dev --port 8787",
     "start": "wrangler dev --port 8787",
     "test": "vitest",
