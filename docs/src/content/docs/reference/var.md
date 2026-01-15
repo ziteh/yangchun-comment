@@ -2,6 +2,8 @@
 title: Variables
 ---
 
+🚧 Work in progress 🚧
+
 ## Environment Variables
 
 | 變數名稱                    | 型別                    | 必填 | 說明                          | 預設值                          |

@@ -10,11 +10,16 @@ import { Aside } from '@astrojs/starlight/components';
 ✨ 對於留言者來說，它具有以下特色:
 
 - 無需註冊或登入
-- 無需使用 cookie
-- 不收集個人資料，包含姓名、Email、IP 地址、User-Agent 等
+- 不收集包含真實姓名、Email、IP 位址、User-Agent 或 Cookie 在內的人資料
 - 不進行瀏覽器指紋識別
+- 支援 Markdown 語法
+- RSS Feed 通知
 
 以下步驟將帶你完成部署，這樣你就可以為你的網站添加 Yang Chun Comment，讓人們輕鬆留言。
+
+<Aside type="caution">
+不保證系統設計符合包含但不限於 GDPR (General Data Protection Regulation) 在內的任何資料和隱私相關法規。
+</Aside>
 
 ## 1. 準備
 
@@ -142,27 +147,21 @@ id = "506ac68ae906458692g22933d3896af3" # <-- Replace with your KV ID
 
 ### C. 配置環境變數
 
-`wrangler.toml` 中有一些變數需要根據你的需求來修改：
+`wrangler.toml` 中有一些變數需要根據你的需求來修改，對於完整的變數和各自的說明，請查看 [Environment Variables](/reference/var/#environment-variables)：
 
 ```toml frame="auto"
 # wrangler.toml
 ...
 
 [vars]
-# 這些變數必須根據你的情況來修改
+# 你至少需要根據情況調整這些變數
 ADMIN_USERNAME = "admin"                       # Admin username
-PRE_POW_SALT = "MAGIC"                   # The pepper for the pre-PoW
-FRONTEND_URL = "https://your-frontend-url.com" # Frontend URL
+PRE_POW_SALT = "MAGIC"                   # The salt for the pre-PoW
+FRONTEND_URL = "http://localhost:5173" # Frontend URL
 CORS_ORIGIN = "http://localhost:5173"          # CORS origin
 
-# 這些變數可以保留預設值
-RSS_SITE_PATH = "site"           # The path for the all-site RSS feed
-MAX_ALL_SITE_RSS_COMMENTS = 20   # The max number of comments in the all-site RSS feed
-MAX_THREAD_RSS_COMMENTS = 10     # The max number of comments in the thread RSS feed
-PRE_POW_DIFFICULTY = 2           # The difficulty for the pre-PoW
-PRE_POW_TIME_WINDOW = 60         # The time window (in seconds) for the pre-PoW
-FORMAL_POW_DIFFICULTY = 4        # The difficulty for the formal-PoW
-FORMAL_POW_EXPIRATION = 300      # The expiration time (in seconds) for the formal-PoW challenges
+...
+
 ```
 
 <Aside>
