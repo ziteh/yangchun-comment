@@ -10,6 +10,8 @@
 - Supports Markdown syntax
 - RSS Feed notifications
 
+Live demo: <https://ycc.ziteh.dev>
+
 ## Architecture
 
 This monorepo uses pnpm workspace and contains four packages:
@@ -21,7 +23,7 @@ This monorepo uses pnpm workspace and contains four packages:
 
 ## Usage
 
-Refer to <https://ycc.ziteh.dev> or [get-started](./docs/src/content/docs/guides/get-started.mdx)
+Refer to [Getting Started](https://ycc.ziteh.dev/guides/get-started/) or [get-started.mdx](./docs/src/content/docs/guides/get-started.mdx)
 
 > [!WARNING]  
 > The system design is not guaranteed to comply with any data and privacy regulations, including but not limited to GDPR (General Data Protection Regulation).
