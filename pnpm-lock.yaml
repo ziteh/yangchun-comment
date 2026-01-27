@@ -106,13 +106,13 @@ importers:
     dependencies:
       '@hono/standard-validator':
         specifier: ^0.2.2
-        version: 0.2.2(@standard-schema/spec@1.0.0)(hono@4.11.4)
+        version: 0.2.2(@standard-schema/spec@1.0.0)(hono@4.11.7)
       '@ziteh/yangchun-comment-shared':
         specifier: workspace:*
         version: link:../shared
       hono:
-        specifier: ^4.11.4
-        version: 4.11.4
+        specifier: ^4.11.7
+        version: 4.11.7
       nanoid:
         specifier: ^5.1.6
         version: 5.1.6
@@ -2228,8 +2228,8 @@ packages:
   headers-polyfill@4.0.3:
     resolution: {integrity: sha512-IScLbePpkvO846sIwOtOTDjutRMWdXdJmXdMvk6gCBHxFO8d+QKOQedyZSxFTTFYRSmlgSTDtXqqq4pcenBXLQ==}
 
-  hono@4.11.4:
-    resolution: {integrity: sha512-U7tt8JsyrxSRKspfhtLET79pU8K+tInj5QZXs1jSugO1Vq5dFj3kmZsRldo29mTBfcjDRVRXrEZ6LS63Cog9ZA==}
+  hono@4.11.7:
+    resolution: {integrity: sha512-l7qMiNee7t82bH3SeyUCt9UF15EVmaBvsppY2zQtrbIhl/yzBTny+YUxsVjSjQ6gaqaeVtZmGocom8TzBlA4Yw==}
     engines: {node: '>=16.9.0'}
 
   html-encoding-sniffer@6.0.0:
@@ -4471,10 +4471,10 @@ snapshots:
     dependencies:
       '@expressive-code/core': 0.41.3
 
-  '@hono/standard-validator@0.2.2(@standard-schema/spec@1.0.0)(hono@4.11.4)':
+  '@hono/standard-validator@0.2.2(@standard-schema/spec@1.0.0)(hono@4.11.7)':
     dependencies:
       '@standard-schema/spec': 1.0.0
-      hono: 4.11.4
+      hono: 4.11.7
 
   '@humanfs/core@0.19.1': {}
 
@@ -6033,7 +6033,7 @@ snapshots:
 
   headers-polyfill@4.0.3: {}
 
-  hono@4.11.4: {}
+  hono@4.11.7: {}
 
   html-encoding-sniffer@6.0.0:
     dependencies:
