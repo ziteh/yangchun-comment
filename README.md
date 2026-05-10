@@ -33,4 +33,7 @@ Refer to [Getting Started](https://ycc.ziteh.dev/guides/get-started/) or [get-st
 - [x] ~~Using PoW (proof of work) to replace IP-based bot attack prevention to reduce the impact on different users with the same IP address, and further eliminate the need to store IP hash values on the backend server (storing hashed IPs may be considered a lightweight user tracking method)~~
 - [ ] Add a page explaining personal data collection and prompts.
 - [ ] Redesign the comment editing and deletion tokens to make them more durable and user-friendly, aligning with rights of erasure.
+- [ ] Implement a user-initiated "delete me" flow (Art. 17): allow commenters to request permanent hard deletion of all their comments, similar to Remark42's `/api/v1/deleteme` mechanism.
+- [ ] Add a personal data export endpoint (Art. 20): allow commenters to download all their own comments in a machine-readable format (e.g. JSON), keyed by a durable token rather than the current in-memory edit token.
+- [ ] Surface the privacy policy in the comment UI (Art. 13): show a brief notice (or link to the privacy page) before the user's first submission, not only in the help dialog.
 - [ ] Improve the Administrator Page.
